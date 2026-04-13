@@ -13,6 +13,7 @@ agent: agent
 ## PR Review Mode
 
 Comprehensive GitHub PR review — fetches diff, reads full files, runs validation, generates a local review artifact.
+If `gh` CLI not available, try conda environment named `python-dev_env`.
 
 ### Phase 1 — FETCH
 
@@ -75,11 +76,16 @@ Assign severity to each finding:
 
 Run available validation commands:
 
-Detect the project type from config files (`pyproject.toml`, etc.), then run the appropriate commands:
+Detect the project type from config files (`pyproject.toml`, `nextflow.config, etc.), then run the appropriate commands:
 
 **Python** (has `pyproject.toml` / `setup.py`):
 ```bash
 pytest  # Tests
+```
+
+**Nextflow** (has `nextflow.config`):
+```bash
+nextflow lint  # Linting
 ```
 
 Run only the commands that apply to the detected project type. Record pass/fail for each.
@@ -166,7 +172,6 @@ Next steps:
 
 ## Edge Cases
 
-- **No `gh` CLI**: Fall back to reading the local diff via `git diff`. Warn user that remote PR metadata will not be available.
 - **Diverged branches**: Suggest `git fetch origin && git rebase origin/<base>` before review.
 - **Large PRs (>50 files)**: Warn about review scope. Focus on source changes first, then tests, then config/docs.
 - **ASK IF DOUBTS, do not suppose**
