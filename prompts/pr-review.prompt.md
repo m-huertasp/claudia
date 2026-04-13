@@ -1,6 +1,6 @@
 ---
 description: GitHub PR review (pass PR number/URL)
-argument-hint: [pr-number | pr-url]
+agent: agent
 ---
 
 # Python-based PR Review
@@ -8,7 +8,6 @@ argument-hint: [pr-number | pr-url]
 > PR review mode adapted from PRPs-agentic-eng by Wirasm. Part of the PRP workflow series.
 
 **Input**: $ARGUMENTS
-
 ---
 
 ## PR Review Mode
