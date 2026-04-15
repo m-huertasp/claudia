@@ -1,10 +1,11 @@
 ---
 description: GitHub PR review (pass PR number/URL)
-agent: agent
+agent: code-reviewer
 ---
 
-# Python-based PR Review
+# PR Review
 
+> Designed to run with the `@code-reviewer` agent. Invoke as: `@code-reviewer /pr-review <PR-number|URL|branch>`
 > PR review mode adapted from PRPs-agentic-eng by Wirasm. Part of the PRP workflow series.
 
 **Input**: $ARGUMENTS

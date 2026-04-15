@@ -1,6 +1,6 @@
 ---
 description: Comprehensive Python code review for a single file or a repo/folder. Generates a local review artifact.
-agent: agent
+agent: code-reviewer
 ---
 
 # Python Code Review
@@ -82,6 +82,37 @@ Only report issues you are **>80% confident** are real problems:
 - `yaml.load()` without `Loader=yaml.SafeLoader`
 - Bare `except:` clauses that swallow all errors
 
+```python
+# BAD: SQL injection via f-string
+cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+
+# GOOD: parameterized query
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+```
+
+```python
+# BAD: unsafe YAML load
+data = yaml.load(stream)
+
+# GOOD:
+data = yaml.safe_load(stream)
+```
+
+```python
+# BAD: bare except swallows everything
+try:
+    process()
+except:
+    pass
+
+# GOOD: catch specific exceptions, log and re-raise
+try:
+    process()
+except ValueError as e:
+    logger.error("Invalid input: %s", e)
+    raise
+```
+
 #### HIGH — Should Fix
 
 - Missing type hints on public functions and methods
@@ -91,6 +122,33 @@ Only report issues you are **>80% confident** are real problems:
 - Using `type(x) == Y` instead of `isinstance(x, Y)`
 - C-style loops where a comprehension or built-in would be clearer
 - Race conditions in shared state without locks
+
+```python
+# BAD: mutable default, no type hints, no context manager
+def load_data(path, cache=[]):
+    f = open(path)
+    data = f.read()
+    f.close()
+    return data
+
+# GOOD:
+def load_data(path: str, cache: list | None = None) -> str:
+    if cache is None:
+        cache = []
+    with open(path) as f:
+        return f.read()
+```
+
+```python
+# BAD: type equality check, C-style loop
+result = []
+for i in range(len(items)):
+    if type(items[i]) == str:
+        result.append(items[i].upper())
+
+# GOOD:
+result = [item.upper() for item in items if isinstance(item, str)]
+```
 
 #### MEDIUM — Fix Recommended
 
