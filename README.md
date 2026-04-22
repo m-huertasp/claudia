@@ -1,47 +1,79 @@
-# copilot-setup
+# claude-setup
 
-> Collection of GitHub Copilot configurations, rules, prompts, and commands — focused on Python development, powered by Claude through GitHub Copilot in VS Code.
+> Collection of Claude Code configurations, agents, and commands — focused on Python development, powered by Claude Code in VS Code.
 
 ---
 
 ## What this is
 
-This repo is my personal toolkit for working with **GitHub Copilot (Claude)** in VS Code. It's a place to collect and refine:
+This repo is my personal toolkit for working with **Claude Code** in VS Code. It's a place to collect and refine:
 
-- **Instructions** that tell Copilot how I like to work
+- **Instructions** (`CLAUDE.md`) that tell Claude Code how I like to work
+- **Agents** for complex multi-step workflows
+- **Commands** (slash commands) for quick recurring tasks
 - **Rules** for consistent Python code style and conventions
-- **Prompts** for common tasks I do repeatedly
-- **Commands** (slash commands) for quick workflows
-- **MCP servers** and **agents** as things grow
+- **MCP servers** as things grow
 
 ---
 
 ## Folder structure
 
 ```
-copilot-setup/
-├── .github/
-│   ├── copilot-instructions.md      # Global Copilot instructions
-│   └── agents/                      # Agent configurations
+claude-setup/
+├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
+├── .claude/
+│   ├── agents/                      # Subagent definitions
+│   └── commands/                    # Slash command definitions
 ├── docs/
-├── prompts/                         # Reusable prompt templates for common tasks
 ├── rules/                           # Reusable coding rules and conventions (planned)
-├── commands/                        # Slash command definitions (planned)
 ├── mcp-servers/                     # Custom MCP servers (planned)
 └── README.md                        # This file
 ```
 
 ### Folder descriptions
 
-| Folder | Purpose | Status |
+| Folder / File | Purpose | Status |
 |---|---|---|
-| `.github/` | Contains `copilot-instructions.md` — the main file Copilot reads to understand how to behave in a project | ✅ Active |
-| `.github/agents/` | Agent configurations (`code-reviewer`, `doc-updater`) — autonomous specialists for complex workflows | ✅ Active |
+| `CLAUDE.md` | Main file Claude Code reads to understand how to behave in a project | ✅ Active |
+| `.claude/agents/` | Subagent configurations (`code-reviewer`, `doc-updater`) — autonomous specialists for complex workflows | ✅ Active |
+| `.claude/commands/` | Slash commands (`/python-review`, `/pr-review`, `/prepare-docstrings`, `/nextflow-review`, `/pytest-gen`, `/update-docs`) | ✅ Active |
 | `docs/` | Single consolidated architecture index (`docs/INDEX.md`) — components, data flow, phases | ✅ Active |
-| `prompts/` | Reusable prompt templates for recurring tasks (Python review, PR review, docstrings, Nextflow review, update-docs) | ✅ Active |
 | `rules/` | Short Markdown files with coding conventions (Python type hints, imports, formatting) | 📋 Planned |
-| `commands/` | Slash command definitions (`/review`, `/test`, `/docstring`, `/refactor`) | 📋 Planned |
-| `mcp-servers/` | Custom Model Context Protocol servers to extend Copilot's capabilities | 📋 Planned |
+| `mcp-servers/` | Custom Model Context Protocol servers to extend Claude Code's capabilities | 📋 Planned |
+
+---
+
+## Deployment
+
+To use this setup in any project, symlink `CLAUDE.md` into the project root:
+
+```bash
+ln -s /path/to/claude-setup/CLAUDE.md CLAUDE.md
+```
+
+Claude Code auto-loads `CLAUDE.md` from the project root. Agents and commands in `.claude/` live in this repo and can be invoked directly from any Claude Code session pointed at this directory.
+
+---
+
+## Available agents
+
+| Agent | Model | Invocation | Purpose |
+|---|---|---|---|
+| `code-reviewer` | Claude Sonnet 4.6 | subagent | Security, correctness, and quality review |
+| `doc-updater` | Claude Haiku 4.5 | subagent via `/update-docs` | README, docs/INDEX.md, and CLAUDE.md updates |
+
+---
+
+## Available commands
+
+| Command | Purpose |
+|---|---|
+| `/python-review <path>` | Comprehensive Python code review with static analysis |
+| `/pr-review <PR#\|URL\|branch>` | GitHub PR analysis and review |
+| `/prepare-docstrings <file>` | Add/rewrite docstrings in NumPy/SciPy format |
+| `/nextflow-review <path>` | Nextflow DSL pipeline review |
+| `/pytest-gen <path>` | Generate pytest unit and integration tests |
+| `/update-docs` | Update all project documentation |
 
 ---
 
@@ -49,6 +81,4 @@ copilot-setup/
 
 Architectural documentation lives in a single file: **[docs/INDEX.md](docs/INDEX.md)**.
 
-It covers repository structure, all components (instructions, agents, prompts), data flows, external dependencies, and development phases.
-
-
+It covers repository structure, all components (instructions, agents, commands), data flows, external dependencies, and development phases.

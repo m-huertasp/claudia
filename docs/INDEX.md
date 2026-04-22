@@ -1,29 +1,31 @@
-# copilot-setup — Architecture Index
+# claude-setup — Architecture Index
 
 **Last Updated:** April 22, 2026
 
 ## Overview
 
-Personal toolkit for **GitHub Copilot (Claude)** in VS Code. Provides reusable instructions, agents, and prompt templates focused on Python development. Designed to be symlinked or copied into any project.
+Personal toolkit for **Claude Code** in VS Code. Provides reusable instructions, agents, and slash commands focused on Python development. Designed to be symlinked or copied into any project.
 
 ---
 
 ## Repository Structure
 
 ```
-copilot-setup/
-├── .github/
-│   ├── copilot-instructions.md      # Global Copilot instructions (auto-loaded per project)
-│   └── agents/                      # Agent configurations
-│       ├── code-reviewer.agent.md   # Code review specialist
-│       └── doc-updater.agent.md     # Documentation specialist
+claude-setup/
+├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
+├── .claude/
+│   ├── agents/                      # Subagent definitions
+│   │   ├── code-reviewer.md         # Code review specialist
+│   │   └── doc-updater.md           # Documentation specialist
+│   └── commands/                    # Slash command definitions
+│       ├── python-review.md         # Python code review
+│       ├── pr-review.md             # Pull request analysis
+│       ├── prepare-docstrings.md    # Docstring generation
+│       ├── nextflow-review.md       # Nextflow DSL review
+│       ├── pytest-gen.md            # Pytest test generation
+│       └── update-docs.md           # Documentation update
 ├── docs/
 │   └── INDEX.md                     # This file — architecture overview
-├── prompts/                         # Reusable prompt templates
-│   ├── python-review.prompt.md      # Python code review
-│   ├── pr-review.prompt.md          # Pull request analysis
-│   ├── prepare-docstrings.prompt.md # Docstring generation
-│   └── nextflow-review.prompt.md    # Nextflow DSL review
 └── README.md                        # User-facing documentation
 ```
 
@@ -31,27 +33,26 @@ copilot-setup/
 
 ## Components
 
-### Instructions — `.github/copilot-instructions.md`
+### Instructions — `CLAUDE.md`
 
-Auto-loaded by Copilot in any project that includes this file (directly or via symlink). Sets global behavior: project overview, architecture description, key commands, editing conventions, and what not to do.
+Auto-loaded by Claude Code in any project that includes this file (directly or via symlink). Sets global behavior: project overview, architecture description, key commands, editing conventions, and what not to do.
 
 **Deployment:**
 ```bash
 # Symlink into a target project (recommended)
-ln -s /path/to/copilot-setup/.github/copilot-instructions.md \
-      .github/copilot-instructions.md
+ln -s /path/to/claude-setup/CLAUDE.md CLAUDE.md
 ```
 
 ---
 
-### Agents — `.github/agents/`
+### Agents — `.claude/agents/`
 
-Stateless autonomous specialists. Invoked with `@agent-name` in Copilot chat.
+Stateless autonomous specialists. Invoked as subagents within Claude Code.
 
 | Agent | File | Model | Purpose |
 |-------|------|-------|---------|
-| **code-reviewer** | `code-reviewer.agent.md` | Claude Sonnet 4.6 | Security, correctness, and quality review |
-| **doc-updater** | `doc-updater.agent.md` | Claude Haiku 4.5 | README, docs/INDEX.md, and copilot-instructions.md updates |
+| **code-reviewer** | `code-reviewer.md` | Claude Sonnet 4.6 | Security, correctness, and quality review |
+| **doc-updater** | `doc-updater.md` | Claude Haiku 4.5 | README, docs/INDEX.md, and CLAUDE.md updates |
 
 **code-reviewer** workflow:
 1. Determine target (file, PR, git diff, or recent commit)
@@ -65,20 +66,22 @@ Stateless autonomous specialists. Invoked with `@agent-name` in Copilot chat.
 2. Update `README.md` (required sections + verified run instructions)
 3. Update `docs/INDEX.md` (this file — single consolidated architecture doc)
 4. Validate and update any other files in `docs/`
-5. Update `.github/copilot-instructions.md` if present
+5. Update `CLAUDE.md` if present
 
 ---
 
-### Prompts — `prompts/`
+### Commands — `.claude/commands/`
 
-Reusable prompt templates. Each pairs with an agent and defines a multi-phase workflow.
+Slash commands invoked as `/command-name` in Claude Code chat. Each defines a multi-phase workflow.
 
-| Prompt | Agent | Invocation | Purpose |
-|--------|-------|-----------|---------|
-| `python-review.prompt.md` | code-reviewer | `@code-reviewer /python-review <path>` | Full Python review (PARSE → LINT → SECURITY → CORRECTNESS) |
-| `pr-review.prompt.md` | code-reviewer | `@code-reviewer /pr-review` | PR analysis and test generation |
-| `prepare-docstrings.prompt.md` | code-reviewer | `@code-reviewer /docstring <file>` | Docstring generation or improvement |
-| `nextflow-review.prompt.md` | code-reviewer | `@code-reviewer /nextflow-review <file>` | Nextflow DSL syntax and best practices review |
+| Command | File | Purpose |
+|---------|------|---------|
+| `/python-review <path>` | `python-review.md` | Full Python review (PARSE → LINT → SECURITY → CORRECTNESS) |
+| `/pr-review <PR#\|URL>` | `pr-review.md` | PR analysis and review |
+| `/prepare-docstrings <file>` | `prepare-docstrings.md` | NumPy/SciPy docstring generation or improvement |
+| `/nextflow-review <path>` | `nextflow-review.md` | Nextflow DSL syntax and best practices review |
+| `/pytest-gen <path>` | `pytest-gen.md` | Interactive pytest unit/integration test generation |
+| `/update-docs` | `update-docs.md` | Update all project documentation via doc-updater |
 
 ---
 
@@ -87,23 +90,23 @@ Reusable prompt templates. Each pairs with an agent and defines a multi-phase wo
 ### Code Review
 
 ```
-User: @code-reviewer /python-review src/
-  → code-reviewer loads copilot-instructions.md
-  → python-review.prompt.md defines phases
-  → Agent reads files, follows imports
+User: /python-review src/
+  → Claude Code loads CLAUDE.md
+  → python-review.md defines phases
+  → Claude reads files, follows imports
   → Findings filtered by confidence (>80%)
-  → Report saved as code-review_DDMMYY.md
+  → Report saved as .github/py-src-review.md
 ```
 
 ### Documentation Update
 
 ```
-User: @doc-updater
-  → doc-updater analyzes repository structure
+User: /update-docs
+  → doc-updater subagent analyzes repository structure
   → README.md updated (sections + run instructions verified)
   → docs/INDEX.md updated (this file)
   → docs/ files validated for accuracy and link integrity
-  → .github/copilot-instructions.md updated if present
+  → CLAUDE.md updated if present
 ```
 
 ---
@@ -112,7 +115,7 @@ User: @doc-updater
 
 | Dependency | Purpose |
 |------------|---------|
-| GitHub Copilot (VS Code extension) | Chat interface and code generation |
+| Claude Code (VS Code extension) | Chat interface and code generation |
 | Claude Haiku 4.5 | doc-updater model backend |
 | Claude Sonnet 4.6 | code-reviewer model backend |
 
@@ -123,15 +126,14 @@ No runtime dependencies — this is a configuration/template repository with no 
 ## Development Phases
 
 ### ✅ Phase 1 — Basics
-- Global Copilot instructions (`copilot-instructions.md`)
+- Global Claude Code instructions (`CLAUDE.md`)
 - Agents: `code-reviewer`, `doc-updater`
-- Prompts: `python-review`, `pr-review`, `prepare-docstrings`, `nextflow-review`
+- Commands: `python-review`, `pr-review`, `prepare-docstrings`, `nextflow-review`, `pytest-gen`, `update-docs`
 - Architecture documentation (`docs/INDEX.md`)
 
-### 🚧 Phase 2 — Commands and Workflows
-- [ ] Slash commands: `/review`, `/test`, `/docstring`, `/refactor`
+### 🚧 Phase 2 — Rules and Workflows
 - [ ] Rules: type hints, docstring conventions, formatting guidelines
-- [ ] Workflow prompts: commit message, changelog
+- [ ] Workflow commands: commit message, changelog
 
 ### 📋 Phase 3 — Extended Capabilities
 - [ ] Per-language rule sets (JavaScript, TypeScript, etc.)
