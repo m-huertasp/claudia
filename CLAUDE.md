@@ -15,6 +15,7 @@ The project is organized into several core components:
 - **`.claude/commands/`** — slash command definitions invoked as `/command-name` in Claude Code chat
 - **`rules/`** — always-follow coding conventions (type hints, docstrings, formatting, imports) *(planned)*
 - **`mcp-servers/`** — MCP server configurations for extending Claude Code's context *(planned)*
+- **`SKILLS/`** — Skills to help with coding *(planned)*  
 
 ## Key Commands
 
