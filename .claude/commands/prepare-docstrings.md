@@ -52,7 +52,7 @@ Add or rewrite docstrings following the rules below. Edit the source file in-pla
 **Structure** (in order):
 
 1. **Summary** — A single concise sentence on the first line.
-2. **Description** *(optional)* — A short paragraph explaining the *how* or *why*, separated from the summary by a blank line. Omit if the summary is self-explanatory.
+2. **Description** *(optional)* — A short paragraph explaining the *how* or *why*, separated from the summary by a blank line. Add only if necessary.
 3. **Parameters** — List every argument (excluding `self` and `cls`) with its type and a one-line description. **Omit this section entirely if there are no parameters.**
 4. **Returns** — Return type and description. **Omit this section entirely if the function returns `None` or has no return statement.**
 5. **Raises** — Only include when the function body contains explicit `raise` statements. **Omit entirely if no exceptions are raised.**
@@ -91,9 +91,6 @@ class MyProcessor:
 ```python
 def fetch_hgnc_data(hgnc_url: str) -> pd.DataFrame:
     """Read HGNC data from the specified URL into a pandas DataFrame.
-
-    Downloads the data, verifies its MD5 checksum, and parses it
-    into a pandas DataFrame.
 
     Parameters
     ----------
