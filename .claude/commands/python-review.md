@@ -14,6 +14,8 @@ description: Comprehensive Python code review for a single file or a repo/folder
 
 Comprehensive Python-specific code review — reads full files, runs static analysis, generates a local review artifact.
 
+> **Pattern reference**: Idiomatic Python patterns, anti-patterns, and code examples are defined in the [python-patterns skill](../../skills/python-patterns/SKILL.md). Pattern Compliance and Maintainability checks in this review apply those standards.
+
 ### Phase 1 — PARSE
 
 Parse the input to determine the review target:
@@ -265,89 +267,6 @@ Artifact: .github/py-<NAME>-review.md
 
 Next steps:
   - <contextual suggestions based on decision>
-```
-
----
-
-## Common Fixes
-
-### Add Type Hints
-
-```python
-# Before
-def calculate(x, y):
-    return x + y
-
-# After
-from typing import Union
-
-def calculate(x: Union[int, float], y: Union[int, float]) -> Union[int, float]:
-    return x + y
-```
-
-### Use Context Managers
-
-```python
-# Before
-f = open("file.txt")
-data = f.read()
-f.close()
-
-# After
-with open("file.txt") as f:
-    data = f.read()
-```
-
-### Use List Comprehensions
-
-```python
-# Before
-result = []
-for item in items:
-    if item.active:
-        result.append(item.name)
-
-# After
-result = [item.name for item in items if item.active]
-```
-
-### Fix Mutable Defaults
-
-```python
-# Before
-def append(value, items=[]):
-    items.append(value)
-    return items
-
-# After
-def append(value, items=None):
-    if items is None:
-        items = []
-    items.append(value)
-    return items
-```
-
-### Use f-strings (Python 3.6+)
-
-```python
-# Before
-greeting = "Hello, " + name + "!"
-greeting2 = "Hello, {}".format(name)
-
-# After
-greeting = f"Hello, {name}!"
-```
-
-### Fix String Concatenation in Loops
-
-```python
-# Before
-result = ""
-for item in items:
-    result += str(item)
-
-# After
-result = "".join(str(item) for item in items)
 ```
 
 ## Python Version Compatibility
