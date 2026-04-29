@@ -17,7 +17,7 @@ If `gh` CLI not available, try conda environment named `python-dev_env`.
 
 ### Phase 1 — FETCH
 
-Parse input to determine PR:
+Resolve the PR number. If no argument is given, stop and ask the user for the PR number.
 
 | Input | Action |
 |---|---|
@@ -108,7 +108,7 @@ Special cases:
 
 ### Phase 6 — REPORT
 
-Create a **local** review artifact at `.github/pr-<NUMBER>-review.md`. Do not post or publish anything to GitHub.
+Create a **local** review artifact at `./pr-<NUMBER>-review.md`. Do not post or publish anything to GitHub.
 
 ```markdown
 # PR Review: #<NUMBER> — <TITLE>
@@ -162,7 +162,7 @@ Issues: <critical_count> critical, <high_count> high, <medium_count> medium, <lo
 Validation: <pass_count>/<total_count> checks passed
 
 Artifacts:
-  Review: .github/pr-<NUMBER>-review.md
+  Review: ./pr-<NUMBER>-review.md
 
 Next steps:
   - <contextual suggestions based on decision>

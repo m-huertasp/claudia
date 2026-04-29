@@ -4,7 +4,7 @@ description: Generate comprehensive pytest unit and integration tests for a Pyth
 
 # Pytest Test Generation
 
-> Invoke as: `/pytest-gen <path>`
+> Invoke as: `/pytest-gen <path-to-python-file>`
 
 **Input**: $ARGUMENTS
 
