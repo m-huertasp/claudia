@@ -18,13 +18,12 @@ Comprehensive Python-specific code review — reads full files, runs static anal
 
 ### Phase 1 — PARSE
 
-Parse the input to determine the review target:
+Parse the input to determine the review target. If no argument is given, stop and ask the user for a file path.
 
 | Input | Action |
 |---|---|
 | `.py` file path (e.g. `app/routes/user.py`) | Review that single file |
 | Folder / repo path (e.g. `src/` or `.`) | Recursively find all `.py` files under it |
-| No input | Default to current working directory |
 
 Resolve the path to absolute. If the target does not exist, stop with an error.
 
@@ -32,7 +31,7 @@ Derive the **artifact name** from the target:
 - Single file → basename without extension (e.g. `user.py` → `user`)
 - Folder → folder name (e.g. `src/` → `src`, `.` → repo root name)
 
-Artifact will be written to `.github/py-<NAME>-review.md`.
+Artifact will be written to `./py-<NAME>-review.md`.
 
 ### Phase 2 — CONTEXT
 
@@ -210,7 +209,7 @@ Form a recommendation:
 
 ### Phase 6 — REPORT
 
-Create a **local** review artifact at `.github/py-<NAME>-review.md`. Do not post or publish anything.
+Create a **local** review artifact at `./py-<NAME>-review.md`. Do not post or publish anything.
 
 ```markdown
 # Python Review: <TARGET>
@@ -263,7 +262,7 @@ Decision: <PASS|WARNING|FAIL|BLOCK>
 Issues: <critical_count> critical, <high_count> high, <medium_count> medium, <low_count> low
 Validation: <pass_count>/<total_count> checks passed
 
-Artifact: .github/py-<NAME>-review.md
+Artifact: ./py-<NAME>-review.md
 
 Next steps:
   - <contextual suggestions based on decision>
