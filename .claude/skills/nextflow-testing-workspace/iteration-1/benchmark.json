@@ -1,0 +1,373 @@
+{
+  "metadata": {
+    "skill_name": "nextflow-testing",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-13T14:42:11Z",
+    "evals_run": [
+      0,
+      1,
+      2
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 52.4,
+        "tokens": 21632,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)",
+          "passed": true,
+          "evidence": "File opens with 'nextflow_process {' on line 1"
+        },
+        {
+          "text": "References correct script path modules/samtools/index/main.nf",
+          "passed": true,
+          "evidence": "Line 3: script \"modules/samtools/index/main.nf\""
+        },
+        {
+          "text": "Includes at least 2 test cases",
+          "passed": true,
+          "evidence": "Three test cases: 'Should run successfully...', 'Should produce snapshot-matching output...', 'Should preserve meta map...'"
+        },
+        {
+          "text": "Has when { process { ... } } block with tuple input syntax",
+          "passed": true,
+          "evidence": "Lines 10-18: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"
+        },
+        {
+          "text": "Asserts process.success",
+          "passed": true,
+          "evidence": "Line 21: assert process.success (also lines 41, 57)"
+        },
+        {
+          "text": "References process.out.bai output channel",
+          "passed": true,
+          "evidence": "Lines 22-24: assert process.out.bai.size() == 1, process.out.bai[0][1].endsWith, path(process.out.bai[0][1]).exists()"
+        },
+        {
+          "text": "Includes at least one snapshot assertion (snapshot(...).match())",
+          "passed": true,
+          "evidence": "Line 42: assert snapshot(process.out).match()"
+        },
+        {
+          "text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)",
+          "passed": true,
+          "evidence": "Line 15: file(\"${projectDir}/tests/data/test.sorted.bam\") \u2014 used consistently across all test cases"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 47.7,
+        "tokens": 21553,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses nextflow_workflow block",
+          "passed": true,
+          "evidence": "File opens with 'nextflow_workflow {' on line 1"
+        },
+        {
+          "text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN",
+          "passed": true,
+          "evidence": "Lines 3-4: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""
+        },
+        {
+          "text": "Has when { workflow { ... } } block with channel inputs",
+          "passed": true,
+          "evidence": "Lines 9-19: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"
+        },
+        {
+          "text": "Asserts workflow.success",
+          "passed": true,
+          "evidence": "Line 22: assert workflow.success (also lines 43, 64)"
+        },
+        {
+          "text": "Asserts on workflow.out.bam.size()",
+          "passed": true,
+          "evidence": "Line 44: assert workflow.out.bam.size() == 2"
+        },
+        {
+          "text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()",
+          "passed": true,
+          "evidence": "Lines 66-67: assert workflow.trace.tasks().size() == 2 and assert workflow.trace.succeeded().size() == 2"
+        },
+        {
+          "text": "Includes a snapshot assertion",
+          "passed": true,
+          "evidence": "Line 46: assert snapshot(workflow.out.bam).match(\"bam_outputs\")"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 81.5,
+        "tokens": 23983,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions nf-test init command",
+          "passed": true,
+          "evidence": "Lines 7-8: 'nf-test init' shown in bash block under section 1"
+        },
+        {
+          "text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings",
+          "passed": true,
+          "evidence": "Lines 33-41: config block includes testsDir, workDir, configFile, libDir, profile, withTrace, autoSort"
+        },
+        {
+          "text": "Describes tests/ directory structure with example layout",
+          "passed": true,
+          "evidence": "Lines 56-87: full directory tree under '## 3. How to Structure the tests/ Directory'"
+        },
+        {
+          "text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)",
+          "passed": true,
+          "evidence": "Lines 146-181: tests/nextflow.config with cpus, memory, time at global and per-process level (FASTQC, STAR_ALIGN, TRIMMOMATIC)"
+        },
+        {
+          "text": "All four requested topics (init, config, structure, resource limits) are addressed",
+          "passed": true,
+          "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (tests/nextflow.config resource limits) all present"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 32.5,
+        "tokens": 14608,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)",
+          "passed": true,
+          "evidence": "File opens with 'nextflow_process {' on line 1"
+        },
+        {
+          "text": "References correct script path modules/samtools/index/main.nf",
+          "passed": true,
+          "evidence": "Line 4: script \"modules/samtools/index/main.nf\""
+        },
+        {
+          "text": "Includes at least 2 test cases",
+          "passed": true,
+          "evidence": "Two test cases: 'Should index a sorted BAM file...' and 'Should produce snapshot-matching output...'"
+        },
+        {
+          "text": "Has when { process { ... } } block with tuple input syntax",
+          "passed": true,
+          "evidence": "Lines 9-16: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"
+        },
+        {
+          "text": "Asserts process.success",
+          "passed": true,
+          "evidence": "Line 21: assert process.success (also line 46)"
+        },
+        {
+          "text": "References process.out.bai output channel",
+          "passed": true,
+          "evidence": "Lines 23-26: with(process.out.bai) { assert size() == 1; assert get(0).get(1) ==~ /.*\\.bai$/ }"
+        },
+        {
+          "text": "Includes at least one snapshot assertion (snapshot(...).match())",
+          "passed": true,
+          "evidence": "Lines 48-51: snapshot(process.out.bai, process.out.versions).match()"
+        },
+        {
+          "text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)",
+          "passed": true,
+          "evidence": "Line 39: file(\"${projectDir}/tests/data/test_sorted.bam\") \u2014 used in both test cases"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8571,
+        "passed": 6,
+        "failed": 1,
+        "total": 7,
+        "time_seconds": 399.8,
+        "tokens": 14956,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses nextflow_workflow block",
+          "passed": true,
+          "evidence": "File opens with 'nextflow_workflow {' on line 1"
+        },
+        {
+          "text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN",
+          "passed": true,
+          "evidence": "Lines 4-5: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""
+        },
+        {
+          "text": "Has when { workflow { ... } } block with channel inputs",
+          "passed": true,
+          "evidence": "Lines 9-26: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"
+        },
+        {
+          "text": "Asserts workflow.success",
+          "passed": true,
+          "evidence": "Line 30: assert workflow.success (also line 53)"
+        },
+        {
+          "text": "Asserts on workflow.out.bam.size()",
+          "passed": true,
+          "evidence": "Lines 31 and 55: assert workflow.out.bam.size() == 2 and assert workflow.out.bam.size() == 1"
+        },
+        {
+          "text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()",
+          "passed": true,
+          "evidence": "Lines 33 and 56: assert workflow.trace.tasks().size() == 4 and assert workflow.trace.tasks().size() == 2"
+        },
+        {
+          "text": "Includes a snapshot assertion",
+          "passed": false,
+          "evidence": "No snapshot(...).match() call found anywhere in the file"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 79.1,
+        "tokens": 16158,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions nf-test init command",
+          "passed": true,
+          "evidence": "Lines 16-19: 'nf-test init' shown in bash block under section 1"
+        },
+        {
+          "text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings",
+          "passed": false,
+          "evidence": "Lines 32-40: config block includes testsDir, workDir, configFile, and commented-out profile \u2014 profile is not shown as an active setting, only as a comment"
+        },
+        {
+          "text": "Describes tests/ directory structure with example layout",
+          "passed": true,
+          "evidence": "Lines 54-73: directory tree under '## 3. How to Structure the tests/ Directory'"
+        },
+        {
+          "text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)",
+          "passed": true,
+          "evidence": "Lines 114-168: tests/nextflow.config with cpus and memory at global level and per withLabel blocks"
+        },
+        {
+          "text": "All four requested topics (init, config, structure, resource limits) are addressed",
+          "passed": true,
+          "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (nextflow.config resource limits) all present"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 60.5333,
+        "stddev": 18.3091,
+        "min": 47.7,
+        "max": 81.5
+      },
+      "tokens": {
+        "mean": 22389.3333,
+        "stddev": 1380.7209,
+        "min": 21553,
+        "max": 23983
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.8857,
+        "stddev": 0.103,
+        "min": 0.8,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 170.4667,
+        "stddev": 199.9706,
+        "min": 32.5,
+        "max": 399.8
+      },
+      "tokens": {
+        "mean": 15240.6667,
+        "stddev": 813.2658,
+        "min": 14608,
+        "max": 16158
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.11",
+      "time_seconds": "-109.9",
+      "tokens": "+7149"
+    }
+  },
+  "notes": []
+}

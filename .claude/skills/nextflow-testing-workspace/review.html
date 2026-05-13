@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "nextflow-testing", "runs": [{"id": "eval-0-with_skill-run-1", "prompt": "I need to write an nf-test test file for a process called SAMTOOLS_INDEX. The process is defined in modules/samtools/index/main.nf, it takes a sorted BAM file as input (a tuple with meta map and bam file) and emits a tuple with meta and a .bai index file on a channel called 'bai', plus a versions.yml on a channel called 'versions'. Write a complete nf-test test file with at least two tests: one that verifies the process runs successfully and the output file has the right extension, and one that uses snapshot testing.", "eval_id": 0, "outputs": [{"name": "main.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfcHJvY2VzcyB7CiAgICBuYW1lICJUZXN0IFByb2Nlc3MgU0FNVE9PTFNfSU5ERVgiCiAgICBzY3JpcHQgIm1vZHVsZXMvc2FtdG9vbHMvaW5kZXgvbWFpbi5uZiIKICAgIHByb2Nlc3MgIlNBTVRPT0xTX0lOREVYIgogICAgdGFnICJzYW10b29scyIKICAgIHRhZyAic2FtdG9vbHNfaW5kZXgiCiAgICB0YWcgIm1vZHVsZXMiCgogICAgdGVzdCgiU2hvdWxkIHJ1biBzdWNjZXNzZnVsbHkgYW5kIHByb2R1Y2UgYSBCQUkgaW5kZXggZmlsZSIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgcHJvY2VzcyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gWwogICAgICAgICAgICAgICAgICAgIFsgaWQ6ICd0ZXN0X3NhbXBsZScsIHNpbmdsZV9lbmQ6IGZhbHNlIF0sCiAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3Rlc3Quc29ydGVkLmJhbSIpCiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpLnNpemUoKSA9PSAxCiAgICAgICAgICAgIGFzc2VydCBwcm9jZXNzLm91dC5iYWlbMF1bMV0uZW5kc1dpdGgoIi5iYWkiKQogICAgICAgICAgICBhc3NlcnQgcGF0aChwcm9jZXNzLm91dC5iYWlbMF1bMV0pLmV4aXN0cygpCiAgICAgICAgICAgIGFzc2VydCBwcm9jZXNzLm91dC52ZXJzaW9ucyAhPSBudWxsCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBwcm9kdWNlIHNuYXBzaG90LW1hdGNoaW5nIG91dHB1dCBmb3IgYSBzb3J0ZWQgQkFNIikgewogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdC5zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5zdWNjZXNzCiAgICAgICAgICAgIGFzc2VydCBzbmFwc2hvdChwcm9jZXNzLm91dCkubWF0Y2goKQogICAgICAgIH0KICAgIH0KCiAgICB0ZXN0KCJTaG91bGQgcHJlc2VydmUgbWV0YSBtYXAgaW4gb3V0cHV0IGNoYW5uZWwiKSB7CiAgICAgICAgd2hlbiB7CiAgICAgICAgICAgIHByb2Nlc3MgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IFsKICAgICAgICAgICAgICAgICAgICBbIGlkOiAnbWV0YV9jaGVjaycsIHNpbmdsZV9lbmQ6IHRydWUsIHN0cmFuZGVkbmVzczogJ2ZvcndhcmQnIF0sCiAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3Rlc3Quc29ydGVkLmJhbSIpCiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLmlkID09ICdtZXRhX2NoZWNrJwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLnNpbmdsZV9lbmQgPT0gdHJ1ZQogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLnN0cmFuZGVkbmVzcyA9PSAnZm9yd2FyZCcKICAgICAgICB9CiAgICB9Cn0="}, {"name": "response.md", "type": "text", "content": "# nf-test for SAMTOOLS_INDEX (with skill)\n\nHere's a complete nf-test file for the `SAMTOOLS_INDEX` process, following the nextflow-testing skill patterns.\n\n## Test file: `tests/modules/samtools/index/main.nf.test`\n\nSee `main.nf.test` for the full file.\n\n## Design decisions\n\n1. **Test 1 \u2014 Explicit assertions**: Checks `process.success`, `bai` channel size == 1, `.bai` extension, file existence on disk, and `versions` not null.\n\n2. **Test 2 \u2014 Snapshot testing**: Uses `assert snapshot(process.out).match()` to snapshot all output channels. Per the skill: \"Default to `assert snapshot(process.out).match()` for file outputs\".\n\n3. **Test 3 \u2014 Meta map preservation**: Verifies that meta map fields (`id`, `single_end`, `strandedness`) pass through unchanged in the output tuple.\n\n4. **Structural patterns applied**:\n   - `nextflow_process {}` block with `tag` declarations\n   - Descriptive test names starting with \"Should\"\n   - `when { process { ... } }` / `then { }` structure\n   - `${projectDir}` references for test data (no hardcoded paths)\n   - Three focused tests, each verifying a distinct behavior"}], "grading": {"run_id": "eval-0-with_skill", "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 3: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Three test cases: 'Should run successfully...', 'Should produce snapshot-matching output...', 'Should preserve meta map...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 10-18: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also lines 41, 57)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 22-24: assert process.out.bai.size() == 1, process.out.bai[0][1].endsWith, path(process.out.bai[0][1]).exists()"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Line 42: assert snapshot(process.out).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 15: file(\"${projectDir}/tests/data/test.sorted.bam\") \u2014 used consistently across all test cases"}], "summary": {"passed": 8, "failed": 0, "total": 8, "pass_rate": 1.0}}}, {"id": "eval-0-without_skill-run-1", "prompt": "I need to write an nf-test test file for a process called SAMTOOLS_INDEX. The process is defined in modules/samtools/index/main.nf, it takes a sorted BAM file as input (a tuple with meta map and bam file) and emits a tuple with meta and a .bai index file on a channel called 'bai', plus a versions.yml on a channel called 'versions'. Write a complete nf-test test file with at least two tests: one that verifies the process runs successfully and the output file has the right extension, and one that uses snapshot testing.", "eval_id": 0, "outputs": [{"name": "main.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfcHJvY2VzcyB7CgogICAgbmFtZSAiVGVzdCBTQU1UT09MU19JTkRFWCIKICAgIHNjcmlwdCAibW9kdWxlcy9zYW10b29scy9pbmRleC9tYWluLm5mIgogICAgcHJvY2VzcyAiU0FNVE9PTFNfSU5ERVgiCgogICAgdGVzdCgiU2hvdWxkIGluZGV4IGEgc29ydGVkIEJBTSBmaWxlIGFuZCBwcm9kdWNlIGEgLmJhaSBvdXRwdXQiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdF9zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwoKICAgICAgICAgICAgd2l0aChwcm9jZXNzLm91dC5iYWkpIHsKICAgICAgICAgICAgICAgIGFzc2VydCBzaXplKCkgPT0gMQogICAgICAgICAgICAgICAgYXNzZXJ0IGdldCgwKS5nZXQoMSkgPT1+IC8uKlwuYmFpJC8KICAgICAgICAgICAgfQoKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Mub3V0LnZlcnNpb25zCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBwcm9kdWNlIHNuYXBzaG90LW1hdGNoaW5nIG91dHB1dCBmb3IgYSBzb3J0ZWQgQkFNIGZpbGUiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdF9zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwoKICAgICAgICAgICAgc25hcHNob3QoCiAgICAgICAgICAgICAgICBwcm9jZXNzLm91dC5iYWksCiAgICAgICAgICAgICAgICBwcm9jZXNzLm91dC52ZXJzaW9ucwogICAgICAgICAgICApLm1hdGNoKCkKICAgICAgICB9CiAgICB9Cn0="}, {"name": "response.md", "type": "text", "content": "# nf-test for SAMTOOLS_INDEX (baseline, no skill)\n\nHere's a complete nf-test file for the `SAMTOOLS_INDEX` process.\n\n## Test file: `tests/modules/samtools/index/main.nf.test`\n\n```groovy\nnextflow_process {\n\n    name \"Test SAMTOOLS_INDEX\"\n    script \"modules/samtools/index/main.nf\"\n    process \"SAMTOOLS_INDEX\"\n\n    test(\"Should index a sorted BAM file and produce a .bai output\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    file(\"${projectDir}/tests/data/test_sorted.bam\")\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n\n            with(process.out.bai) {\n                assert size() == 1\n                assert get(0).get(1) ==~ /.*\\.bai$/\n            }\n\n            assert process.out.versions\n        }\n    }\n\n    test(\"Should produce snapshot-matching output for a sorted BAM file\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    file(\"${projectDir}/tests/data/test_sorted.bam\")\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n\n            snapshot(\n                process.out.bai,\n                process.out.versions\n            ).match()\n        }\n    }\n}\n```\n\n## Design notes\n\n- The `when { process { ... } }` block provides inputs using the `input[0]` notation.\n- The meta map `[ id: 'test_sample', single_end: false ]` matches nf-core conventions.\n- Test 1 checks the `.bai` extension using a regex match `==~ /.*\\.bai$/`.\n- Test 2 uses `snapshot()` to capture the full output for reproducibility checking.\n- Both tests reference `${projectDir}` so paths stay portable across environments."}], "grading": {"run_id": "eval-0-without_skill", "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 4: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Two test cases: 'Should index a sorted BAM file...' and 'Should produce snapshot-matching output...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 9-16: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also line 46)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 23-26: with(process.out.bai) { assert size() == 1; assert get(0).get(1) ==~ /.*\\.bai$/ }"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Lines 48-51: snapshot(process.out.bai, process.out.versions).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 39: file(\"${projectDir}/tests/data/test_sorted.bam\") \u2014 used in both test cases"}], "summary": {"passed": 8, "failed": 0, "total": 8, "pass_rate": 1.0}}}, {"id": "samtools-index-process-test-with_skill", "prompt": "I need to write an nf-test test file for a process called SAMTOOLS_INDEX. The process is defined in modules/samtools/index/main.nf, it takes a sorted BAM file as input (a tuple with meta map and bam file) and emits a tuple with meta and a .bai index file on a channel called 'bai', plus a versions.yml on a channel called 'versions'. Write a complete nf-test test file with at least two tests: one that verifies the process runs successfully and the output file has the right extension, and one that uses snapshot testing.", "eval_id": 0, "outputs": [{"name": "main.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfcHJvY2VzcyB7CiAgICBuYW1lICJUZXN0IFByb2Nlc3MgU0FNVE9PTFNfSU5ERVgiCiAgICBzY3JpcHQgIm1vZHVsZXMvc2FtdG9vbHMvaW5kZXgvbWFpbi5uZiIKICAgIHByb2Nlc3MgIlNBTVRPT0xTX0lOREVYIgogICAgdGFnICJzYW10b29scyIKICAgIHRhZyAic2FtdG9vbHNfaW5kZXgiCiAgICB0YWcgIm1vZHVsZXMiCgogICAgdGVzdCgiU2hvdWxkIHJ1biBzdWNjZXNzZnVsbHkgYW5kIHByb2R1Y2UgYSBCQUkgaW5kZXggZmlsZSIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgcHJvY2VzcyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gWwogICAgICAgICAgICAgICAgICAgIFsgaWQ6ICd0ZXN0X3NhbXBsZScsIHNpbmdsZV9lbmQ6IGZhbHNlIF0sCiAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3Rlc3Quc29ydGVkLmJhbSIpCiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpLnNpemUoKSA9PSAxCiAgICAgICAgICAgIGFzc2VydCBwcm9jZXNzLm91dC5iYWlbMF1bMV0uZW5kc1dpdGgoIi5iYWkiKQogICAgICAgICAgICBhc3NlcnQgcGF0aChwcm9jZXNzLm91dC5iYWlbMF1bMV0pLmV4aXN0cygpCiAgICAgICAgICAgIGFzc2VydCBwcm9jZXNzLm91dC52ZXJzaW9ucyAhPSBudWxsCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBwcm9kdWNlIHNuYXBzaG90LW1hdGNoaW5nIG91dHB1dCBmb3IgYSBzb3J0ZWQgQkFNIikgewogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdC5zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5zdWNjZXNzCiAgICAgICAgICAgIGFzc2VydCBzbmFwc2hvdChwcm9jZXNzLm91dCkubWF0Y2goKQogICAgICAgIH0KICAgIH0KCiAgICB0ZXN0KCJTaG91bGQgcHJlc2VydmUgbWV0YSBtYXAgaW4gb3V0cHV0IGNoYW5uZWwiKSB7CiAgICAgICAgd2hlbiB7CiAgICAgICAgICAgIHByb2Nlc3MgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IFsKICAgICAgICAgICAgICAgICAgICBbIGlkOiAnbWV0YV9jaGVjaycsIHNpbmdsZV9lbmQ6IHRydWUsIHN0cmFuZGVkbmVzczogJ2ZvcndhcmQnIF0sCiAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3Rlc3Quc29ydGVkLmJhbSIpCiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLmlkID09ICdtZXRhX2NoZWNrJwogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLnNpbmdsZV9lbmQgPT0gdHJ1ZQogICAgICAgICAgICBhc3NlcnQgcHJvY2Vzcy5vdXQuYmFpWzBdWzBdLnN0cmFuZGVkbmVzcyA9PSAnZm9yd2FyZCcKICAgICAgICB9CiAgICB9Cn0="}, {"name": "response.md", "type": "text", "content": "# nf-test for SAMTOOLS_INDEX (with skill)\n\nHere's a complete nf-test file for the `SAMTOOLS_INDEX` process, following the nextflow-testing skill patterns.\n\n## Test file: `tests/modules/samtools/index/main.nf.test`\n\nSee `main.nf.test` for the full file.\n\n## Design decisions\n\n1. **Test 1 \u2014 Explicit assertions**: Checks `process.success`, `bai` channel size == 1, `.bai` extension, file existence on disk, and `versions` not null.\n\n2. **Test 2 \u2014 Snapshot testing**: Uses `assert snapshot(process.out).match()` to snapshot all output channels. Per the skill: \"Default to `assert snapshot(process.out).match()` for file outputs\".\n\n3. **Test 3 \u2014 Meta map preservation**: Verifies that meta map fields (`id`, `single_end`, `strandedness`) pass through unchanged in the output tuple.\n\n4. **Structural patterns applied**:\n   - `nextflow_process {}` block with `tag` declarations\n   - Descriptive test names starting with \"Should\"\n   - `when { process { ... } }` / `then { }` structure\n   - `${projectDir}` references for test data (no hardcoded paths)\n   - Three focused tests, each verifying a distinct behavior"}], "grading": {"run_id": "eval-0-with_skill", "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 3: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Three test cases: 'Should run successfully...', 'Should produce snapshot-matching output...', 'Should preserve meta map...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 10-18: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also lines 41, 57)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 22-24: assert process.out.bai.size() == 1, process.out.bai[0][1].endsWith, path(process.out.bai[0][1]).exists()"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Line 42: assert snapshot(process.out).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 15: file(\"${projectDir}/tests/data/test.sorted.bam\") \u2014 used consistently across all test cases"}]}}, {"id": "samtools-index-process-test-without_skill", "prompt": "I need to write an nf-test test file for a process called SAMTOOLS_INDEX. The process is defined in modules/samtools/index/main.nf, it takes a sorted BAM file as input (a tuple with meta map and bam file) and emits a tuple with meta and a .bai index file on a channel called 'bai', plus a versions.yml on a channel called 'versions'. Write a complete nf-test test file with at least two tests: one that verifies the process runs successfully and the output file has the right extension, and one that uses snapshot testing.", "eval_id": 0, "outputs": [{"name": "main.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfcHJvY2VzcyB7CgogICAgbmFtZSAiVGVzdCBTQU1UT09MU19JTkRFWCIKICAgIHNjcmlwdCAibW9kdWxlcy9zYW10b29scy9pbmRleC9tYWluLm5mIgogICAgcHJvY2VzcyAiU0FNVE9PTFNfSU5ERVgiCgogICAgdGVzdCgiU2hvdWxkIGluZGV4IGEgc29ydGVkIEJBTSBmaWxlIGFuZCBwcm9kdWNlIGEgLmJhaSBvdXRwdXQiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdF9zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwoKICAgICAgICAgICAgd2l0aChwcm9jZXNzLm91dC5iYWkpIHsKICAgICAgICAgICAgICAgIGFzc2VydCBzaXplKCkgPT0gMQogICAgICAgICAgICAgICAgYXNzZXJ0IGdldCgwKS5nZXQoMSkgPT1+IC8uKlwuYmFpJC8KICAgICAgICAgICAgfQoKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Mub3V0LnZlcnNpb25zCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBwcm9kdWNlIHNuYXBzaG90LW1hdGNoaW5nIG91dHB1dCBmb3IgYSBzb3J0ZWQgQkFNIGZpbGUiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICBwcm9jZXNzIHsKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICAgICAgaW5wdXRbMF0gPSBbCiAgICAgICAgICAgICAgICAgICAgWyBpZDogJ3Rlc3Rfc2FtcGxlJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvdGVzdF9zb3J0ZWQuYmFtIikKICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHByb2Nlc3Muc3VjY2VzcwoKICAgICAgICAgICAgc25hcHNob3QoCiAgICAgICAgICAgICAgICBwcm9jZXNzLm91dC5iYWksCiAgICAgICAgICAgICAgICBwcm9jZXNzLm91dC52ZXJzaW9ucwogICAgICAgICAgICApLm1hdGNoKCkKICAgICAgICB9CiAgICB9Cn0="}, {"name": "response.md", "type": "text", "content": "# nf-test for SAMTOOLS_INDEX (baseline, no skill)\n\nHere's a complete nf-test file for the `SAMTOOLS_INDEX` process.\n\n## Test file: `tests/modules/samtools/index/main.nf.test`\n\n```groovy\nnextflow_process {\n\n    name \"Test SAMTOOLS_INDEX\"\n    script \"modules/samtools/index/main.nf\"\n    process \"SAMTOOLS_INDEX\"\n\n    test(\"Should index a sorted BAM file and produce a .bai output\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    file(\"${projectDir}/tests/data/test_sorted.bam\")\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n\n            with(process.out.bai) {\n                assert size() == 1\n                assert get(0).get(1) ==~ /.*\\.bai$/\n            }\n\n            assert process.out.versions\n        }\n    }\n\n    test(\"Should produce snapshot-matching output for a sorted BAM file\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    file(\"${projectDir}/tests/data/test_sorted.bam\")\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n\n            snapshot(\n                process.out.bai,\n                process.out.versions\n            ).match()\n        }\n    }\n}\n```\n\n## Design notes\n\n- The `when { process { ... } }` block provides inputs using the `input[0]` notation.\n- The meta map `[ id: 'test_sample', single_end: false ]` matches nf-core conventions.\n- Test 1 checks the `.bai` extension using a regex match `==~ /.*\\.bai$/`.\n- Test 2 uses `snapshot()` to capture the full output for reproducibility checking.\n- Both tests reference `${projectDir}` so paths stay portable across environments."}], "grading": {"run_id": "eval-0-without_skill", "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 4: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Two test cases: 'Should index a sorted BAM file...' and 'Should produce snapshot-matching output...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 9-16: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also line 46)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 23-26: with(process.out.bai) { assert size() == 1; assert get(0).get(1) ==~ /.*\\.bai$/ }"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Lines 48-51: snapshot(process.out.bai, process.out.versions).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 39: file(\"${projectDir}/tests/data/test_sorted.bam\") \u2014 used in both test cases"}]}}, {"id": "eval-1-with_skill-run-1", "prompt": "I have a Nextflow workflow file at workflows/rnaseq.nf with a sub-workflow called RNASEQ_ALIGN that takes a channel of reads (tuples of meta + fastq files) and a genome index path, runs STAR_ALIGN and SAMTOOLS_SORT internally, and emits 'bam' and 'versions' channels. Write a complete nf-test workflow test for it. I want to test that it succeeds, that the bam channel has the right number of elements, and that the workflow runs the correct number of tasks.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# nf-test for RNASEQ_ALIGN workflow (with skill)\n\nComplete nf-test workflow test for the `RNASEQ_ALIGN` sub-workflow, following the nextflow-testing skill patterns.\n\n## Design decisions\n\n1. **Test 1 \u2014 Success baseline**: Single sample, asserts `workflow.success` only. Lightweight smoke test.\n\n2. **Test 2 \u2014 BAM channel size**: Two samples, asserts `workflow.out.bam.size() == 2`, `workflow.out.versions != null`, plus a named snapshot `(\"bam_outputs\")` for output stability.\n\n3. **Test 3 \u2014 Task count**: Single sample, uses `workflow.trace.tasks().size() == 2` and `workflow.trace.succeeded().size() == 2` to confirm exactly STAR_ALIGN + SAMTOOLS_SORT ran.\n\n## Skill patterns applied\n\n- `nextflow_workflow {}` block with `script`, `workflow`, and `tag` fields\n- `input[0]` / `input[1]` notation inside `workflow {}` block\n- `Channel.of(...)` with meta+fastq tuples for `input[0]`\n- `${projectDir}/tests/data/` for all test data paths\n- Named snapshot (`\"bam_outputs\"`) for selective output capture\n- Descriptive test names starting with \"Should\""}, {"name": "rnaseq.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfd29ya2Zsb3cgewogICAgbmFtZSAiVGVzdCBXb3JrZmxvdyBSTkFTRVFfQUxJR04iCiAgICBzY3JpcHQgIndvcmtmbG93cy9ybmFzZXEubmYiCiAgICB3b3JrZmxvdyAiUk5BU0VRX0FMSUdOIgogICAgdGFnICJybmFzZXEiCiAgICB0YWcgImFsaWdubWVudCIKCiAgICB0ZXN0KCJTaG91bGQgY29tcGxldGUgc3VjY2Vzc2Z1bGx5IHdpdGggcGFpcmVkLWVuZCByZWFkcyIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgd29ya2Zsb3cgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IENoYW5uZWwub2YoCiAgICAgICAgICAgICAgICAgICAgWyBbaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2VdLAogICAgICAgICAgICAgICAgICAgICAgWyBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMS5mYXN0cS5neiIpLAogICAgICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMi5mYXN0cS5neiIpIF0gXQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaW5wdXRbMV0gPSBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc3Rhcl9pbmRleCIpCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93LnN1Y2Nlc3MKICAgICAgICB9CiAgICB9CgogICAgdGVzdCgiU2hvdWxkIGVtaXQgdGhlIGNvcnJlY3QgbnVtYmVyIG9mIEJBTSBmaWxlcyIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgd29ya2Zsb3cgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IENoYW5uZWwub2YoCiAgICAgICAgICAgICAgICAgICAgWyBbaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2VdLAogICAgICAgICAgICAgICAgICAgICAgWyBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMS5mYXN0cS5neiIpLAogICAgICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMi5mYXN0cS5neiIpIF0gXSwKICAgICAgICAgICAgICAgICAgICBbIFtpZDogJ3NhbXBsZTInLCBzaW5nbGVfZW5kOiBmYWxzZV0sCiAgICAgICAgICAgICAgICAgICAgICBbIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IyLmZhc3RxLmd6IikgXSBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LmJhbS5zaXplKCkgPT0gMgogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LnZlcnNpb25zICE9IG51bGwKICAgICAgICAgICAgYXNzZXJ0IHNuYXBzaG90KHdvcmtmbG93Lm91dC5iYW0pLm1hdGNoKCJiYW1fb3V0cHV0cyIpCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBydW4gdGhlIGNvcnJlY3QgbnVtYmVyIG9mIHRhc2tzIikgewogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbIFtpZDogJ3NhbXBsZTEnLCBzaW5nbGVfZW5kOiBmYWxzZV0sCiAgICAgICAgICAgICAgICAgICAgICBbIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUxX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUxX1IyLmZhc3RxLmd6IikgXSBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICAvLyBSTkFTRVFfQUxJR04gcnVucyBTVEFSX0FMSUdOICsgU0FNVE9PTFNfU09SVCA9IDIgdGFza3MgcGVyIHNhbXBsZQogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2UudGFza3MoKS5zaXplKCkgPT0gMgogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2Uuc3VjY2VlZGVkKCkuc2l6ZSgpID09IDIKICAgICAgICB9CiAgICB9Cn0="}], "grading": {"run_id": "eval-1-with_skill", "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 3-4: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-19: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 22: assert workflow.success (also lines 43, 64)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Line 44: assert workflow.out.bam.size() == 2"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 66-67: assert workflow.trace.tasks().size() == 2 and assert workflow.trace.succeeded().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": true, "evidence": "Line 46: assert snapshot(workflow.out.bam).match(\"bam_outputs\")"}], "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1.0}}}, {"id": "eval-1-without_skill-run-1", "prompt": "I have a Nextflow workflow file at workflows/rnaseq.nf with a sub-workflow called RNASEQ_ALIGN that takes a channel of reads (tuples of meta + fastq files) and a genome index path, runs STAR_ALIGN and SAMTOOLS_SORT internally, and emits 'bam' and 'versions' channels. Write a complete nf-test workflow test for it. I want to test that it succeeds, that the bam channel has the right number of elements, and that the workflow runs the correct number of tasks.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# nf-test Workflow Test for RNASEQ_ALIGN (baseline, no skill)\n\nComplete nf-test file for the `RNASEQ_ALIGN` sub-workflow.\n\n## Test 1: Paired-end, two samples\n\nCovers: `workflow.success`, `workflow.out.bam.size() == 2`, `workflow.out.versions != null`, `workflow.trace.tasks().size() == 4` (STAR_ALIGN \u00d7 2 + SAMTOOLS_SORT \u00d7 2).\n\n## Test 2: Single-end, one sample\n\nValidates single-end mode: `workflow.out.bam.size() == 1`, `workflow.trace.tasks().size() == 2`.\n\n## Notes\n\n- Uses `${projectDir}/tests/data/` for all file references.\n- `workflow.trace.tasks().size()` requires `withTrace true` in `nf-test.config`.\n- Snapshot assertion omitted here but should be added for output stability."}, {"name": "rnaseq.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfd29ya2Zsb3cgewoKICAgIG5hbWUgIlRlc3QgUk5BU0VRX0FMSUdOIHdvcmtmbG93IgogICAgc2NyaXB0ICJ3b3JrZmxvd3Mvcm5hc2VxLm5mIgogICAgd29ya2Zsb3cgIlJOQVNFUV9BTElHTiIKCiAgICB0ZXN0KCJSTkFTRVFfQUxJR04gYWxpZ25zIHJlYWRzIGFuZCBlbWl0cyBCQU0gZmlsZXMiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbCiAgICAgICAgICAgICAgICAgICAgICAgIFsgaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3NhbXBsZTFfUjEuZmFzdHEuZ3oiKSwKICAgICAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3NhbXBsZTFfUjIuZmFzdHEuZ3oiKQogICAgICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAgICAgWwogICAgICAgICAgICAgICAgICAgICAgICBbIGlkOiAnc2FtcGxlMicsIHNpbmdsZV9lbmQ6IGZhbHNlIF0sCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IyLmZhc3RxLmd6IikKICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93LnN1Y2Nlc3MKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93Lm91dC5iYW0uc2l6ZSgpID09IDIKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93Lm91dC52ZXJzaW9ucyAhPSBudWxsCiAgICAgICAgICAgIGFzc2VydCB3b3JrZmxvdy50cmFjZS50YXNrcygpLnNpemUoKSA9PSA0CiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlJOQVNFUV9BTElHTiBoYW5kbGVzIHNpbmdsZS1lbmQgcmVhZHMiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbCiAgICAgICAgICAgICAgICAgICAgICAgIFsgaWQ6ICdzYW1wbGVfc2UnLCBzaW5nbGVfZW5kOiB0cnVlIF0sCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGVfc2UuZmFzdHEuZ3oiKQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlucHV0WzFdID0gZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3N0YXJfaW5kZXgiKQogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LmJhbS5zaXplKCkgPT0gMQogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2UudGFza3MoKS5zaXplKCkgPT0gMgogICAgICAgIH0KICAgIH0KfQ=="}], "grading": {"run_id": "eval-1-without_skill", "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 4-5: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-26: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 30: assert workflow.success (also line 53)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Lines 31 and 55: assert workflow.out.bam.size() == 2 and assert workflow.out.bam.size() == 1"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 33 and 56: assert workflow.trace.tasks().size() == 4 and assert workflow.trace.tasks().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": false, "evidence": "No snapshot(...).match() call found anywhere in the file"}], "summary": {"passed": 6, "failed": 1, "total": 7, "pass_rate": 0.8571}}}, {"id": "rnaseq-workflow-test-with_skill", "prompt": "I have a Nextflow workflow file at workflows/rnaseq.nf with a sub-workflow called RNASEQ_ALIGN that takes a channel of reads (tuples of meta + fastq files) and a genome index path, runs STAR_ALIGN and SAMTOOLS_SORT internally, and emits 'bam' and 'versions' channels. Write a complete nf-test workflow test for it. I want to test that it succeeds, that the bam channel has the right number of elements, and that the workflow runs the correct number of tasks.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# nf-test for RNASEQ_ALIGN workflow (with skill)\n\nComplete nf-test workflow test for the `RNASEQ_ALIGN` sub-workflow, following the nextflow-testing skill patterns.\n\n## Design decisions\n\n1. **Test 1 \u2014 Success baseline**: Single sample, asserts `workflow.success` only. Lightweight smoke test.\n\n2. **Test 2 \u2014 BAM channel size**: Two samples, asserts `workflow.out.bam.size() == 2`, `workflow.out.versions != null`, plus a named snapshot `(\"bam_outputs\")` for output stability.\n\n3. **Test 3 \u2014 Task count**: Single sample, uses `workflow.trace.tasks().size() == 2` and `workflow.trace.succeeded().size() == 2` to confirm exactly STAR_ALIGN + SAMTOOLS_SORT ran.\n\n## Skill patterns applied\n\n- `nextflow_workflow {}` block with `script`, `workflow`, and `tag` fields\n- `input[0]` / `input[1]` notation inside `workflow {}` block\n- `Channel.of(...)` with meta+fastq tuples for `input[0]`\n- `${projectDir}/tests/data/` for all test data paths\n- Named snapshot (`\"bam_outputs\"`) for selective output capture\n- Descriptive test names starting with \"Should\""}, {"name": "rnaseq.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfd29ya2Zsb3cgewogICAgbmFtZSAiVGVzdCBXb3JrZmxvdyBSTkFTRVFfQUxJR04iCiAgICBzY3JpcHQgIndvcmtmbG93cy9ybmFzZXEubmYiCiAgICB3b3JrZmxvdyAiUk5BU0VRX0FMSUdOIgogICAgdGFnICJybmFzZXEiCiAgICB0YWcgImFsaWdubWVudCIKCiAgICB0ZXN0KCJTaG91bGQgY29tcGxldGUgc3VjY2Vzc2Z1bGx5IHdpdGggcGFpcmVkLWVuZCByZWFkcyIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgd29ya2Zsb3cgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IENoYW5uZWwub2YoCiAgICAgICAgICAgICAgICAgICAgWyBbaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2VdLAogICAgICAgICAgICAgICAgICAgICAgWyBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMS5mYXN0cS5neiIpLAogICAgICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMi5mYXN0cS5neiIpIF0gXQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaW5wdXRbMV0gPSBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc3Rhcl9pbmRleCIpCiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93LnN1Y2Nlc3MKICAgICAgICB9CiAgICB9CgogICAgdGVzdCgiU2hvdWxkIGVtaXQgdGhlIGNvcnJlY3QgbnVtYmVyIG9mIEJBTSBmaWxlcyIpIHsKICAgICAgICB3aGVuIHsKICAgICAgICAgICAgd29ya2Zsb3cgewogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgICAgICBpbnB1dFswXSA9IENoYW5uZWwub2YoCiAgICAgICAgICAgICAgICAgICAgWyBbaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2VdLAogICAgICAgICAgICAgICAgICAgICAgWyBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMS5mYXN0cS5neiIpLAogICAgICAgICAgICAgICAgICAgICAgICBmaWxlKCIke3Byb2plY3REaXJ9L3Rlc3RzL2RhdGEvc2FtcGxlMV9SMi5mYXN0cS5neiIpIF0gXSwKICAgICAgICAgICAgICAgICAgICBbIFtpZDogJ3NhbXBsZTInLCBzaW5nbGVfZW5kOiBmYWxzZV0sCiAgICAgICAgICAgICAgICAgICAgICBbIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IyLmZhc3RxLmd6IikgXSBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LmJhbS5zaXplKCkgPT0gMgogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LnZlcnNpb25zICE9IG51bGwKICAgICAgICAgICAgYXNzZXJ0IHNuYXBzaG90KHdvcmtmbG93Lm91dC5iYW0pLm1hdGNoKCJiYW1fb3V0cHV0cyIpCiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlNob3VsZCBydW4gdGhlIGNvcnJlY3QgbnVtYmVyIG9mIHRhc2tzIikgewogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbIFtpZDogJ3NhbXBsZTEnLCBzaW5nbGVfZW5kOiBmYWxzZV0sCiAgICAgICAgICAgICAgICAgICAgICBbIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUxX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUxX1IyLmZhc3RxLmd6IikgXSBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICAvLyBSTkFTRVFfQUxJR04gcnVucyBTVEFSX0FMSUdOICsgU0FNVE9PTFNfU09SVCA9IDIgdGFza3MgcGVyIHNhbXBsZQogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2UudGFza3MoKS5zaXplKCkgPT0gMgogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2Uuc3VjY2VlZGVkKCkuc2l6ZSgpID09IDIKICAgICAgICB9CiAgICB9Cn0="}], "grading": {"run_id": "eval-1-with_skill", "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 3-4: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-19: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 22: assert workflow.success (also lines 43, 64)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Line 44: assert workflow.out.bam.size() == 2"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 66-67: assert workflow.trace.tasks().size() == 2 and assert workflow.trace.succeeded().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": true, "evidence": "Line 46: assert snapshot(workflow.out.bam).match(\"bam_outputs\")"}]}}, {"id": "rnaseq-workflow-test-without_skill", "prompt": "I have a Nextflow workflow file at workflows/rnaseq.nf with a sub-workflow called RNASEQ_ALIGN that takes a channel of reads (tuples of meta + fastq files) and a genome index path, runs STAR_ALIGN and SAMTOOLS_SORT internally, and emits 'bam' and 'versions' channels. Write a complete nf-test workflow test for it. I want to test that it succeeds, that the bam channel has the right number of elements, and that the workflow runs the correct number of tasks.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# nf-test Workflow Test for RNASEQ_ALIGN (baseline, no skill)\n\nComplete nf-test file for the `RNASEQ_ALIGN` sub-workflow.\n\n## Test 1: Paired-end, two samples\n\nCovers: `workflow.success`, `workflow.out.bam.size() == 2`, `workflow.out.versions != null`, `workflow.trace.tasks().size() == 4` (STAR_ALIGN \u00d7 2 + SAMTOOLS_SORT \u00d7 2).\n\n## Test 2: Single-end, one sample\n\nValidates single-end mode: `workflow.out.bam.size() == 1`, `workflow.trace.tasks().size() == 2`.\n\n## Notes\n\n- Uses `${projectDir}/tests/data/` for all file references.\n- `workflow.trace.tasks().size()` requires `withTrace true` in `nf-test.config`.\n- Snapshot assertion omitted here but should be added for output stability."}, {"name": "rnaseq.nf.test", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,bmV4dGZsb3dfd29ya2Zsb3cgewoKICAgIG5hbWUgIlRlc3QgUk5BU0VRX0FMSUdOIHdvcmtmbG93IgogICAgc2NyaXB0ICJ3b3JrZmxvd3Mvcm5hc2VxLm5mIgogICAgd29ya2Zsb3cgIlJOQVNFUV9BTElHTiIKCiAgICB0ZXN0KCJSTkFTRVFfQUxJR04gYWxpZ25zIHJlYWRzIGFuZCBlbWl0cyBCQU0gZmlsZXMiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbCiAgICAgICAgICAgICAgICAgICAgICAgIFsgaWQ6ICdzYW1wbGUxJywgc2luZ2xlX2VuZDogZmFsc2UgXSwKICAgICAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3NhbXBsZTFfUjEuZmFzdHEuZ3oiKSwKICAgICAgICAgICAgICAgICAgICAgICAgZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3NhbXBsZTFfUjIuZmFzdHEuZ3oiKQogICAgICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAgICAgWwogICAgICAgICAgICAgICAgICAgICAgICBbIGlkOiAnc2FtcGxlMicsIHNpbmdsZV9lbmQ6IGZhbHNlIF0sCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IxLmZhc3RxLmd6IiksCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGUyX1IyLmZhc3RxLmd6IikKICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpbnB1dFsxXSA9IGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zdGFyX2luZGV4IikKICAgICAgICAgICAgICAgICIiIgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVuIHsKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93LnN1Y2Nlc3MKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93Lm91dC5iYW0uc2l6ZSgpID09IDIKICAgICAgICAgICAgYXNzZXJ0IHdvcmtmbG93Lm91dC52ZXJzaW9ucyAhPSBudWxsCiAgICAgICAgICAgIGFzc2VydCB3b3JrZmxvdy50cmFjZS50YXNrcygpLnNpemUoKSA9PSA0CiAgICAgICAgfQogICAgfQoKICAgIHRlc3QoIlJOQVNFUV9BTElHTiBoYW5kbGVzIHNpbmdsZS1lbmQgcmVhZHMiKSB7CgogICAgICAgIHdoZW4gewogICAgICAgICAgICB3b3JrZmxvdyB7CiAgICAgICAgICAgICAgICAiIiIKICAgICAgICAgICAgICAgIGlucHV0WzBdID0gQ2hhbm5lbC5vZigKICAgICAgICAgICAgICAgICAgICBbCiAgICAgICAgICAgICAgICAgICAgICAgIFsgaWQ6ICdzYW1wbGVfc2UnLCBzaW5nbGVfZW5kOiB0cnVlIF0sCiAgICAgICAgICAgICAgICAgICAgICAgIGZpbGUoIiR7cHJvamVjdERpcn0vdGVzdHMvZGF0YS9zYW1wbGVfc2UuZmFzdHEuZ3oiKQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlucHV0WzFdID0gZmlsZSgiJHtwcm9qZWN0RGlyfS90ZXN0cy9kYXRhL3N0YXJfaW5kZXgiKQogICAgICAgICAgICAgICAgIiIiCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHRoZW4gewogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cuc3VjY2VzcwogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cub3V0LmJhbS5zaXplKCkgPT0gMQogICAgICAgICAgICBhc3NlcnQgd29ya2Zsb3cudHJhY2UudGFza3MoKS5zaXplKCkgPT0gMgogICAgICAgIH0KICAgIH0KfQ=="}], "grading": {"run_id": "eval-1-without_skill", "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 4-5: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-26: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 30: assert workflow.success (also line 53)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Lines 31 and 55: assert workflow.out.bam.size() == 2 and assert workflow.out.bam.size() == 1"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 33 and 56: assert workflow.trace.tasks().size() == 4 and assert workflow.trace.tasks().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": false, "evidence": "No snapshot(...).match() call found anywhere in the file"}]}}, {"id": "eval-2-with_skill-run-1", "prompt": "I'm setting up nf-test for the first time in my Nextflow project. Walk me through: (1) initializing nf-test, (2) what goes in nf-test.config, (3) how to structure the tests/ directory, and (4) how to configure a tests/nextflow.config to limit CPU/memory during tests. Give me concrete examples of each.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Setting Up nf-test for the First Time\n\n## 1. Initializing nf-test\n\nRun once from your project root:\n\n```bash\nnf-test init\n```\n\nThis creates `nf-test.config` at the project root and sets up the `tests/` directory. After that, generate test scaffolds for existing code:\n\n```bash\n# For an individual process\nnf-test generate process modules/fastqc/main.nf\n\n# For a sub-workflow\nnf-test generate workflow workflows/alignment.nf\n\n# For the full pipeline\nnf-test generate pipeline main.nf\n```\n\nThese scaffolds give you the correct block structure \u2014 you still fill in inputs and assertions.\n\n---\n\n## 2. What Goes in nf-test.config\n\n`nf-test.config` lives at the project root. Here is a fully annotated example:\n\n```groovy\nconfig {\n    testsDir   \"tests\"                    // where .nf.test files live\n    workDir    \".nf-test\"                 // working directory for test artefacts\n    configFile \"tests/nextflow.config\"    // test-specific Nextflow config (limits CPU/memory)\n    libDir     \"tests/lib\"                // shared Groovy helpers for tests\n    profile    \"docker\"                   // default container profile\n    withTrace  true                       // enable tracing (required for trace assertions)\n    autoSort   true                       // sort channels for stable snapshots\n}\n```\n\nKey points:\n- `configFile` wires in `tests/nextflow.config` automatically \u2014 no need to pass `-c` on the CLI.\n- `profile` must match your container backend (`docker`, `singularity`, or `conda`). Check your main `nextflow.config` profiles first.\n- `withTrace true` is required if you plan to use `workflow.trace.tasks()` assertions.\n- Commit this file as part of your project's test infrastructure.\n\n---\n\n## 3. How to Structure the tests/ Directory\n\nMirror your pipeline's module layout inside `tests/`:\n\n```\nproject/\n\u251c\u2500\u2500 main.nf\n\u251c\u2500\u2500 nf-test.config\n\u251c\u2500\u2500 modules/\n\u2502   \u251c\u2500\u2500 fastqc/\n\u2502   \u2502   \u2514\u2500\u2500 main.nf\n\u2502   \u2514\u2500\u2500 trimmomatic/\n\u2502       \u2514\u2500\u2500 main.nf\n\u251c\u2500\u2500 workflows/\n\u2502   \u2514\u2500\u2500 alignment.nf\n\u2514\u2500\u2500 tests/\n    \u251c\u2500\u2500 nextflow.config                  # resource limits for test runs\n    \u251c\u2500\u2500 lib/                             # shared Groovy helpers (optional)\n    \u251c\u2500\u2500 data/                            # small test fixtures\n    \u2502   \u251c\u2500\u2500 samplesheet.csv\n    \u2502   \u251c\u2500\u2500 sample_R1.fastq.gz\n    \u2502   \u2514\u2500\u2500 sample_R2.fastq.gz\n    \u251c\u2500\u2500 main.nf.test                     # pipeline-level test\n    \u251c\u2500\u2500 main.nf.test.snap                # snapshot oracle \u2014 commit this\n    \u251c\u2500\u2500 modules/\n    \u2502   \u251c\u2500\u2500 fastqc/\n    \u2502   \u2502   \u251c\u2500\u2500 main.nf.test\n    \u2502   \u2502   \u2514\u2500\u2500 main.nf.test.snap\n    \u2502   \u2514\u2500\u2500 trimmomatic/\n    \u2502       \u251c\u2500\u2500 main.nf.test\n    \u2502       \u2514\u2500\u2500 main.nf.test.snap\n    \u2514\u2500\u2500 workflows/\n        \u2514\u2500\u2500 alignment/\n            \u251c\u2500\u2500 main.nf.test\n            \u2514\u2500\u2500 main.nf.test.snap\n```\n\nRules:\n- Test files use the `.nf.test` extension.\n- Snapshot files (`.nf.test.snap`) are created on the first test run \u2014 commit them. They are your test oracle.\n- Keep test data small. Large fixtures slow CI and obscure failures.\n- Always use `${projectDir}` to reference test data paths, never absolute paths.\n\nExample process test file:\n\n```groovy\n// tests/modules/fastqc/main.nf.test\nnextflow_process {\n    name \"Test Process FASTQC\"\n    script \"modules/fastqc/main.nf\"\n    process \"FASTQC\"\n    tag \"fastqc\"\n    tag \"modules\"\n\n    test(\"Should produce html and zip outputs for paired-end reads\") {\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    [ file(\"${projectDir}/tests/data/sample_R1.fastq.gz\"),\n                      file(\"${projectDir}/tests/data/sample_R2.fastq.gz\") ]\n                ]\n                \"\"\"\n            }\n        }\n        then {\n            assert process.success\n            assert snapshot(process.out).match()\n        }\n    }\n\n    test(\"Should fail gracefully with missing input file\") {\n        when {\n            process {\n                \"\"\"\n                input[0] = [ [id: 'bad'], file(\"nonexistent.fastq.gz\") ]\n                \"\"\"\n            }\n        }\n        then {\n            assert process.failed\n        }\n    }\n}\n```\n\n---\n\n## 4. Configuring tests/nextflow.config to Limit CPU/Memory\n\n`tests/nextflow.config` overrides resource settings so tests don't request excessive CPU/memory on developer machines or in CI:\n\n```groovy\n// tests/nextflow.config\n\nprocess {\n    // Global defaults for all processes during tests\n    cpus   = 1\n    memory = \"2.GB\"\n    time   = \"30.min\"\n\n    // Per-process overrides where a tool needs slightly more\n    withName: \"FASTQC\" {\n        cpus   = 1\n        memory = \"1.GB\"\n        ext.args = \"--quiet\"\n    }\n\n    withName: \"STAR_ALIGN\" {\n        cpus   = 2\n        memory = \"4.GB\"\n        time   = \"1.h\"\n    }\n\n    withName: \"TRIMMOMATIC\" {\n        cpus   = 1\n        memory = \"2.GB\"\n    }\n}\n\n// Fail immediately on error \u2014 do not retry during tests\nprocess.errorStrategy = \"terminate\"\n\n// Hard ceiling so no process can accidentally exceed test limits\nparams {\n    max_cpus   = 2\n    max_memory = \"8.GB\"\n    max_time   = \"2.h\"\n}\n```\n\nThis file is picked up automatically via `configFile` in `nf-test.config` \u2014 no manual `-c` flag needed.\n\n---\n\n## Putting It All Together\n\n```bash\n# 1. Initialize (one-time)\nnf-test init\n\n# 2. Generate a test scaffold\nnf-test generate process modules/fastqc/main.nf\n\n# 3. Fill in inputs and assertions in the generated .nf.test file\n\n# 4. Run for the first time \u2014 creates the snapshot file\nnf-test test tests/modules/fastqc/main.nf.test\n\n# 5. Commit both test file and snapshot\ngit add tests/modules/fastqc/main.nf.test tests/modules/fastqc/main.nf.test.snap\n\n# 6. Run all tests\nnf-test test .\n\n# 7. After intentional pipeline changes, regenerate snapshots\nnf-test test tests/modules/fastqc/main.nf.test --update-snapshot\n```\n\nKey reminders: commit `.nf.test.snap` files, match `profile` to your container backend, keep test fixtures tiny, and set `errorStrategy = \"terminate\"` so failures are immediately visible."}], "grading": {"run_id": "eval-2-with_skill", "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 7-8: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": true, "evidence": "Lines 33-41: config block includes testsDir, workDir, configFile, libDir, profile, withTrace, autoSort"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 56-87: full directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 146-181: tests/nextflow.config with cpus, memory, time at global and per-process level (FASTQC, STAR_ALIGN, TRIMMOMATIC)"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (tests/nextflow.config resource limits) all present"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-2-without_skill-run-1", "prompt": "I'm setting up nf-test for the first time in my Nextflow project. Walk me through: (1) initializing nf-test, (2) what goes in nf-test.config, (3) how to structure the tests/ directory, and (4) how to configure a tests/nextflow.config to limit CPU/memory during tests. Give me concrete examples of each.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Setting Up nf-test for the First Time\n\n## 1. Initializing nf-test\n\n**Install the binary:**\n\n```bash\ncurl -fsSL https://get.nf-test.com | bash\n# or via conda\nmamba install -c bioconda nf-test\nnf-test --version\n```\n\n**Initialize in your project root:**\n\n```bash\ncd /path/to/your/nextflow-project\nnf-test init\n```\n\nThis creates `nf-test.config` and the `tests/` directory. You can also scaffold test stubs:\n\n```bash\nnf-test generate process modules/local/fastqc/main.nf\nnf-test generate workflow main.nf\n```\n\n---\n\n## 2. What Goes in nf-test.config\n\n```groovy\nconfig {\n    testsDir   \"tests\"\n    workDir    \".nf-test\"\n    configFile \"tests/nextflow.config\"\n    // profile \"test\"          // optional: activate a Nextflow profile\n    // timeout 600             // seconds per test (default 3600)\n    // snapshotMode \"never\"    // \"never\" | \"always\" | \"ask\"\n}\n```\n\n| Field | Purpose |\n|---|---|\n| `testsDir` | Where nf-test looks for `.nf.test` files |\n| `workDir` | Scratch space for test execution |\n| `configFile` | Nextflow config applied to every test run |\n| `timeout` | Max seconds per test before it is killed |\n\n---\n\n## 3. How to Structure the tests/ Directory\n\n**Centralized layout** (mirror the source tree):\n\n```\ntests/\n\u251c\u2500\u2500 nextflow.config\n\u251c\u2500\u2500 data/\n\u2502   \u2514\u2500\u2500 reads/\n\u2502       \u251c\u2500\u2500 sample1_R1.fastq.gz\n\u2502       \u2514\u2500\u2500 sample1_R2.fastq.gz\n\u251c\u2500\u2500 modules/\n\u2502   \u2514\u2500\u2500 local/\n\u2502       \u2514\u2500\u2500 fastqc/\n\u2502           \u2514\u2500\u2500 main.nf.test\n\u251c\u2500\u2500 subworkflows/\n\u2502   \u2514\u2500\u2500 local/\n\u2502       \u2514\u2500\u2500 align_and_sort/\n\u2502           \u2514\u2500\u2500 main.nf.test\n\u2514\u2500\u2500 workflows/\n    \u2514\u2500\u2500 main.nf.test\n```\n\n**Example process test** (`tests/modules/local/fastqc/main.nf.test`):\n\n```groovy\nnextflow_process {\n\n    name \"Test FASTQC process\"\n    script \"modules/local/fastqc/main.nf\"\n    process \"FASTQC\"\n\n    test(\"Should run FastQC on paired-end reads\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'sample1', single_end: false ],\n                    [\n                        file(\"${projectDir}/tests/data/reads/sample1_R1.fastq.gz\"),\n                        file(\"${projectDir}/tests/data/reads/sample1_R2.fastq.gz\")\n                    ]\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n            assert process.out.html.size() == 1\n            assert process.out.zip.size() == 1\n            assert snapshot(process.out).match()\n        }\n    }\n}\n```\n\n---\n\n## 4. tests/nextflow.config to Limit CPU/Memory\n\n```groovy\n// tests/nextflow.config \u2014 resource limits for nf-test runs\n\nprocess {\n    resourceLimits = [\n        cpus:   4,\n        memory: '8.GB',\n        time:   '1.h'\n    ]\n\n    cpus   = 1\n    memory = '2.GB'\n    time   = '30.m'\n\n    withLabel: 'process_single' {\n        cpus   = 1\n        memory = '1.GB'\n        time   = '10.m'\n    }\n\n    withLabel: 'process_low' {\n        cpus   = 2\n        memory = '2.GB'\n        time   = '20.m'\n    }\n\n    withLabel: 'process_medium' {\n        cpus   = 2\n        memory = '4.GB'\n        time   = '30.m'\n    }\n\n    withLabel: 'process_high' {\n        cpus   = 4\n        memory = '8.GB'\n        time   = '1.h'\n    }\n}\n\nexecutor {\n    name   = 'local'\n    cpus   = 4\n    memory = '8.GB'\n}\n\ndocker.enabled      = false\nsingularity.enabled = false\nconda.enabled       = false\n\nparams {\n    max_cpus   = 4\n    max_memory = '8.GB'\n    max_time   = '1.h'\n}\n```\n\n## Running Tests\n\n```bash\nnf-test test                                              # run all tests\nnf-test test tests/modules/local/fastqc/main.nf.test     # single file\nnf-test test --update-snapshot                           # accept new snapshots\nnf-test test --verbose                                   # show Nextflow output\n```\n\nAdd `.nf-test/` to `.gitignore` but **commit snapshot files** (`.snap`) so regressions are caught in CI."}], "grading": {"run_id": "eval-2-without_skill", "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 16-19: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": false, "evidence": "Lines 32-40: config block includes testsDir, workDir, configFile, and commented-out profile \u2014 profile is not shown as an active setting, only as a comment"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 54-73: directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 114-168: tests/nextflow.config with cpus and memory at global level and per withLabel blocks"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (nextflow.config resource limits) all present"}], "summary": {"passed": 4, "failed": 1, "total": 5, "pass_rate": 0.8}}}, {"id": "nftest-setup-guide-with_skill", "prompt": "I'm setting up nf-test for the first time in my Nextflow project. Walk me through: (1) initializing nf-test, (2) what goes in nf-test.config, (3) how to structure the tests/ directory, and (4) how to configure a tests/nextflow.config to limit CPU/memory during tests. Give me concrete examples of each.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Setting Up nf-test for the First Time\n\n## 1. Initializing nf-test\n\nRun once from your project root:\n\n```bash\nnf-test init\n```\n\nThis creates `nf-test.config` at the project root and sets up the `tests/` directory. After that, generate test scaffolds for existing code:\n\n```bash\n# For an individual process\nnf-test generate process modules/fastqc/main.nf\n\n# For a sub-workflow\nnf-test generate workflow workflows/alignment.nf\n\n# For the full pipeline\nnf-test generate pipeline main.nf\n```\n\nThese scaffolds give you the correct block structure \u2014 you still fill in inputs and assertions.\n\n---\n\n## 2. What Goes in nf-test.config\n\n`nf-test.config` lives at the project root. Here is a fully annotated example:\n\n```groovy\nconfig {\n    testsDir   \"tests\"                    // where .nf.test files live\n    workDir    \".nf-test\"                 // working directory for test artefacts\n    configFile \"tests/nextflow.config\"    // test-specific Nextflow config (limits CPU/memory)\n    libDir     \"tests/lib\"                // shared Groovy helpers for tests\n    profile    \"docker\"                   // default container profile\n    withTrace  true                       // enable tracing (required for trace assertions)\n    autoSort   true                       // sort channels for stable snapshots\n}\n```\n\nKey points:\n- `configFile` wires in `tests/nextflow.config` automatically \u2014 no need to pass `-c` on the CLI.\n- `profile` must match your container backend (`docker`, `singularity`, or `conda`). Check your main `nextflow.config` profiles first.\n- `withTrace true` is required if you plan to use `workflow.trace.tasks()` assertions.\n- Commit this file as part of your project's test infrastructure.\n\n---\n\n## 3. How to Structure the tests/ Directory\n\nMirror your pipeline's module layout inside `tests/`:\n\n```\nproject/\n\u251c\u2500\u2500 main.nf\n\u251c\u2500\u2500 nf-test.config\n\u251c\u2500\u2500 modules/\n\u2502   \u251c\u2500\u2500 fastqc/\n\u2502   \u2502   \u2514\u2500\u2500 main.nf\n\u2502   \u2514\u2500\u2500 trimmomatic/\n\u2502       \u2514\u2500\u2500 main.nf\n\u251c\u2500\u2500 workflows/\n\u2502   \u2514\u2500\u2500 alignment.nf\n\u2514\u2500\u2500 tests/\n    \u251c\u2500\u2500 nextflow.config                  # resource limits for test runs\n    \u251c\u2500\u2500 lib/                             # shared Groovy helpers (optional)\n    \u251c\u2500\u2500 data/                            # small test fixtures\n    \u2502   \u251c\u2500\u2500 samplesheet.csv\n    \u2502   \u251c\u2500\u2500 sample_R1.fastq.gz\n    \u2502   \u2514\u2500\u2500 sample_R2.fastq.gz\n    \u251c\u2500\u2500 main.nf.test                     # pipeline-level test\n    \u251c\u2500\u2500 main.nf.test.snap                # snapshot oracle \u2014 commit this\n    \u251c\u2500\u2500 modules/\n    \u2502   \u251c\u2500\u2500 fastqc/\n    \u2502   \u2502   \u251c\u2500\u2500 main.nf.test\n    \u2502   \u2502   \u2514\u2500\u2500 main.nf.test.snap\n    \u2502   \u2514\u2500\u2500 trimmomatic/\n    \u2502       \u251c\u2500\u2500 main.nf.test\n    \u2502       \u2514\u2500\u2500 main.nf.test.snap\n    \u2514\u2500\u2500 workflows/\n        \u2514\u2500\u2500 alignment/\n            \u251c\u2500\u2500 main.nf.test\n            \u2514\u2500\u2500 main.nf.test.snap\n```\n\nRules:\n- Test files use the `.nf.test` extension.\n- Snapshot files (`.nf.test.snap`) are created on the first test run \u2014 commit them. They are your test oracle.\n- Keep test data small. Large fixtures slow CI and obscure failures.\n- Always use `${projectDir}` to reference test data paths, never absolute paths.\n\nExample process test file:\n\n```groovy\n// tests/modules/fastqc/main.nf.test\nnextflow_process {\n    name \"Test Process FASTQC\"\n    script \"modules/fastqc/main.nf\"\n    process \"FASTQC\"\n    tag \"fastqc\"\n    tag \"modules\"\n\n    test(\"Should produce html and zip outputs for paired-end reads\") {\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'test_sample', single_end: false ],\n                    [ file(\"${projectDir}/tests/data/sample_R1.fastq.gz\"),\n                      file(\"${projectDir}/tests/data/sample_R2.fastq.gz\") ]\n                ]\n                \"\"\"\n            }\n        }\n        then {\n            assert process.success\n            assert snapshot(process.out).match()\n        }\n    }\n\n    test(\"Should fail gracefully with missing input file\") {\n        when {\n            process {\n                \"\"\"\n                input[0] = [ [id: 'bad'], file(\"nonexistent.fastq.gz\") ]\n                \"\"\"\n            }\n        }\n        then {\n            assert process.failed\n        }\n    }\n}\n```\n\n---\n\n## 4. Configuring tests/nextflow.config to Limit CPU/Memory\n\n`tests/nextflow.config` overrides resource settings so tests don't request excessive CPU/memory on developer machines or in CI:\n\n```groovy\n// tests/nextflow.config\n\nprocess {\n    // Global defaults for all processes during tests\n    cpus   = 1\n    memory = \"2.GB\"\n    time   = \"30.min\"\n\n    // Per-process overrides where a tool needs slightly more\n    withName: \"FASTQC\" {\n        cpus   = 1\n        memory = \"1.GB\"\n        ext.args = \"--quiet\"\n    }\n\n    withName: \"STAR_ALIGN\" {\n        cpus   = 2\n        memory = \"4.GB\"\n        time   = \"1.h\"\n    }\n\n    withName: \"TRIMMOMATIC\" {\n        cpus   = 1\n        memory = \"2.GB\"\n    }\n}\n\n// Fail immediately on error \u2014 do not retry during tests\nprocess.errorStrategy = \"terminate\"\n\n// Hard ceiling so no process can accidentally exceed test limits\nparams {\n    max_cpus   = 2\n    max_memory = \"8.GB\"\n    max_time   = \"2.h\"\n}\n```\n\nThis file is picked up automatically via `configFile` in `nf-test.config` \u2014 no manual `-c` flag needed.\n\n---\n\n## Putting It All Together\n\n```bash\n# 1. Initialize (one-time)\nnf-test init\n\n# 2. Generate a test scaffold\nnf-test generate process modules/fastqc/main.nf\n\n# 3. Fill in inputs and assertions in the generated .nf.test file\n\n# 4. Run for the first time \u2014 creates the snapshot file\nnf-test test tests/modules/fastqc/main.nf.test\n\n# 5. Commit both test file and snapshot\ngit add tests/modules/fastqc/main.nf.test tests/modules/fastqc/main.nf.test.snap\n\n# 6. Run all tests\nnf-test test .\n\n# 7. After intentional pipeline changes, regenerate snapshots\nnf-test test tests/modules/fastqc/main.nf.test --update-snapshot\n```\n\nKey reminders: commit `.nf.test.snap` files, match `profile` to your container backend, keep test fixtures tiny, and set `errorStrategy = \"terminate\"` so failures are immediately visible."}], "grading": {"run_id": "eval-2-with_skill", "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 7-8: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": true, "evidence": "Lines 33-41: config block includes testsDir, workDir, configFile, libDir, profile, withTrace, autoSort"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 56-87: full directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 146-181: tests/nextflow.config with cpus, memory, time at global and per-process level (FASTQC, STAR_ALIGN, TRIMMOMATIC)"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (tests/nextflow.config resource limits) all present"}]}}, {"id": "nftest-setup-guide-without_skill", "prompt": "I'm setting up nf-test for the first time in my Nextflow project. Walk me through: (1) initializing nf-test, (2) what goes in nf-test.config, (3) how to structure the tests/ directory, and (4) how to configure a tests/nextflow.config to limit CPU/memory during tests. Give me concrete examples of each.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Setting Up nf-test for the First Time\n\n## 1. Initializing nf-test\n\n**Install the binary:**\n\n```bash\ncurl -fsSL https://get.nf-test.com | bash\n# or via conda\nmamba install -c bioconda nf-test\nnf-test --version\n```\n\n**Initialize in your project root:**\n\n```bash\ncd /path/to/your/nextflow-project\nnf-test init\n```\n\nThis creates `nf-test.config` and the `tests/` directory. You can also scaffold test stubs:\n\n```bash\nnf-test generate process modules/local/fastqc/main.nf\nnf-test generate workflow main.nf\n```\n\n---\n\n## 2. What Goes in nf-test.config\n\n```groovy\nconfig {\n    testsDir   \"tests\"\n    workDir    \".nf-test\"\n    configFile \"tests/nextflow.config\"\n    // profile \"test\"          // optional: activate a Nextflow profile\n    // timeout 600             // seconds per test (default 3600)\n    // snapshotMode \"never\"    // \"never\" | \"always\" | \"ask\"\n}\n```\n\n| Field | Purpose |\n|---|---|\n| `testsDir` | Where nf-test looks for `.nf.test` files |\n| `workDir` | Scratch space for test execution |\n| `configFile` | Nextflow config applied to every test run |\n| `timeout` | Max seconds per test before it is killed |\n\n---\n\n## 3. How to Structure the tests/ Directory\n\n**Centralized layout** (mirror the source tree):\n\n```\ntests/\n\u251c\u2500\u2500 nextflow.config\n\u251c\u2500\u2500 data/\n\u2502   \u2514\u2500\u2500 reads/\n\u2502       \u251c\u2500\u2500 sample1_R1.fastq.gz\n\u2502       \u2514\u2500\u2500 sample1_R2.fastq.gz\n\u251c\u2500\u2500 modules/\n\u2502   \u2514\u2500\u2500 local/\n\u2502       \u2514\u2500\u2500 fastqc/\n\u2502           \u2514\u2500\u2500 main.nf.test\n\u251c\u2500\u2500 subworkflows/\n\u2502   \u2514\u2500\u2500 local/\n\u2502       \u2514\u2500\u2500 align_and_sort/\n\u2502           \u2514\u2500\u2500 main.nf.test\n\u2514\u2500\u2500 workflows/\n    \u2514\u2500\u2500 main.nf.test\n```\n\n**Example process test** (`tests/modules/local/fastqc/main.nf.test`):\n\n```groovy\nnextflow_process {\n\n    name \"Test FASTQC process\"\n    script \"modules/local/fastqc/main.nf\"\n    process \"FASTQC\"\n\n    test(\"Should run FastQC on paired-end reads\") {\n\n        when {\n            process {\n                \"\"\"\n                input[0] = [\n                    [ id: 'sample1', single_end: false ],\n                    [\n                        file(\"${projectDir}/tests/data/reads/sample1_R1.fastq.gz\"),\n                        file(\"${projectDir}/tests/data/reads/sample1_R2.fastq.gz\")\n                    ]\n                ]\n                \"\"\"\n            }\n        }\n\n        then {\n            assert process.success\n            assert process.out.html.size() == 1\n            assert process.out.zip.size() == 1\n            assert snapshot(process.out).match()\n        }\n    }\n}\n```\n\n---\n\n## 4. tests/nextflow.config to Limit CPU/Memory\n\n```groovy\n// tests/nextflow.config \u2014 resource limits for nf-test runs\n\nprocess {\n    resourceLimits = [\n        cpus:   4,\n        memory: '8.GB',\n        time:   '1.h'\n    ]\n\n    cpus   = 1\n    memory = '2.GB'\n    time   = '30.m'\n\n    withLabel: 'process_single' {\n        cpus   = 1\n        memory = '1.GB'\n        time   = '10.m'\n    }\n\n    withLabel: 'process_low' {\n        cpus   = 2\n        memory = '2.GB'\n        time   = '20.m'\n    }\n\n    withLabel: 'process_medium' {\n        cpus   = 2\n        memory = '4.GB'\n        time   = '30.m'\n    }\n\n    withLabel: 'process_high' {\n        cpus   = 4\n        memory = '8.GB'\n        time   = '1.h'\n    }\n}\n\nexecutor {\n    name   = 'local'\n    cpus   = 4\n    memory = '8.GB'\n}\n\ndocker.enabled      = false\nsingularity.enabled = false\nconda.enabled       = false\n\nparams {\n    max_cpus   = 4\n    max_memory = '8.GB'\n    max_time   = '1.h'\n}\n```\n\n## Running Tests\n\n```bash\nnf-test test                                              # run all tests\nnf-test test tests/modules/local/fastqc/main.nf.test     # single file\nnf-test test --update-snapshot                           # accept new snapshots\nnf-test test --verbose                                   # show Nextflow output\n```\n\nAdd `.nf-test/` to `.gitignore` but **commit snapshot files** (`.snap`) so regressions are caught in CI."}], "grading": {"run_id": "eval-2-without_skill", "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 16-19: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": false, "evidence": "Lines 32-40: config block includes testsDir, workDir, configFile, and commented-out profile \u2014 profile is not shown as an active setting, only as a comment"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 54-73: directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 114-168: tests/nextflow.config with cpus and memory at global level and per withLabel blocks"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (nextflow.config resource limits) all present"}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "nextflow-testing", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-13T14:42:11Z", "evals_run": [0, 1, 2], "runs_per_configuration": 3}, "runs": [{"eval_id": 0, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8, "time_seconds": 52.4, "tokens": 21632, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 3: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Three test cases: 'Should run successfully...', 'Should produce snapshot-matching output...', 'Should preserve meta map...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 10-18: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also lines 41, 57)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 22-24: assert process.out.bai.size() == 1, process.out.bai[0][1].endsWith, path(process.out.bai[0][1]).exists()"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Line 42: assert snapshot(process.out).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 15: file(\"${projectDir}/tests/data/test.sorted.bam\") \u2014 used consistently across all test cases"}], "notes": []}, {"eval_id": 1, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": 47.7, "tokens": 21553, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 3-4: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-19: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 22: assert workflow.success (also lines 43, 64)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Line 44: assert workflow.out.bam.size() == 2"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 66-67: assert workflow.trace.tasks().size() == 2 and assert workflow.trace.succeeded().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": true, "evidence": "Line 46: assert snapshot(workflow.out.bam).match(\"bam_outputs\")"}], "notes": []}, {"eval_id": 2, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 81.5, "tokens": 23983, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 7-8: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": true, "evidence": "Lines 33-41: config block includes testsDir, workDir, configFile, libDir, profile, withTrace, autoSort"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 56-87: full directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 146-181: tests/nextflow.config with cpus, memory, time at global and per-process level (FASTQC, STAR_ALIGN, TRIMMOMATIC)"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (tests/nextflow.config resource limits) all present"}], "notes": []}, {"eval_id": 0, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8, "time_seconds": 32.5, "tokens": 14608, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)", "passed": true, "evidence": "File opens with 'nextflow_process {' on line 1"}, {"text": "References correct script path modules/samtools/index/main.nf", "passed": true, "evidence": "Line 4: script \"modules/samtools/index/main.nf\""}, {"text": "Includes at least 2 test cases", "passed": true, "evidence": "Two test cases: 'Should index a sorted BAM file...' and 'Should produce snapshot-matching output...'"}, {"text": "Has when { process { ... } } block with tuple input syntax", "passed": true, "evidence": "Lines 9-16: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"}, {"text": "Asserts process.success", "passed": true, "evidence": "Line 21: assert process.success (also line 46)"}, {"text": "References process.out.bai output channel", "passed": true, "evidence": "Lines 23-26: with(process.out.bai) { assert size() == 1; assert get(0).get(1) ==~ /.*\\.bai$/ }"}, {"text": "Includes at least one snapshot assertion (snapshot(...).match())", "passed": true, "evidence": "Lines 48-51: snapshot(process.out.bai, process.out.versions).match()"}, {"text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)", "passed": true, "evidence": "Line 39: file(\"${projectDir}/tests/data/test_sorted.bam\") \u2014 used in both test cases"}], "notes": []}, {"eval_id": 1, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8571, "passed": 6, "failed": 1, "total": 7, "time_seconds": 399.8, "tokens": 14956, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Uses nextflow_workflow block", "passed": true, "evidence": "File opens with 'nextflow_workflow {' on line 1"}, {"text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN", "passed": true, "evidence": "Lines 4-5: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""}, {"text": "Has when { workflow { ... } } block with channel inputs", "passed": true, "evidence": "Lines 9-26: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"}, {"text": "Asserts workflow.success", "passed": true, "evidence": "Line 30: assert workflow.success (also line 53)"}, {"text": "Asserts on workflow.out.bam.size()", "passed": true, "evidence": "Lines 31 and 55: assert workflow.out.bam.size() == 2 and assert workflow.out.bam.size() == 1"}, {"text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()", "passed": true, "evidence": "Lines 33 and 56: assert workflow.trace.tasks().size() == 4 and assert workflow.trace.tasks().size() == 2"}, {"text": "Includes a snapshot assertion", "passed": false, "evidence": "No snapshot(...).match() call found anywhere in the file"}], "notes": []}, {"eval_id": 2, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8, "passed": 4, "failed": 1, "total": 5, "time_seconds": 79.1, "tokens": 16158, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Mentions nf-test init command", "passed": true, "evidence": "Lines 16-19: 'nf-test init' shown in bash block under section 1"}, {"text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings", "passed": false, "evidence": "Lines 32-40: config block includes testsDir, workDir, configFile, and commented-out profile \u2014 profile is not shown as an active setting, only as a comment"}, {"text": "Describes tests/ directory structure with example layout", "passed": true, "evidence": "Lines 54-73: directory tree under '## 3. How to Structure the tests/ Directory'"}, {"text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)", "passed": true, "evidence": "Lines 114-168: tests/nextflow.config with cpus and memory at global level and per withLabel blocks"}, {"text": "All four requested topics (init, config, structure, resource limits) are addressed", "passed": true, "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (nextflow.config resource limits) all present"}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 60.5333, "stddev": 18.3091, "min": 47.7, "max": 81.5}, "tokens": {"mean": 22389.3333, "stddev": 1380.7209, "min": 21553, "max": 23983}}, "without_skill": {"pass_rate": {"mean": 0.8857, "stddev": 0.103, "min": 0.8, "max": 1.0}, "time_seconds": {"mean": 170.4667, "stddev": 199.9706, "min": 32.5, "max": 399.8}, "tokens": {"mean": 15240.6667, "stddev": 813.2658, "min": 14608, "max": 16158}}, "delta": {"pass_rate": "+0.11", "time_seconds": "-109.9", "tokens": "+7149"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

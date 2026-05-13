@@ -1,7 +1,6 @@
 ---
 name: python-patterns
 description: Pythonic idioms, PEP 8 standards, type hints, and best practices for building robust, efficient, and maintainable Python applications.
-origin: ECC
 ---
 
 # Python Development Patterns
@@ -500,6 +499,33 @@ async def fetch_all(urls: list[str]) -> dict[str, str]:
 
 ## Package Organization
 
+### Standard Project Layout
+
+```
+myproject/
+├── src/
+│   └── mypackage/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── api/
+│       │   ├── __init__.py
+│       │   └── routes.py
+│       ├── models/
+│       │   ├── __init__.py
+│       │   └── user.py
+│       └── utils/
+│           ├── __init__.py
+│           └── helpers.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_api.py
+│   └── test_models.py
+├── pyproject.toml
+├── README.md
+└── .gitignore
+```
+
 ### Import Conventions
 
 ```python
@@ -654,19 +680,6 @@ disallow_untyped_defs = true
 testpaths = ["tests"]
 addopts = "--cov=mypackage --cov-report=term-missing"
 ```
-## Logs
-Logs should use the standard logging library with appropriate log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) and structured messages for better observability.
-
-```python
-import logging
-```
-
-Logs should use lazy formatting to avoid unnecessary string interpolation when the log level is not enabled.
-
-```python
-logger.debug("Processing user %s with id %d", user.name, user.id)
-```
-
 
 ## Quick Reference: Python Idioms
 

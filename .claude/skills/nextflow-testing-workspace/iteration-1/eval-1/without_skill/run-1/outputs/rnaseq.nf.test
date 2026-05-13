@@ -1,0 +1,59 @@
+nextflow_workflow {
+
+    name "Test RNASEQ_ALIGN workflow"
+    script "workflows/rnaseq.nf"
+    workflow "RNASEQ_ALIGN"
+
+    test("RNASEQ_ALIGN aligns reads and emits BAM files") {
+
+        when {
+            workflow {
+                """
+                input[0] = Channel.of(
+                    [
+                        [ id: 'sample1', single_end: false ],
+                        file("${projectDir}/tests/data/sample1_R1.fastq.gz"),
+                        file("${projectDir}/tests/data/sample1_R2.fastq.gz")
+                    ],
+                    [
+                        [ id: 'sample2', single_end: false ],
+                        file("${projectDir}/tests/data/sample2_R1.fastq.gz"),
+                        file("${projectDir}/tests/data/sample2_R2.fastq.gz")
+                    ]
+                )
+                input[1] = file("${projectDir}/tests/data/star_index")
+                """
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.out.bam.size() == 2
+            assert workflow.out.versions != null
+            assert workflow.trace.tasks().size() == 4
+        }
+    }
+
+    test("RNASEQ_ALIGN handles single-end reads") {
+
+        when {
+            workflow {
+                """
+                input[0] = Channel.of(
+                    [
+                        [ id: 'sample_se', single_end: true ],
+                        file("${projectDir}/tests/data/sample_se.fastq.gz")
+                    ]
+                )
+                input[1] = file("${projectDir}/tests/data/star_index")
+                """
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.out.bam.size() == 1
+            assert workflow.trace.tasks().size() == 2
+        }
+    }
+}

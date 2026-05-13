@@ -1,0 +1,30 @@
+{
+  "run_id": "eval-2-without_skill",
+  "expectations": [
+    {
+      "text": "Mentions nf-test init command",
+      "passed": true,
+      "evidence": "Lines 16-19: 'nf-test init' shown in bash block under section 1"
+    },
+    {
+      "text": "Shows nf-test.config with at least testsDir, workDir, configFile, and profile settings",
+      "passed": false,
+      "evidence": "Lines 32-40: config block includes testsDir, workDir, configFile, and commented-out profile — profile is not shown as an active setting, only as a comment"
+    },
+    {
+      "text": "Describes tests/ directory structure with example layout",
+      "passed": true,
+      "evidence": "Lines 54-73: directory tree under '## 3. How to Structure the tests/ Directory'"
+    },
+    {
+      "text": "Shows tests/nextflow.config with process resource overrides (cpus, memory)",
+      "passed": true,
+      "evidence": "Lines 114-168: tests/nextflow.config with cpus and memory at global level and per withLabel blocks"
+    },
+    {
+      "text": "All four requested topics (init, config, structure, resource limits) are addressed",
+      "passed": true,
+      "evidence": "Sections 1 (init), 2 (nf-test.config), 3 (tests/ structure), and 4 (nextflow.config resource limits) all present"
+    }
+  ]
+}

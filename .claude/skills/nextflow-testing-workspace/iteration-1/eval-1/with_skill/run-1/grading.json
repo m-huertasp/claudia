@@ -1,0 +1,46 @@
+{
+  "run_id": "eval-1-with_skill",
+  "expectations": [
+    {
+      "text": "Uses nextflow_workflow block",
+      "passed": true,
+      "evidence": "File opens with 'nextflow_workflow {' on line 1"
+    },
+    {
+      "text": "References script workflows/rnaseq.nf and workflow RNASEQ_ALIGN",
+      "passed": true,
+      "evidence": "Lines 3-4: script \"workflows/rnaseq.nf\" and workflow \"RNASEQ_ALIGN\""
+    },
+    {
+      "text": "Has when { workflow { ... } } block with channel inputs",
+      "passed": true,
+      "evidence": "Lines 9-19: when { workflow { \"\"\" input[0] = Channel.of(...) input[1] = file(...) \"\"\" } }"
+    },
+    {
+      "text": "Asserts workflow.success",
+      "passed": true,
+      "evidence": "Line 22: assert workflow.success (also lines 43, 64)"
+    },
+    {
+      "text": "Asserts on workflow.out.bam.size()",
+      "passed": true,
+      "evidence": "Line 44: assert workflow.out.bam.size() == 2"
+    },
+    {
+      "text": "Asserts on workflow.trace.tasks().size() or workflow.trace.succeeded()",
+      "passed": true,
+      "evidence": "Lines 66-67: assert workflow.trace.tasks().size() == 2 and assert workflow.trace.succeeded().size() == 2"
+    },
+    {
+      "text": "Includes a snapshot assertion",
+      "passed": true,
+      "evidence": "Line 46: assert snapshot(workflow.out.bam).match(\"bam_outputs\")"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

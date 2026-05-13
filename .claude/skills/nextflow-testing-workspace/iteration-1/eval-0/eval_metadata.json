@@ -1,0 +1,47 @@
+{
+  "eval_id": 0,
+  "eval_name": "samtools-index-process-test",
+  "prompt": "I need to write an nf-test test file for a process called SAMTOOLS_INDEX. The process is defined in modules/samtools/index/main.nf, it takes a sorted BAM file as input (a tuple with meta map and bam file) and emits a tuple with meta and a .bai index file on a channel called 'bai', plus a versions.yml on a channel called 'versions'. Write a complete nf-test test file with at least two tests: one that verifies the process runs successfully and the output file has the right extension, and one that uses snapshot testing.",
+  "assertions": [
+    {
+      "text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "References correct script path modules/samtools/index/main.nf",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "Includes at least 2 test cases",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "Has when { process { ... } } block with tuple input syntax",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "Asserts process.success",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "References process.out.bai output channel",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "Includes at least one snapshot assertion (snapshot(...).match())",
+      "passed": null,
+      "evidence": null
+    },
+    {
+      "text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)",
+      "passed": null,
+      "evidence": null
+    }
+  ]
+}

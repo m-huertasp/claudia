@@ -1,0 +1,45 @@
+{
+  "run_id": "eval-0-without_skill",
+  "expectations": [
+    {
+      "text": "Uses nextflow_process block (not nextflow_workflow or nextflow_pipeline)",
+      "passed": true,
+      "evidence": "File opens with 'nextflow_process {' on line 1"
+    },
+    {
+      "text": "References correct script path modules/samtools/index/main.nf",
+      "passed": true,
+      "evidence": "Line 4: script \"modules/samtools/index/main.nf\""
+    },
+    {
+      "text": "Includes at least 2 test cases",
+      "passed": true,
+      "evidence": "Two test cases: 'Should index a sorted BAM file...' and 'Should produce snapshot-matching output...'"
+    },
+    {
+      "text": "Has when { process { ... } } block with tuple input syntax",
+      "passed": true,
+      "evidence": "Lines 9-16: when { process { \"\"\" input[0] = [ [ id: 'test_sample', ... ], file(...) ] \"\"\" } }"
+    },
+    {
+      "text": "Asserts process.success",
+      "passed": true,
+      "evidence": "Line 21: assert process.success (also line 46)"
+    },
+    {
+      "text": "References process.out.bai output channel",
+      "passed": true,
+      "evidence": "Lines 23-26: with(process.out.bai) { assert size() == 1; assert get(0).get(1) ==~ /.*\\.bai$/ }"
+    },
+    {
+      "text": "Includes at least one snapshot assertion (snapshot(...).match())",
+      "passed": true,
+      "evidence": "Lines 48-51: snapshot(process.out.bai, process.out.versions).match()"
+    },
+    {
+      "text": "Uses ${projectDir} for test data paths (not hardcoded absolute paths)",
+      "passed": true,
+      "evidence": "Line 39: file(\"${projectDir}/tests/data/test_sorted.bam\") — used in both test cases"
+    }
+  ]
+}
