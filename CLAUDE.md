@@ -26,6 +26,13 @@ The project is organized into several core components:
 - `/pytest-gen` — generate pytest unit and integration tests
 - `/update-docs` — update all project documentation
 
+### GitHub workflow (uses the official `github` MCP plugin — read-only)
+
+- `/gh-issue <num|owner/repo#num|url>` — fetch and summarize a GitHub issue with repo-side context and a suggested first step
+- `/gh-my-issues [filters]` — list issues assigned to me, grouped by repo
+- `/gh-my-prs [filters]` — list PRs I authored, was review-requested on, or am assigned
+- `/gh-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
+
 ## Development Notes
 
 - Primary language: **Python** — all rules, prompts, and examples should assume Python unless stated otherwise
