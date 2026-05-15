@@ -1,6 +1,6 @@
 # claude-setup
 
-> Collection of Claude Code configurations, agents, and commands — focused on Python development, powered by Claude Code in VS Code.
+> Collection of Claude Code configurations, agents, skills, and plugins.
 
 ---
 
@@ -10,9 +10,9 @@ This repo is my personal toolkit for working with **Claude Code** in VS Code. It
 
 - **Instructions** (`CLAUDE.md`) that tell Claude Code how I like to work
 - **Agents** for complex multi-step workflows
-- **Commands** (slash commands) for quick recurring tasks
-- **Rules** for consistent Python code style and conventions
-- **MCP servers** as things grow
+- **Rules** for consistent code style and conventions
+- **Skills** (slash commands) for recurring tasks
+- **Plugins** that bundle related commands and agents
 
 ---
 
@@ -23,62 +23,67 @@ claude-setup/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
 │   ├── agents/                      # Subagent definitions
-│   └── commands/                    # Slash command definitions
+│   ├── rules/                       # Coding conventions (common/ and python/)
+│   └── skills/                      # Skill definitions (invokable as slash commands)
+├── plugins/
+│   └── gh-workflow/                 # GitHub workflow plugin
 ├── docs/
-├── rules/                           # Reusable coding rules and conventions (planned)
-├── mcp-servers/                     # Custom MCP servers (planned)
 └── README.md                        # This file
 ```
 
 ### Folder descriptions
 
-| Folder / File | Purpose | Status |
-|---|---|---|
-| `CLAUDE.md` | Main file Claude Code reads to understand how to behave in a project | ✅ Active |
-| `.claude/agents/` | Subagent configurations (`code-reviewer`, `doc-updater`) — autonomous specialists for complex workflows | ✅ Active |
-| `.claude/commands/` | Slash commands (`/python-review`, `/pr-review`, `/prepare-docstrings`, `/nextflow-review`, `/pytest-gen`, `/update-docs`) | ✅ Active |
-| `docs/` | Single consolidated architecture index (`docs/INDEX.md`) — components, data flow, phases | ✅ Active |
-| `rules/` | Short Markdown files with coding conventions (Python type hints, imports, formatting) | 📋 Planned |
-| `mcp-servers/` | Custom Model Context Protocol servers to extend Claude Code's capabilities | 📋 Planned |
-
----
-
-## Deployment
-
-To use this setup in any project, symlink `CLAUDE.md` into the project root:
-
-```bash
-ln -s /path/to/claude-setup/CLAUDE.md CLAUDE.md
-```
-
-Claude Code auto-loads `CLAUDE.md` from the project root. Agents and commands in `.claude/` live in this repo and can be invoked directly from any Claude Code session pointed at this directory.
+| Folder / File | Purpose |
+|---|---|
+| `CLAUDE.md` | Main file Claude Code reads to understand how to behave in a project |
+| `.claude/agents/` | Subagent configurations (`code-explorer`, `code-reviewer`) |
+| `.claude/rules/` | Short Markdown files with coding conventions, split into `common/` and `python/` |
+| `.claude/skills/` | Skills invokable as `/<skill-name>` in Claude Code chat |
+| `plugins/gh-workflow/` | GitHub workflow plugin — issues, PRs, and review |
+| `docs/` | Single consolidated architecture index (`docs/INDEX.md`) |
 
 ---
 
 ## Available agents
 
-| Agent | Model | Invocation | Purpose |
-|---|---|---|---|
-| `code-reviewer` | Claude Sonnet 4.6 | subagent | Security, correctness, and quality review |
-| `doc-updater` | Claude Haiku 4.5 | subagent via `/update-docs` | README, docs/INDEX.md, and CLAUDE.md updates |
+| Agent | Model | Purpose |
+|---|---|---|
+| `code-explorer` | Claude Sonnet 4.6 | Deep codebase exploration — traces execution paths, maps architecture |
+| `code-reviewer` | Claude Sonnet 4.6 | Security, correctness, and quality review |
 
 ---
 
-## Available commands
+## Available skills
+
+Invokable as `/<skill-name>` in Claude Code chat.
+
+| Skill | Purpose |
+|---|---|
+| `/prepare-docstrings <file>` | Add or rewrite docstrings in NumPy/SciPy format |
+| `/add-type-hints <file>` | Infer and add type annotations; asks when uncertain |
+| `/python-testing <path>` | Write pytest tests using TDD |
+| `/python-patterns` | Non-obvious Python patterns (typed decorators, immutability, exception chaining) |
+| `/nextflow-patterns` | Production-ready Nextflow DSL2 habits |
+| `/nextflow-testing` | Nextflow pipeline testing with nf-test |
+
+---
+
+## Plugins
+
+### `gh-workflow` — `plugins/gh-workflow/`
+
+GitHub workflow automation. Requires the official `github` MCP plugin and `GITHUB_PERSONAL_ACCESS_TOKEN` set in the environment. See [plugins/gh-workflow/README.md](plugins/gh-workflow/README.md) for setup.
 
 | Command | Purpose |
 |---|---|
-| `/python-review <path>` | Comprehensive Python code review with static analysis |
-| `/pr-review <PR#\|URL\|branch>` | GitHub PR analysis and review |
-| `/prepare-docstrings <file>` | Add/rewrite docstrings in NumPy/SciPy format |
-| `/nextflow-review <path>` | Nextflow DSL pipeline review |
-| `/pytest-gen <path>` | Generate pytest unit and integration tests |
-| `/update-docs` | Update all project documentation |
+| `/gh-issue [owner/repo:] <description>` | Draft and create a structured GitHub issue (confirmation-gated) |
+| `/gh-my-issues [filters]` | List issues assigned to me, grouped by repo |
+| `/gh-my-prs [filters]` | List PRs I authored, was review-requested on, or am assigned |
+| `/gh-pr-draft [base:branch]` | Draft and create a PR in a fixed human-readable structure (accept/refuse gate) |
+| `/gh-pr-review <num\|url>` | Structured PR review (URGENT/HIGH/MEDIUM/LOW) — never posts to GitHub |
 
 ---
 
 ## Documentation
 
 Architectural documentation lives in a single file: **[docs/INDEX.md](docs/INDEX.md)**.
-
-It covers repository structure, all components (instructions, agents, commands), data flows, external dependencies, and development phases.
