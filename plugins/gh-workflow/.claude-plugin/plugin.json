@@ -1,0 +1,9 @@
+{
+  "name": "gh-workflow",
+  "description": "GitHub workflow commands for triaging issues and PRs: create structured issues, list assigned issues and PRs, draft PRs from the current branch, and run confidence-gated PR reviews. All write actions are gated behind explicit user confirmation; PR review never posts to GitHub.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Marta H."
+  },
+  "keywords": ["github", "issues", "pull-requests", "code-review", "workflow"]
+}
