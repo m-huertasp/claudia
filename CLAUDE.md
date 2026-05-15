@@ -11,26 +11,32 @@ This is a **Claude Code setup repo** — a personal collection of instructions, 
 The project is organized into several core components:
 
 - **`CLAUDE.md`** — this file; read automatically by Claude Code in every project that includes it
-- **`.claude/agents/`** — subagent definitions (`code-reviewer`, `doc-updater`) for multi-step automated workflows
-- **`.claude/commands/`** — slash command definitions invoked as `/command-name` in Claude Code chat
-- **`rules/`** — always-follow coding conventions (type hints, docstrings, formatting, imports) *(planned)*
-- **`mcp-servers/`** — MCP server configurations for extending Claude Code's context *(planned)*
-- **`SKILLS/`** — Skills to help with coding *(planned)*  
+- **`.claude/agents/`** — subagent definitions (`code-explorer`, `code-reviewer`) for multi-step automated workflows
+- **`.claude/rules/`** — always-follow coding conventions, split into `common/` and `python/`
+- **`.claude/skills/`** — skills that guide Claude through specific tasks (testing, docstrings, language patterns)
+- **`plugins/`** — bundled Claude Code plugins; each ships its own commands, agents, and MCP config
+
+## Skills
+
+Invokable as `/<skill-name>`, or triggered automatically when relevant:
+
+- `prepare-docstrings` — write or homogenize docstrings (NumPy/SciPy format)
+- `add-type-hints` — infer and add type annotations to every function, asking when a type is uncertain
+- `python-testing` — write pytest tests using TDD
+- `python-patterns` — non-obvious Python patterns (typed decorators, immutability, exception chaining)
+- `nextflow-patterns` — production-ready Nextflow DSL2 habits
+- `nextflow-testing` — Nextflow pipeline testing with nf-test
 
 ## Key Commands
 
-- `/python-review` — comprehensive Python code quality review
-- `/pr-review` — pull request analysis and review
-- `/prepare-docstrings` — write or improve docstrings (NumPy/SciPy format)
-- `/nextflow-review` — Nextflow DSL pipeline review
-- `/pytest-gen` — generate pytest unit and integration tests
-- `/update-docs` — update all project documentation
+### GitHub workflow — `gh-workflow` plugin (`plugins/gh-workflow/`)
 
-### GitHub workflow (uses the official `github` MCP plugin — read-only)
+Requires a GitHub MCP server (the official `github` plugin) and `GITHUB_PERSONAL_ACCESS_TOKEN` set in the environment. See `plugins/gh-workflow/README.md`.
 
-- `/gh-issue <num|owner/repo#num|url>` — fetch and summarize a GitHub issue with repo-side context and a suggested first step
-- `/gh-my-issues [filters]` — list issues assigned to me, grouped by repo
-- `/gh-my-prs [filters]` — list PRs I authored, was review-requested on, or am assigned
+- `/gh-issue [owner/repo:] <description>` — draft a structured GitHub issue and create it in the target repo, **only after the user confirms the draft**
+- `/gh-my-issues [filters]` — list issues assigned to me, grouped by repo (read-only)
+- `/gh-my-prs [filters]` — list PRs I authored, was review-requested on, or am assigned (read-only)
+- `/gh-pr-draft [base:branch]` — draft a PR for the current branch in a fixed, human-readable structure and create it **only after the user accepts the draft**
 - `/gh-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
 
 ## Development Notes
@@ -43,10 +49,10 @@ The project is organized into several core components:
 
 Follow these formats when adding or editing files:
 
-- **Agents** (`.claude/agents/`): YAML frontmatter with `name`, `description`, `model`, `tools`; agent system prompt in the body
-- **Commands** (`.claude/commands/`): YAML frontmatter with `description`; prompt body with `$ARGUMENTS` for user input
+- **Agents** (`.claude/agents/` or a plugin's `agents/`): YAML frontmatter with `name`, `description`, `model`; add `tools` only to restrict access — omit it when the agent needs MCP tools
+- **Commands** (a plugin's `commands/`): YAML frontmatter with `description`; prompt body with `$ARGUMENTS` for user input
 - **Rules**: focused on a single convention; use a short title, one-paragraph explanation, and a code example
-- **MCP servers**: one folder per server, with a `README.md` explaining what it does and how to configure it
+- **Plugins** (`plugins/<name>/`): `.claude-plugin/plugin.json` manifest, plus `commands/`, `agents/`, and a `README.md` covering prerequisites and setup
 
 File naming: lowercase with hyphens (e.g. `code-review.md`, `pr-review.md`, `docstrings.md`)
 
