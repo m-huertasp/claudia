@@ -1,6 +1,6 @@
 # Decisions — <name>
 
-<!-- Written by /clavia-discuss before planning. Captures design choices the
+<!-- Written by /claudia-discuss before planning. Captures design choices the
      user made so the plan reflects their intent, not generic defaults. This
      artifact is direction-locking: entries pass through the review gate.
      Append-only — supersede an entry rather than deleting it. -->

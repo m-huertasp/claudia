@@ -11,8 +11,8 @@ Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
 ## Steps
 
 1. **Check readiness.** Read `STATE.md` — the phase must have passed
-   `/clavia-verify` with no unresolved CRITICAL findings. If it has not, stop
-   and tell the user to run `/clavia-verify` first.
+   `/claudia-verify` with no unresolved CRITICAL findings. If it has not, stop
+   and tell the user to run `/claudia-verify` first.
 2. **Final secret scan.** Scan the branch's diff against the base for secrets,
    credentials, and unpublished data per the secure-ai-use rule. If anything
    is found, stop and surface it — do not proceed.
@@ -20,7 +20,7 @@ Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
    runs its own review gate: present the draft, then **accept / edit /
    cancel**. The PR is created only on accept.
 4. **On success**, update `STATE.md`: record the PR, advance the current
-   phase, set next step = `/clavia-discuss` for the following phase (or mark
+   phase, set next step = `/claudia-discuss` for the following phase (or mark
    the roadmap complete).
 
 ## Review gate

@@ -1,5 +1,5 @@
 ---
-description: Report where the clavia workflow currently stands — current phase, last command, open tasks, and the suggested next step — by reading .planning/STATE.md.
+description: Report where the claudia workflow currently stands — current phase, last command, open tasks, and the suggested next step — by reading .planning/STATE.md.
 ---
 
 # Workflow progress
@@ -12,7 +12,7 @@ run the suggested next command.
 ## Steps
 
 1. **Read `.planning/STATE.md`.** If it does not exist, tell the user no
-   `clavia` project is initialized here and suggest `/clavia-new`.
+   `claudia` project is initialized here and suggest `/claudia-new`.
 2. **Report**, concisely:
    - Current phase and its roadmap goal
    - Last command run

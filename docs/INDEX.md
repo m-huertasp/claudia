@@ -1,10 +1,10 @@
-# clavia — Architecture Index
+# Claudia — Architecture Index
 
 **Last Updated:** May 19, 2026
 
 ## Overview
 
-**clavia** is a personal, control-first Claude Code framework for Python and
+**claudia** is a personal, control-first Claude Code framework for Python and
 Nextflow development. It provides a phased development workflow plus reusable
 instructions, agents, rules, and skills, designed to be symlinked or copied
 into any project.
@@ -22,7 +22,7 @@ Two principles are framework-wide:
 ## Repository Structure
 
 ```
-clavia/
+claudia/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
 │   ├── agents/                      # code-explorer, code-reviewer
@@ -32,15 +32,15 @@ clavia/
 │   │   └── python/                  # coding-style, fastapi, patterns, security, tests
 │   └── skills/                      # add-type-hints, prepare-docstrings, python-testing,
 │                                    #   python-patterns, nextflow-patterns, nextflow-testing,
-│                                    #   clavia-new-skill
+│                                    #   claudia-new-skill
 ├── plugins/
-│   ├── clavia-workflow/             # Phased development workflow
+│   ├── claudia-workflow/             # Phased development workflow
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── config.template.json     # Config schema, copied to .planning/config.json
 │   │   ├── templates/               # State-file skeletons (PROJECT, ROADMAP, STATE,
 │   │   │                            #   CONTEXT, DECISIONS)
 │   │   ├── agents/                  # researcher, planner, executor, verifier
-│   │   ├── commands/                # 9 /clavia-* phase commands
+│   │   ├── commands/                # 9 /claudia-* phase commands
 │   │   └── README.md
 │   └── gh-workflow/                 # GitHub issue / PR commands
 ├── docs/INDEX.md                    # This file
@@ -85,11 +85,11 @@ Invokable as `/<skill-name>`; helper skills auto-trigger on file context.
 | `python-patterns` | Non-obvious Python patterns |
 | `nextflow-patterns` | Nextflow DSL2 habits |
 | `nextflow-testing` | nf-test patterns |
-| `clavia-new-skill` | Author a new skill (extensibility path) |
+| `claudia-new-skill` | Author a new skill (extensibility path) |
 
 ---
 
-## Plugin — `clavia-workflow`
+## Plugin — `claudia-workflow`
 
 The phased development workflow. GSD-shaped: explicit phase commands,
 persistent `.planning/` state, a `config.json` of toggles.
@@ -98,15 +98,15 @@ persistent `.planning/` state, a `config.json` of toggles.
 
 | Command | Output |
 |---------|--------|
-| `/clavia-map` | `.planning/CONTEXT.md` |
-| `/clavia-new` | `PROJECT.md`, `ROADMAP.md`, `config.json` |
-| `/clavia-discuss` | `.planning/DECISIONS.md` |
-| `/clavia-plan` | task breakdown in `STATE.md` |
-| `/clavia-execute` | code + atomic commits |
-| `/clavia-verify` | verification report |
-| `/clavia-ship` | pull request (via `gh-workflow`) |
-| `/clavia-progress` | status report (read-only) |
-| `/clavia-settings` | updated `config.json` |
+| `/claudia-map` | `.planning/CONTEXT.md` |
+| `/claudia-new` | `PROJECT.md`, `ROADMAP.md`, `config.json` |
+| `/claudia-discuss` | `.planning/DECISIONS.md` |
+| `/claudia-plan` | task breakdown in `STATE.md` |
+| `/claudia-execute` | code + atomic commits |
+| `/claudia-verify` | verification report |
+| `/claudia-ship` | pull request (via `gh-workflow`) |
+| `/claudia-progress` | status report (read-only) |
+| `/claudia-settings` | updated `config.json` |
 
 ### Workflow agents
 
@@ -144,14 +144,14 @@ GitHub issue/PR automation. Requires the official `github` MCP plugin and
 ## Data Flow — the workflow loop
 
 ```
-/clavia-map      → CONTEXT.md       (existing repo only)
-/clavia-new      → PROJECT.md, ROADMAP.md, config.json   [review gate: roadmap]
-/clavia-discuss  → DECISIONS.md     [review gate: decisions]
-/clavia-plan     → task breakdown   [review gate: plan]
-/clavia-execute  → code + commits   (executor subagents, sequential)
-/clavia-verify   → report           (two-stage review + secret scan)
-/clavia-ship     → pull request     [review gate: PR draft, via gh-workflow]
-                 ↑ /clavia-progress reads STATE.md at any point
+/claudia-map      → CONTEXT.md       (existing repo only)
+/claudia-new      → PROJECT.md, ROADMAP.md, config.json   [review gate: roadmap]
+/claudia-discuss  → DECISIONS.md     [review gate: decisions]
+/claudia-plan     → task breakdown   [review gate: plan]
+/claudia-execute  → code + commits   (executor subagents, sequential)
+/claudia-verify   → report           (two-stage review + secret scan)
+/claudia-ship     → pull request     [review gate: PR draft, via gh-workflow]
+                 ↑ /claudia-progress reads STATE.md at any point
 ```
 
 ---
@@ -161,7 +161,7 @@ GitHub issue/PR automation. Requires the official `github` MCP plugin and
 | Dependency | Purpose |
 |------------|---------|
 | Claude Code (VS Code extension) | Chat interface and code generation |
-| Official `github` MCP plugin | GitHub API access for `gh-workflow` / `/clavia-ship` |
+| Official `github` MCP plugin | GitHub API access for `gh-workflow` / `/claudia-ship` |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | Auth for GitHub MCP |
 
 No runtime dependencies — this is a configuration/template repository.
@@ -178,8 +178,8 @@ Global instructions, `code-reviewer` / `code-explorer` agents, `common/` and
 Python and Nextflow skills; `gh-workflow` plugin.
 
 ### ✅ Phase 3 — Workflow framework foundation
-`review-gate` / `secure-ai-use` rules; `clavia-workflow` plugin (9 commands,
-4 agents, state files, config); `clavia-new-skill` meta-skill; helper-skill
+`review-gate` / `secure-ai-use` rules; `claudia-workflow` plugin (9 commands,
+4 agents, state files, config); `claudia-new-skill` meta-skill; helper-skill
 auto-triggering.
 
 ### 📋 Phase 4 — Extended capabilities

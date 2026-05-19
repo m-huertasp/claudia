@@ -4,7 +4,7 @@ description: Analyze an existing codebase — stack, architecture, conventions, 
 
 # Map the codebase
 
-The user wants `clavia` to understand an existing repository before any
+The user wants `claudia` to understand an existing repository before any
 planning. Produce `.planning/CONTEXT.md`.
 
 Argument: `$ARGUMENTS` — optional focus hint (a subdirectory or subsystem). If

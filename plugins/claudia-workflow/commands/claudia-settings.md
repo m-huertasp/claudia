@@ -1,5 +1,5 @@
 ---
-description: View or change the clavia workflow configuration in .planning/config.json — mode, model profile, agent toggles, parallelization — without reinstalling.
+description: View or change the claudia workflow configuration in .planning/config.json — mode, model profile, agent toggles, parallelization — without reinstalling.
 ---
 
 # Workflow settings
@@ -13,7 +13,7 @@ the current config.
 ## Steps
 
 1. **Read `.planning/config.json`.** If it does not exist, tell the user to
-   run `/clavia-new` first.
+   run `/claudia-new` first.
 2. **If no argument**, show the current settings with a one-line explanation
    of each, and the valid values.
 3. **If a `key=value`** was given, validate it against the schema below, then

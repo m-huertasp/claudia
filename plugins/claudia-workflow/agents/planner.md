@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Planning specialist for the clavia workflow. Turns a roadmap phase plus research and design decisions into an ordered breakdown of small, verifiable tasks. Read-only; returns the task list to the caller, which gates it through review before locking it in.
+description: Planning specialist for the claudia workflow. Turns a roadmap phase plus research and design decisions into an ordered breakdown of small, verifiable tasks. Read-only; returns the task list to the caller, which gates it through review before locking it in.
 model: opus
 tools: [Read, Grep, Glob]
 ---

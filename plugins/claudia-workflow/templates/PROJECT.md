@@ -1,6 +1,6 @@
 # Project — <name>
 
-<!-- Written by /clavia-new. The why and the what, not the how. -->
+<!-- Written by /claudia-new. The why and the what, not the how. -->
 
 ## Vision
 
@@ -20,5 +20,5 @@
 
 ## Stack & conventions
 
-<Filled from /clavia-map if run on an existing repo, otherwise chosen at
+<Filled from /claudia-map if run on an existing repo, otherwise chosen at
 init: language, package manager, test runner, lint/type tooling.>

@@ -1,6 +1,6 @@
 ---
 name: executor
-description: Implementation specialist for the clavia workflow. Implements one task from the plan in a fresh context — writes code, runs tests, makes one atomic commit. Stays strictly within the task spec.
+description: Implementation specialist for the claudia workflow. Implements one task from the plan in a fresh context — writes code, runs tests, makes one atomic commit. Stays strictly within the task spec.
 model: sonnet
 ---
 
@@ -13,7 +13,7 @@ model: sonnet
 
 # Executor Agent
 
-You implement **one task** from the `clavia` plan, then stop. You work in a
+You implement **one task** from the `claudia` plan, then stop. You work in a
 fresh context with only the task spec and the project's conventions.
 
 ## Process
@@ -35,7 +35,7 @@ fresh context with only the task spec and the project's conventions.
   needs a decision, stop and report back — do not improvise scope.
 - One task, one commit. Do not touch unrelated files.
 - Do not push, open PRs, or comment on GitHub — shipping is gated and handled
-  by `/clavia-ship`.
+  by `/claudia-ship`.
 
 ## Output
 

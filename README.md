@@ -1,4 +1,4 @@
-# clavia
+# claudia
 
 > A personal, Claude Code framework for Python and Nextflow development.
 
@@ -6,7 +6,7 @@
 
 ## What this is
 
-**clavia** is a Claude Code framework. It gives a phased development
+**claudia** is a Claude Code framework. It gives a phased development
 **workflow** — map, discuss, plan, execute, verify, ship — backed by reusable
 agents, rules, and skills. It works with Claude Code in VS Code, and the rules
 are written to hold for any AI model.
@@ -23,39 +23,39 @@ Two principles run through everything:
 
 ---
 
-## The workflow — `clavia-workflow` plugin
+## The workflow — `claudia-workflow` plugin
 
 Explicit-command workflow. State persists in `.planning/` so
 work resumes cold across sessions.
 
 | Command | Phase |
 |---|---|
-| `/clavia-map` | Analyze an existing codebase → `CONTEXT.md` |
-| `/clavia-new` | Start a project, build the roadmap |
-| `/clavia-discuss` | Pin down design decisions before planning |
-| `/clavia-plan` | Research + ordered task breakdown |
-| `/clavia-execute` | Implement tasks via executor subagents (sequential by default) |
-| `/clavia-verify` | Two-stage review + secret scan |
-| `/clavia-ship` | Open a PR (via `gh-workflow`) |
-| `/clavia-progress` | Where things stand / next step |
-| `/clavia-settings` | View or edit `.planning/config.json` |
+| `/claudia-map` | Analyze an existing codebase → `CONTEXT.md` |
+| `/claudia-new` | Start a project, build the roadmap |
+| `/claudia-discuss` | Pin down design decisions before planning |
+| `/claudia-plan` | Research + ordered task breakdown |
+| `/claudia-execute` | Implement tasks via executor subagents (sequential by default) |
+| `/claudia-verify` | Two-stage review + secret scan |
+| `/claudia-ship` | Open a PR (via `gh-workflow`) |
+| `/claudia-progress` | Where things stand / next step |
+| `/claudia-settings` | View or edit `.planning/config.json` |
 
 Four agent roles — `researcher`, `planner`, `executor`, `verifier` — each run
-in a fresh context. See [plugins/clavia-workflow/README.md](plugins/clavia-workflow/README.md).
+in a fresh context. See [plugins/claudia-workflow/README.md](plugins/claudia-workflow/README.md).
 
 ---
 
 ## Folder structure
 
 ```
-clavia/
+claudia/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
 │   ├── agents/                      # Subagent definitions (code-explorer, code-reviewer)
 │   ├── rules/                       # Conventions — common/ (incl. review-gate, secure-ai-use) 
 │   └── skills/                      # Skills, invokable as /<skill-name>
 ├── plugins/
-│   ├── clavia-workflow/             # The phased development workflow
+│   ├── claudia-workflow/             # The phased development workflow
 │   └── gh-workflow/                 # GitHub issue / PR commands
 ├── docs/                            # docs/INDEX.md — architecture overview
 └── README.md                        # This file
@@ -75,7 +75,7 @@ Invokable as `/<skill-name>`, or triggered automatically when relevant.
 | `/python-patterns` | Non-obvious Python patterns |
 | `/nextflow-patterns` | Production-ready Nextflow DSL2 habits |
 | `/nextflow-testing` | Nextflow pipeline testing with nf-test |
-| `/clavia-new-skill` | Author a new skill following repo conventions |
+| `/claudia-new-skill` | Author a new skill following repo conventions |
 
 ---
 
@@ -85,13 +85,13 @@ Invokable as `/<skill-name>`, or triggered automatically when relevant.
 |---|---|
 | `code-explorer` | Deep codebase exploration — traces execution paths, maps architecture |
 | `code-reviewer` | Security, correctness, and quality review |
-| `researcher` / `planner` / `executor` / `verifier` | The four `clavia-workflow` roles |
+| `researcher` / `planner` / `executor` / `verifier` | The four `claudia-workflow` roles |
 
 ---
 
 ## Plugins
 
-### `clavia-workflow` — `plugins/clavia-workflow/`
+### `claudia-workflow` — `plugins/claudia-workflow/`
 
 The phased development workflow. See above and the plugin README.
 

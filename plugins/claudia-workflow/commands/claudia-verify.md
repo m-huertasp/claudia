@@ -30,11 +30,11 @@ task completed since the last verification.
 
 The verification report is presented for the user to read — verification
 never edits or commits. If issues are found, ask the user how to proceed:
-**fix now** (loop back to `/clavia-execute` with fix tasks), **accept with
+**fix now** (loop back to `/claudia-execute` with fix tasks), **accept with
 warnings**, or **stop**. Shipping is blocked on a CRITICAL finding.
 
 ## Rules
 
 - Verify behavior — run the tests, do not trust commit messages.
 - The secret scan is mandatory and cannot be skipped.
-- Update `STATE.md`: next step = `/clavia-ship` if the verdict allows.
+- Update `STATE.md`: next step = `/claudia-ship` if the verdict allows.

@@ -1,6 +1,6 @@
 # Context — <name>
 
-<!-- Written by /clavia-map. The technical baseline of an existing repo, so
+<!-- Written by /claudia-map. The technical baseline of an existing repo, so
      downstream agents understand the codebase without re-deriving it. -->
 
 ## Architecture

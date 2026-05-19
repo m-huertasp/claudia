@@ -2,16 +2,16 @@
 
 <!-- The resume point. Updated at the end of every phase command so a fresh
      session (or a fresh agent) knows exactly where things stand. Read by
-     /clavia-progress. -->
+     /claudia-progress. -->
 
 **Current phase:** <phase number and title>
-**Last command run:** <e.g. /clavia-plan>
-**Next suggested step:** <e.g. /clavia-execute>
+**Last command run:** <e.g. /claudia-plan>
+**Next suggested step:** <e.g. /claudia-execute>
 **Updated:** <date>
 
 ## Open tasks
 
-<!-- The task breakdown from /clavia-plan. Checked off by /clavia-execute. -->
+<!-- The task breakdown from /claudia-plan. Checked off by /claudia-execute. -->
 
 - [ ] <task>
 

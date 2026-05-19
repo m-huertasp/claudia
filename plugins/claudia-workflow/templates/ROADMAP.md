@@ -1,6 +1,6 @@
 # Roadmap — <name>
 
-<!-- Written by /clavia-new, refined as phases complete. One section per
+<!-- Written by /claudia-new, refined as phases complete. One section per
      phase. A phase is a shippable unit of work. This artifact is
      direction-locking: changes pass through the review gate. -->
 
