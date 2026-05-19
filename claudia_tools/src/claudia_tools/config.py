@@ -36,9 +36,10 @@ def read_config(path: Path) -> dict[str, Any]:
     except FileNotFoundError as exc:
         raise ClaudiaError(f"no config at {path}") from exc
     try:
-        return json.loads(text)
+        parsed: dict[str, Any] = json.loads(text)
     except json.JSONDecodeError as exc:
         raise ClaudiaError(f"invalid JSON in {path}: {exc}") from exc
+    return parsed
 
 
 def get_value(path: Path, key: str) -> Any:

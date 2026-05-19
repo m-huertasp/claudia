@@ -9,7 +9,7 @@ workflow step refuse to advance until its prerequisites are accepted.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,9 +29,10 @@ def _load(planning_dir: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        ledger: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ClaudiaError(f"invalid JSON in {path}: {exc}") from exc
+    return ledger
 
 
 def _save(planning_dir: Path, gates: dict[str, Any]) -> None:
@@ -42,7 +43,7 @@ def _save(planning_dir: Path, gates: dict[str, Any]) -> None:
 def accept(planning_dir: Path, artifact: str) -> None:
     """Record ``artifact`` as having cleared its review gate."""
     gates = _load(planning_dir)
-    gates[artifact] = {"accepted": True, "at": datetime.now(timezone.utc).isoformat()}
+    gates[artifact] = {"accepted": True, "at": datetime.now(UTC).isoformat()}
     _save(planning_dir, gates)
 
 

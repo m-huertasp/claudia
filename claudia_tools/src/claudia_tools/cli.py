@@ -30,7 +30,7 @@ def _run(ctx: click.Context, fn: Callable[[], Any]) -> None:
 
 def _planning(ctx: click.Context) -> Path:
     """Return the configured ``.planning/`` directory."""
-    return ctx.obj["planning_dir"]
+    return Path(ctx.obj["planning_dir"])
 
 
 def _parse_vars(pairs: tuple[str, ...]) -> dict[str, str]:
