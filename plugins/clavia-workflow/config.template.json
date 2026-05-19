@@ -1,0 +1,18 @@
+{
+  "$comment": "Copied to .planning/config.json by /clavia-new. Edit with /clavia-settings.",
+  "mode": "interactive",
+  "model_profile": "balanced",
+  "agents": {
+    "researcher": true,
+    "planner": true,
+    "verifier": true
+  },
+  "execution": {
+    "parallel": false
+  },
+  "profiles": {
+    "quality":  { "researcher": "opus",   "planner": "opus",   "executor": "opus",   "verifier": "opus"   },
+    "balanced": { "researcher": "opus",   "planner": "opus",   "executor": "sonnet", "verifier": "sonnet" },
+    "budget":   { "researcher": "sonnet", "planner": "sonnet", "executor": "haiku",  "verifier": "sonnet" }
+  }
+}

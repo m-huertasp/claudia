@@ -1,89 +1,116 @@
-# claude-setup
+# clavia
 
-> Collection of Claude Code configurations, agents, skills, and plugins.
+> A personal, Claude Code framework for Python and Nextflow development.
 
 ---
 
 ## What this is
 
-This repo is my personal toolkit for working with **Claude Code** in VS Code. It's a place to collect and refine:
+**clavia** is a Claude Code framework. It gives a phased development
+**workflow** — map, discuss, plan, execute, verify, ship — backed by reusable
+agents, rules, and skills. It works with Claude Code in VS Code, and the rules
+are written to hold for any AI model.
 
-- **Instructions** (`CLAUDE.md`) that tell Claude Code how I like to work
-- **Agents** for complex multi-step workflows
-- **Rules** for consistent code style and conventions
-- **Skills** (slash commands) for recurring tasks
-- **Plugins** that bundle related commands and agents
+Two principles run through everything:
+
+- **Control-first.** Every direction-locking artifact (roadmap, plan, design
+  decisions) and every outward action (issues, PRs, pushes) passes through a
+  **review gate**: drafted, shown in full, and acted on only after you accept.
+  "Edit" means you can rewrite anything — your text is used verbatim.
+- **Safe to share.** The rules are model-agnostic and include guardrails for
+  using AI on lab repositories — no secrets, no unpublished research data, a
+  secret scan before anything is published.
+
+---
+
+## The workflow — `clavia-workflow` plugin
+
+Explicit-command workflow. State persists in `.planning/` so
+work resumes cold across sessions.
+
+| Command | Phase |
+|---|---|
+| `/clavia-map` | Analyze an existing codebase → `CONTEXT.md` |
+| `/clavia-new` | Start a project, build the roadmap |
+| `/clavia-discuss` | Pin down design decisions before planning |
+| `/clavia-plan` | Research + ordered task breakdown |
+| `/clavia-execute` | Implement tasks via executor subagents (sequential by default) |
+| `/clavia-verify` | Two-stage review + secret scan |
+| `/clavia-ship` | Open a PR (via `gh-workflow`) |
+| `/clavia-progress` | Where things stand / next step |
+| `/clavia-settings` | View or edit `.planning/config.json` |
+
+Four agent roles — `researcher`, `planner`, `executor`, `verifier` — each run
+in a fresh context. See [plugins/clavia-workflow/README.md](plugins/clavia-workflow/README.md).
 
 ---
 
 ## Folder structure
 
 ```
-claude-setup/
+clavia/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
-│   ├── agents/                      # Subagent definitions
-│   ├── rules/                       # Coding conventions (common/ and python/)
-│   └── skills/                      # Skill definitions (invokable as slash commands)
+│   ├── agents/                      # Subagent definitions (code-explorer, code-reviewer)
+│   ├── rules/                       # Conventions — common/ (incl. review-gate, secure-ai-use) 
+│   └── skills/                      # Skills, invokable as /<skill-name>
 ├── plugins/
-│   └── gh-workflow/                 # GitHub workflow plugin
-├── docs/
+│   ├── clavia-workflow/             # The phased development workflow
+│   └── gh-workflow/                 # GitHub issue / PR commands
+├── docs/                            # docs/INDEX.md — architecture overview
 └── README.md                        # This file
 ```
 
-### Folder descriptions
-
-| Folder / File | Purpose |
-|---|---|
-| `CLAUDE.md` | Main file Claude Code reads to understand how to behave in a project |
-| `.claude/agents/` | Subagent configurations (`code-explorer`, `code-reviewer`) |
-| `.claude/rules/` | Short Markdown files with coding conventions, split into `common/` and `python/` |
-| `.claude/skills/` | Skills invokable as `/<skill-name>` in Claude Code chat |
-| `plugins/gh-workflow/` | GitHub workflow plugin — issues, PRs, and review |
-| `docs/` | Single consolidated architecture index (`docs/INDEX.md`) |
-
 ---
 
-## Available agents
+## Skills
 
-| Agent | Model | Purpose |
-|---|---|---|
-| `code-explorer` | Claude Sonnet 4.6 | Deep codebase exploration — traces execution paths, maps architecture |
-| `code-reviewer` | Claude Sonnet 4.6 | Security, correctness, and quality review |
-
----
-
-## Available skills
-
-Invokable as `/<skill-name>` in Claude Code chat.
+Invokable as `/<skill-name>`, or triggered automatically when relevant.
 
 | Skill | Purpose |
 |---|---|
 | `/prepare-docstrings <file>` | Add or rewrite docstrings in NumPy/SciPy format |
 | `/add-type-hints <file>` | Infer and add type annotations; asks when uncertain |
 | `/python-testing <path>` | Write pytest tests using TDD |
-| `/python-patterns` | Non-obvious Python patterns (typed decorators, immutability, exception chaining) |
+| `/python-patterns` | Non-obvious Python patterns |
 | `/nextflow-patterns` | Production-ready Nextflow DSL2 habits |
 | `/nextflow-testing` | Nextflow pipeline testing with nf-test |
+| `/clavia-new-skill` | Author a new skill following repo conventions |
+
+---
+
+## Agents
+
+| Agent | Purpose |
+|---|---|
+| `code-explorer` | Deep codebase exploration — traces execution paths, maps architecture |
+| `code-reviewer` | Security, correctness, and quality review |
+| `researcher` / `planner` / `executor` / `verifier` | The four `clavia-workflow` roles |
 
 ---
 
 ## Plugins
 
+### `clavia-workflow` — `plugins/clavia-workflow/`
+
+The phased development workflow. See above and the plugin README.
+
 ### `gh-workflow` — `plugins/gh-workflow/`
 
-GitHub workflow automation. Requires the official `github` MCP plugin and `GITHUB_PERSONAL_ACCESS_TOKEN` set in the environment. See [plugins/gh-workflow/README.md](plugins/gh-workflow/README.md) for setup.
+GitHub automation. Requires the official `github` MCP plugin and
+`GITHUB_PERSONAL_ACCESS_TOKEN`. Every write action is gated behind explicit
+confirmation. See [plugins/gh-workflow/README.md](plugins/gh-workflow/README.md).
 
 | Command | Purpose |
 |---|---|
-| `/gh-issue [owner/repo:] <description>` | Draft and create a structured GitHub issue (confirmation-gated) |
-| `/gh-my-issues [filters]` | List issues assigned to me, grouped by repo |
-| `/gh-my-prs [filters]` | List PRs I authored, was review-requested on, or am assigned |
-| `/gh-pr-draft [base:branch]` | Draft and create a PR in a fixed human-readable structure (accept/refuse gate) |
-| `/gh-pr-review <num\|url>` | Structured PR review (URGENT/HIGH/MEDIUM/LOW) — never posts to GitHub |
+| `/gh-issue [owner/repo:] <description>` | Draft and create a structured issue (gated) |
+| `/gh-my-issues [filters]` | List issues assigned to me |
+| `/gh-my-prs [filters]` | List my PRs |
+| `/gh-pr-draft [base:branch]` | Draft and create a PR (gated) |
+| `/gh-pr-review <num\|url>` | Structured PR review — never posts to GitHub |
 
 ---
 
 ## Documentation
 
-Architectural documentation lives in a single file: **[docs/INDEX.md](docs/INDEX.md)**.
+Architecture overview: **[docs/INDEX.md](docs/INDEX.md)**.
