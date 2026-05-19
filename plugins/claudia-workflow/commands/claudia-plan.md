@@ -24,10 +24,12 @@ phase from `STATE.md`.
 
 ## Review gate
 
-The task breakdown is **direction-locking**. Present the full ordered list
-with specs and dependencies, then ask **accept / edit / cancel**. Apply edits
-per the review-gate rule — verbatim rewrites used as given — and re-present.
-Write the tasks into `STATE.md` only on accept.
+The task breakdown is **direction-locking**. Present the ordered list with
+specs and dependencies, then ask **accept / edit / cancel**. On **edit**,
+follow the review-gate rule's file-based edit loop — write the tasks into the
+**Open tasks** section of `.planning/STATE.md`, surface the file so the user
+edits them in place, then re-read and re-present. The breakdown is final only
+on accept; on cancel, remove the draft tasks.
 
 ## Rules
 
@@ -35,4 +37,4 @@ Write the tasks into `STATE.md` only on accept.
   and one verifier pass.
 - Mark independent tasks; they are eligible for parallel execution only if
   `execution.parallel` is enabled.
-- Update `STATE.md`: next step = `/clavia-execute`.
+- Update `STATE.md`: next step = `/claudia-execute`.

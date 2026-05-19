@@ -28,14 +28,17 @@ current phase from `STATE.md`.
 
 ## Review gate
 
-`DECISIONS.md` is **direction-locking**. Before writing, present the full set
-of drafted entries and ask **accept / edit / cancel**. Apply edits per the
-review-gate rule and re-present. Append on accept — never rewrite or delete
-existing entries; supersede instead.
+`DECISIONS.md` is **direction-locking**. Present the drafted entries and ask
+**accept / edit / cancel**. On **edit**, follow the review-gate rule's
+file-based edit loop — append the drafted entries to `.planning/DECISIONS.md`,
+surface the file so the user edits them in place, then re-read and re-present.
+Entries are final only on accept; on cancel, remove the appended draft
+entries. Append-only — never rewrite or delete existing accepted entries;
+supersede instead.
 
 ## Rules
 
 - These are the user's decisions. Surface options and trade-offs; never
   decide for them.
 - Stop when the phase is specified well enough to plan — do not over-discuss.
-- Update `STATE.md`: next step = `/clavia-plan`.
+- Update `STATE.md`: next step = `/claudia-plan`.
