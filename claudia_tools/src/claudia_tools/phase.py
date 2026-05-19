@@ -43,25 +43,36 @@ def _read(path: Path) -> str:
     return Path(path).read_text(encoding="utf-8")
 
 
-def read_phases(path: Path) -> list[Phase]:
-    """Return every phase declared in ``ROADMAP.md``, in order.
+def _parse_phases(text: str) -> list[Phase]:
+    """Parse every phase out of the given ROADMAP.md ``text``.
 
     Raises
     ------
     ClaudiaError
-        If a phase heading has no matching ``status-N`` marked region.
+        If a phase has no ``status-N`` region or an unrecognised status.
     """
-    text = _read(path)
     phases: list[Phase] = []
     for match in _PHASE_HEADING.finditer(text):
         number = int(match["num"])
         region = f"status-{number}"
         if not has_region(text, region):
             raise ClaudiaError(f"phase {number} has no '{region}' marked region")
-        phases.append(
-            Phase(number=number, title=match["title"].strip(), status=read_region(text, region))
-        )
+        status = read_region(text, region).strip()
+        if status not in STATUSES:
+            raise ClaudiaError(f"phase {number} has invalid status '{status}'")
+        phases.append(Phase(number=number, title=match["title"].strip(), status=status))
     return phases
+
+
+def read_phases(path: Path) -> list[Phase]:
+    """Return every phase declared in ``ROADMAP.md``, in order.
+
+    Raises
+    ------
+    ClaudiaError
+        If a phase has no ``status-N`` region or an unrecognised status.
+    """
+    return _parse_phases(_read(path))
 
 
 def current_phase(path: Path) -> Phase:
@@ -88,10 +99,10 @@ def set_phase_status(path: Path, number: int, status: str) -> Phase:
     """
     if status not in STATUSES:
         raise ClaudiaError(f"status must be one of {list(STATUSES)}, got '{status}'")
-    phases = {phase.number: phase for phase in read_phases(path)}
+    text = _read(path)
+    phases = {phase.number: phase for phase in _parse_phases(text)}
     if number not in phases:
         raise ClaudiaError(f"no phase {number} in roadmap")
-    text = _read(path)
     Path(path).write_text(
         replace_region(text, f"status-{number}", status), encoding="utf-8"
     )

@@ -9,6 +9,7 @@ workflow step refuse to advance until its prerequisites are accepted.
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,23 @@ from typing import Any
 from claudia_tools.output import ClaudiaError
 
 _GATES_FILE = "gates.json"
+_ARTIFACT_NAME = re.compile(r"[A-Za-z0-9_.-]+")
+
+
+def _validate_artifact(artifact: str) -> None:
+    """Reject artifact names outside the safe character set.
+
+    Raises
+    ------
+    ClaudiaError
+        If ``artifact`` contains anything but letters, digits, ``.``, ``_``,
+        or ``-`` — keeping path separators and other surprises out of the
+        ledger keys.
+    """
+    if not _ARTIFACT_NAME.fullmatch(artifact):
+        raise ClaudiaError(
+            f"invalid artifact name '{artifact}' — use letters, digits, '.', '_', '-'"
+        )
 
 
 def _gates_path(planning_dir: Path) -> Path:
@@ -42,6 +60,7 @@ def _save(planning_dir: Path, gates: dict[str, Any]) -> None:
 
 def accept(planning_dir: Path, artifact: str) -> None:
     """Record ``artifact`` as having cleared its review gate."""
+    _validate_artifact(artifact)
     gates = _load(planning_dir)
     gates[artifact] = {"accepted": True, "at": datetime.now(UTC).isoformat()}
     _save(planning_dir, gates)
@@ -49,6 +68,7 @@ def accept(planning_dir: Path, artifact: str) -> None:
 
 def revoke(planning_dir: Path, artifact: str) -> None:
     """Remove any recorded acceptance for ``artifact``."""
+    _validate_artifact(artifact)
     gates = _load(planning_dir)
     gates.pop(artifact, None)
     _save(planning_dir, gates)

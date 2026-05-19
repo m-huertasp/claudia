@@ -67,12 +67,14 @@ def set_status_field(path: Path, key: str, value: str) -> dict[str, str]:
     ClaudiaError
         If ``key`` is not already a recognised status field.
     """
-    status = read_status(path)
+    text = _read(path)
+    region = read_region(text, _STATUS_REGION)
+    status = {m["key"]: m["value"].strip() for m in _STATUS_LINE.finditer(region)}
     if key not in status:
         raise ClaudiaError(f"unknown status field '{key}'")
     status[key] = str(value)
     body = "\n" + "\n".join(f"- {k}: {v}" for k, v in status.items()) + "\n"
-    _write(path, replace_region(_read(path), _STATUS_REGION, body))
+    _write(path, replace_region(text, _STATUS_REGION, body))
     return status
 
 

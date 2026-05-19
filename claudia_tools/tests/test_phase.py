@@ -48,3 +48,14 @@ def test_current_phase_all_complete_raises(planning_dir: Path) -> None:
 
     with pytest.raises(ClaudiaError, match="all phases are complete"):
         current_phase(roadmap)
+
+
+def test_read_phases_rejects_invalid_status(planning_dir: Path) -> None:
+    roadmap = planning_dir / "ROADMAP.md"
+    roadmap.write_text(
+        roadmap.read_text(encoding="utf-8").replace("not started", "wip"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ClaudiaError, match="invalid status 'wip'"):
+        read_phases(roadmap)

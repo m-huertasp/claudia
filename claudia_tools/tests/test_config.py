@@ -62,3 +62,12 @@ def test_set_invalid_enum_value_raises(planning_dir: Path) -> None:
 def test_set_invalid_bool_value_raises(planning_dir: Path) -> None:
     with pytest.raises(ClaudiaError, match="must be true or false"):
         set_value(planning_dir / "config.json", "execution.parallel", "maybe")
+
+
+def test_set_value_does_not_mutate_a_prior_read(planning_dir: Path) -> None:
+    config = planning_dir / "config.json"
+    before = read_config(config)
+
+    set_value(config, "mode", "yolo")
+
+    assert before["mode"] == "interactive"

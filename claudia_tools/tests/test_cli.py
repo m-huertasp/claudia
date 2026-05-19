@@ -102,3 +102,12 @@ def test_text_output_is_not_json(planning_dir: Path) -> None:
 
     assert result.exit_code == 0
     assert "current_phase: 1" in result.output
+
+
+def test_os_error_is_caught_as_envelope(planning_dir: Path, tmp_path: Path) -> None:
+    a_directory = tmp_path / "adir"
+    a_directory.mkdir()
+
+    result = _invoke(planning_dir, "template", "render", str(a_directory))
+
+    assert result.exit_code == 1

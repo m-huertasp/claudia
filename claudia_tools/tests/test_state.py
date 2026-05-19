@@ -66,3 +66,14 @@ def test_set_task_done_can_untick(planning_dir: Path) -> None:
 def test_set_task_done_unknown_raises(planning_dir: Path) -> None:
     with pytest.raises(ClaudiaError, match="no task 'T9'"):
         set_task_done(planning_dir / "STATE.md", "T9")
+
+
+def test_consecutive_status_updates_both_persist(planning_dir: Path) -> None:
+    state = planning_dir / "STATE.md"
+
+    set_status_field(state, "next_step", "/a")
+    set_status_field(state, "last_command", "/b")
+
+    status = read_status(state)
+    assert status["next_step"] == "/a"
+    assert status["last_command"] == "/b"

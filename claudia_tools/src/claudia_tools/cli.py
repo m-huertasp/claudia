@@ -25,6 +25,8 @@ def _run(ctx: click.Context, fn: Callable[[], Any]) -> None:
         result = Result.success(fn())
     except ClaudiaError as exc:
         result = Result.failure(str(exc))
+    except OSError as exc:
+        result = Result.failure(f"file error: {exc}")
     ctx.exit(emit(result, as_text=ctx.obj["as_text"]))
 
 

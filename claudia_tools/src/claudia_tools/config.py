@@ -7,6 +7,7 @@ never invents settings, and invalid values are rejected rather than written.
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -69,6 +70,8 @@ def _coerce(key: str, value: Any) -> Any:
         if text in {"true", "false"}:
             return text == "true"
         raise ClaudiaError(f"'{key}' must be true or false, got '{value}'")
+    if key not in _ENUMS:
+        raise ClaudiaError(f"no coercion rule for config key '{key}'")
     allowed = _ENUMS[key]
     if value not in allowed:
         raise ClaudiaError(f"'{key}' must be one of {sorted(allowed)}, got '{value}'")
@@ -86,7 +89,7 @@ def set_value(path: Path, key: str, value: Any) -> dict[str, Any]:
     if key not in _ALLOWED:
         raise ClaudiaError(f"unknown config key '{key}'")
     coerced = _coerce(key, value)
-    config = read_config(path)
+    config = copy.deepcopy(read_config(path))
     parts = key.split(".")
     node = config
     for part in parts[:-1]:

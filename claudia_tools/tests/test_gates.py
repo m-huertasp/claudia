@@ -52,3 +52,8 @@ def test_invalid_ledger_raises(planning_dir: Path) -> None:
 
     with pytest.raises(ClaudiaError, match="invalid JSON"):
         is_accepted(planning_dir, "ROADMAP.md")
+
+
+def test_accept_rejects_unsafe_artifact_name(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="invalid artifact name"):
+        accept(planning_dir, "../../etc/passwd")
