@@ -1,20 +1,237 @@
 """The ``claudia`` command-line interface.
 
-Wired fully in task T9. This module starts as the bare command group so the
-``claudia`` console script and ``claudia --help`` resolve from task T1 on.
+Every command runs a library call, wraps the outcome in a :class:`Result`, and
+emits it as the ``{ok, data, error}`` envelope (JSON by default, ``--text``
+for humans). A :class:`ClaudiaError` becomes a failed envelope and a non-zero
+exit code; it never reaches the user as a traceback.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
+
 import click
 
-from claudia_tools import __version__
+from claudia_tools import __version__, config, gates, phase, state, templates
+from claudia_tools.output import ClaudiaError, Result, emit
+
+
+def _run(ctx: click.Context, fn: Callable[[], Any]) -> None:
+    """Run ``fn``, emit its result as an envelope, and exit with its code."""
+    try:
+        result = Result.success(fn())
+    except ClaudiaError as exc:
+        result = Result.failure(str(exc))
+    ctx.exit(emit(result, as_text=ctx.obj["as_text"]))
+
+
+def _planning(ctx: click.Context) -> Path:
+    """Return the configured ``.planning/`` directory."""
+    return ctx.obj["planning_dir"]
+
+
+def _parse_vars(pairs: tuple[str, ...]) -> dict[str, str]:
+    """Parse ``key=value`` strings from repeated ``--var`` options."""
+    parsed: dict[str, str] = {}
+    for pair in pairs:
+        if "=" not in pair:
+            raise ClaudiaError(f"--var must be key=value, got '{pair}'")
+        key, value = pair.split("=", 1)
+        parsed[key] = value
+    return parsed
 
 
 @click.group()
+@click.option("--text", "as_text", is_flag=True, help="Human-readable output instead of JSON.")
+@click.option(
+    "--planning-dir",
+    default=".planning",
+    type=click.Path(file_okay=False, path_type=Path),
+    help="Path to the .planning/ directory.",
+)
 @click.version_option(__version__)
-def main() -> None:
+@click.pass_context
+def main(ctx: click.Context, as_text: bool, planning_dir: Path) -> None:
     """claudia — deterministic engine for the claudia workflow."""
+    ctx.obj = {"as_text": as_text, "planning_dir": planning_dir}
+
+
+# --- state -----------------------------------------------------------------
+
+
+@click.group()
+def state_cmd() -> None:
+    """Read and update STATE.md."""
+
+
+@state_cmd.command("get")
+@click.pass_context
+def state_get(ctx: click.Context) -> None:
+    """Show the STATE.md status fields."""
+    _run(ctx, lambda: state.read_status(_planning(ctx) / "STATE.md"))
+
+
+@state_cmd.command("set")
+@click.argument("key")
+@click.argument("value")
+@click.pass_context
+def state_set(ctx: click.Context, key: str, value: str) -> None:
+    """Set a STATE.md status field."""
+    _run(ctx, lambda: state.set_status_field(_planning(ctx) / "STATE.md", key, value))
+
+
+@state_cmd.command("tasks")
+@click.pass_context
+def state_tasks(ctx: click.Context) -> None:
+    """List the open tasks."""
+    _run(ctx, lambda: [asdict(t) for t in state.read_tasks(_planning(ctx) / "STATE.md")])
+
+
+@state_cmd.command("task-done")
+@click.argument("task_id")
+@click.option("--undo", is_flag=True, help="Untick the task instead.")
+@click.pass_context
+def state_task_done(ctx: click.Context, task_id: str, undo: bool) -> None:
+    """Tick (or, with --undo, untick) a task's checkbox."""
+    _run(ctx, lambda: asdict(state.set_task_done(_planning(ctx) / "STATE.md", task_id, not undo)))
+
+
+# --- config ----------------------------------------------------------------
+
+
+@click.group()
+def config_cmd() -> None:
+    """Read and update config.json."""
+
+
+@config_cmd.command("get")
+@click.argument("key", required=False)
+@click.pass_context
+def config_get(ctx: click.Context, key: str | None) -> None:
+    """Show the whole config, or one dotted KEY."""
+    path = _planning(ctx) / "config.json"
+    _run(ctx, lambda: config.read_config(path) if key is None else config.get_value(path, key))
+
+
+@config_cmd.command("set")
+@click.argument("key")
+@click.argument("value")
+@click.pass_context
+def config_set(ctx: click.Context, key: str, value: str) -> None:
+    """Set a dotted config KEY to VALUE."""
+    _run(ctx, lambda: config.set_value(_planning(ctx) / "config.json", key, value))
+
+
+# --- phase -----------------------------------------------------------------
+
+
+@click.group()
+def phase_cmd() -> None:
+    """Inspect and transition roadmap phases."""
+
+
+@phase_cmd.command("list")
+@click.pass_context
+def phase_list(ctx: click.Context) -> None:
+    """List every roadmap phase."""
+    _run(ctx, lambda: [asdict(p) for p in phase.read_phases(_planning(ctx) / "ROADMAP.md")])
+
+
+@phase_cmd.command("current")
+@click.pass_context
+def phase_current(ctx: click.Context) -> None:
+    """Show the first incomplete phase."""
+    _run(ctx, lambda: asdict(phase.current_phase(_planning(ctx) / "ROADMAP.md")))
+
+
+@phase_cmd.command("set-status")
+@click.argument("number", type=int)
+@click.argument("status")
+@click.pass_context
+def phase_set_status(ctx: click.Context, number: int, status: str) -> None:
+    """Set phase NUMBER to STATUS."""
+    _run(ctx, lambda: asdict(phase.set_phase_status(_planning(ctx) / "ROADMAP.md", number, status)))
+
+
+# --- template --------------------------------------------------------------
+
+
+@click.group()
+def template_cmd() -> None:
+    """Render workflow templates."""
+
+
+@template_cmd.command("render")
+@click.argument("template_path", type=click.Path(path_type=Path))
+@click.option("--var", "variables", multiple=True, help="A key=value substitution.")
+@click.pass_context
+def template_render(ctx: click.Context, template_path: Path, variables: tuple[str, ...]) -> None:
+    """Render TEMPLATE_PATH with the given --var substitutions."""
+    _run(ctx, lambda: templates.render_file(template_path, _parse_vars(variables)))
+
+
+# --- gate ------------------------------------------------------------------
+
+
+@click.group()
+def gate_cmd() -> None:
+    """Manage review-gate acceptance."""
+
+
+@gate_cmd.command("accept")
+@click.argument("artifact")
+@click.pass_context
+def gate_accept(ctx: click.Context, artifact: str) -> None:
+    """Record ARTIFACT as having cleared its review gate."""
+
+    def _accept() -> str:
+        gates.accept(_planning(ctx), artifact)
+        return f"{artifact} accepted"
+
+    _run(ctx, _accept)
+
+
+@gate_cmd.command("revoke")
+@click.argument("artifact")
+@click.pass_context
+def gate_revoke(ctx: click.Context, artifact: str) -> None:
+    """Clear any recorded acceptance for ARTIFACT."""
+
+    def _revoke() -> str:
+        gates.revoke(_planning(ctx), artifact)
+        return f"{artifact} revoked"
+
+    _run(ctx, _revoke)
+
+
+@gate_cmd.command("check")
+@click.argument("artifacts", nargs=-1, required=True)
+@click.pass_context
+def gate_check(ctx: click.Context, artifacts: tuple[str, ...]) -> None:
+    """Fail unless every named ARTIFACT has cleared its review gate."""
+
+    def _check() -> str:
+        gates.require_accepted(_planning(ctx), *artifacts)
+        return "all review gates cleared"
+
+    _run(ctx, _check)
+
+
+@gate_cmd.command("status")
+@click.pass_context
+def gate_status(ctx: click.Context) -> None:
+    """Show the review-gate ledger."""
+    _run(ctx, lambda: gates.status(_planning(ctx)))
+
+
+main.add_command(state_cmd, "state")
+main.add_command(config_cmd, "config")
+main.add_command(phase_cmd, "phase")
+main.add_command(template_cmd, "template")
+main.add_command(gate_cmd, "gate")
 
 
 if __name__ == "__main__":  # pragma: no cover
