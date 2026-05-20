@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,27 @@ _BOOL_KEYS = frozenset(
     {"agents.researcher", "agents.planner", "agents.verifier", "execution.parallel"}
 )
 _ALLOWED = frozenset(_ENUMS) | _BOOL_KEYS
+
+
+def init_config(planning_dir: Path, force: bool = False) -> Path:
+    """Write the bundled default config to ``planning_dir/config.json``.
+
+    Returns the path written.
+
+    Raises
+    ------
+    ClaudiaError
+        If the target already exists and ``force`` is False.
+    """
+    target = Path(planning_dir) / "config.json"
+    if target.exists() and not force:
+        raise ClaudiaError(
+            f"config already exists at {target}; pass --force to overwrite"
+        )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    default = resources.files("claudia_tools.data").joinpath("config-default.json")
+    target.write_text(default.read_text(encoding="utf-8"), encoding="utf-8")
+    return target
 
 
 def read_config(path: Path) -> dict[str, Any]:

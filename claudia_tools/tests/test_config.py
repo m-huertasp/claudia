@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from claudia_tools.config import get_value, read_config, set_value
+from claudia_tools.config import get_value, init_config, read_config, set_value
 from claudia_tools.output import ClaudiaError
 
 
@@ -71,3 +71,24 @@ def test_set_value_does_not_mutate_a_prior_read(planning_dir: Path) -> None:
     set_value(config, "mode", "yolo")
 
     assert before["mode"] == "interactive"
+
+
+def test_init_config_creates_default(tmp_path: Path) -> None:
+    target = init_config(tmp_path)
+
+    assert target == tmp_path / "config.json"
+    assert read_config(target)["mode"] == "interactive"
+
+
+def test_init_config_refuses_when_exists(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="already exists"):
+        init_config(planning_dir)
+
+
+def test_init_config_force_overwrites(planning_dir: Path) -> None:
+    config_path = planning_dir / "config.json"
+    set_value(config_path, "mode", "yolo")
+
+    init_config(planning_dir, force=True)
+
+    assert read_config(config_path)["mode"] == "interactive"

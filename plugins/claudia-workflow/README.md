@@ -8,8 +8,32 @@ outward action.
 ## Prerequisites
 
 - Claude Code with this plugin enabled.
+- The [`claudia-tools`](../../claudia_tools/) Python package, installed and
+  on PATH as the `claudia` console script — every workflow command calls it
+  for deterministic operations on the `.planning/` files:
+  ```bash
+  uv tool install ./claudia_tools     # or pipx install ./claudia_tools
+  claudia --help
+  ```
 - The `gh-workflow` plugin (for `/claudia-ship`, which delegates to
   `/gh-pr-draft`).
+
+## Architecture — commands, workflows, CLI
+
+Each `/claudia-*` command file in `commands/` is a thin entry point: it
+carries the slash-command frontmatter and a single pointer to the matching
+file in `workflows/`. The full orchestration text — steps, review gates,
+rules, and explicit `claudia` CLI invocations — lives in the workflow file.
+
+This means:
+
+- **Commands** stay small and easy to scan.
+- **Workflows** can grow without bloating the command surface.
+- Every deterministic operation (state update, config read/write, phase
+  status transition, template render, gate acceptance) goes through the
+  tested `claudia` CLI rather than the model hand-editing JSON or Markdown.
+
+See [`workflows/README.md`](workflows/README.md) for the full mapping.
 
 ## The workflow
 

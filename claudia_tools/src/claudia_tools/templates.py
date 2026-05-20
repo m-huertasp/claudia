@@ -48,3 +48,30 @@ def render_file(template_path: Path, variables: Mapping[str, object]) -> str:
     except FileNotFoundError as exc:
         raise ClaudiaError(f"no template at {template_path}") from exc
     return render(text, variables)
+
+
+def render_to_file(
+    template_path: Path,
+    target_path: Path,
+    variables: Mapping[str, object],
+    force: bool = False,
+) -> Path:
+    """Render ``template_path`` and write the result to ``target_path``.
+
+    Returns the path written.
+
+    Raises
+    ------
+    ClaudiaError
+        If the target already exists and ``force`` is False, if the template
+        does not exist, or if a variable is missing.
+    """
+    target = Path(target_path)
+    if target.exists() and not force:
+        raise ClaudiaError(
+            f"output already exists at {target}; pass --force to overwrite"
+        )
+    rendered = render_file(template_path, variables)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(rendered, encoding="utf-8")
+    return target
