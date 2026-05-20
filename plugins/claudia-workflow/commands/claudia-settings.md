@@ -4,37 +4,6 @@ description: View or change the claudia workflow configuration in .planning/conf
 
 # Workflow settings
 
-The user wants to view or change `.planning/config.json`.
+Follow `plugins/claudia-workflow/workflows/settings.md`.
 
-Argument: `$ARGUMENTS` — optional. A `key=value` (e.g. `mode=yolo`,
-`model_profile=quality`, `execution.parallel=true`) sets a value; empty shows
-the current config.
-
-## Steps
-
-1. **Read `.planning/config.json`.** If it does not exist, tell the user to
-   run `/claudia-new` first.
-2. **If no argument**, show the current settings with a one-line explanation
-   of each, and the valid values.
-3. **If a `key=value`** was given, validate it against the schema below, then
-   apply it.
-
-## Settings
-
-| Key | Values | Effect |
-|---|---|---|
-| `mode` | `interactive`, `yolo` | confirm each phase, or auto-proceed |
-| `model_profile` | `quality`, `balanced`, `budget` | model per agent role |
-| `agents.researcher` / `.planner` / `.verifier` | `true`, `false` | toggle quality agents |
-| `execution.parallel` | `true`, `false` | parallel executor waves |
-
-## Review gate
-
-Editing config is local and reversible — show the before/after diff and
-confirm, but no full accept/cancel gate is needed.
-
-## Rules
-
-- Reject keys or values not in the schema; do not invent settings.
-- The review gate and the secret scan are not configurable — there is no key
-  to disable them. Refuse any request to do so.
+Argument: `$ARGUMENTS` — optional `key=value` (e.g. `mode=yolo`).
