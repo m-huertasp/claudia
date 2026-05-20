@@ -1,6 +1,6 @@
 # Claudia — Architecture Index
 
-**Last Updated:** May 19, 2026
+**Last Updated:** May 20, 2026
 
 ## Overview
 
@@ -25,7 +25,8 @@ Two principles are framework-wide:
 claudia/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
-│   ├── agents/                      # code-explorer, code-reviewer
+│   ├── agents/                      # code-explorer, code-reviewer, nextflow-reviewer,
+│   │                                #   domain-reviewer
 │   ├── rules/
 │   │   ├── common/                  # code-review, coding-style, patterns, security,
 │   │   │                            #   testing, review-gate, secure-ai-use
@@ -33,14 +34,17 @@ claudia/
 │   └── skills/                      # add-type-hints, prepare-docstrings, python-testing,
 │                                    #   python-patterns, nextflow-patterns, nextflow-testing,
 │                                    #   claudia-new-skill
+├── claudia_tools/                   # Python package — the `claudia` CLI; modules: output,
+│                                    #   markers, state, config, phase, templates, gates,
+│                                    #   detect, env, verification; pyproject.toml; pytest suite
 ├── plugins/
 │   ├── claudia-workflow/             # Phased development workflow
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── config.template.json     # Config schema, copied to .planning/config.json
-│   │   ├── templates/               # State-file skeletons (PROJECT, ROADMAP, STATE,
-│   │   │                            #   CONTEXT, DECISIONS)
+│   │   ├── config.template.json     # Config schema; defaults bundled in claudia_tools/data/
+│   │   ├── templates/               # PROJECT, ROADMAP, STATE, CONTEXT, DECISIONS, ENVIRONMENT
 │   │   ├── agents/                  # researcher, planner, executor, verifier
-│   │   ├── commands/                # 9 /claudia-* phase commands
+│   │   ├── commands/                # 9 thin /claudia-* entry points
+│   │   ├── workflows/               # Orchestration files; call the `claudia` CLI
 │   │   └── README.md
 │   └── gh-workflow/                 # GitHub issue / PR commands
 ├── docs/INDEX.md                    # This file
@@ -72,6 +76,8 @@ Python-specific. Two `common/` rules are framework infrastructure:
 |-------|-------|---------|
 | `code-explorer` | Sonnet | Deep codebase exploration |
 | `code-reviewer` | Sonnet | Security, correctness, quality review |
+| `nextflow-reviewer` | Sonnet | Nextflow DSL2 review — reproducibility, channels, resources, nf-test |
+| `domain-reviewer` | Sonnet | Bioinformatics output sanity — reference builds, coordinates, counts |
 
 ### Skills — `.claude/skills/`
 
@@ -89,10 +95,33 @@ Invokable as `/<skill-name>`; helper skills auto-trigger on file context.
 
 ---
 
+## Engine — `claudia_tools` (the `claudia` CLI)
+
+Tested Python package that owns every deterministic op the workflow needs:
+
+| Module | Responsibility |
+|---|---|
+| `output` | `{ok, data, error}` envelope; `ClaudiaError` |
+| `markers` | Read/replace HTML-comment-delimited regions in Markdown |
+| `state` | STATE.md status fields and task checkboxes |
+| `config` | Schema-validated `.planning/config.json` access; `config init` writes defaults |
+| `phase` | ROADMAP.md phase listing and status transitions |
+| `templates` | `{{var}}` template rendering; `render_to_file` for direct output |
+| `gates` | Per-artifact review-gate acceptance ledger |
+| `detect` | Project-type detection: Python lib vs Nextflow pipeline |
+| `env` | Tool-version capture + ENVIRONMENT.md render |
+| `verification` | Human verification checklist (gates `/claudia-ship`) |
+
+Every CLI command emits the JSON envelope by default; `--text` for humans;
+errors set a non-zero exit.
+
 ## Plugin — `claudia-workflow`
 
 The phased development workflow. GSD-shaped: explicit phase commands,
-persistent `.planning/` state, a `config.json` of toggles.
+persistent `.planning/` state, a `config.json` of toggles. Each
+`/claudia-*` command file is a thin pointer; orchestration lives in
+[`plugins/claudia-workflow/workflows/`](../plugins/claudia-workflow/workflows/)
+and calls the `claudia` CLI for every deterministic op.
 
 ### Phase commands
 
@@ -120,9 +149,11 @@ persistent `.planning/` state, a `config.json` of toggles.
 ### State — `.planning/`
 
 `PROJECT.md`, `ROADMAP.md`, `CONTEXT.md`, `DECISIONS.md`, `STATE.md`,
-`config.json`. Persists across sessions; gitignored by default.
-`ROADMAP.md`, `DECISIONS.md`, and the plan task breakdown are
-direction-locking — changes pass through the review gate.
+`ENVIRONMENT.md`, `VERIFICATION.md`, `config.json`, `gates.json`. Persists
+across sessions; gitignored by default. `ROADMAP.md`, `DECISIONS.md`, and
+the plan task breakdown are direction-locking — changes pass through the
+review gate. `VERIFICATION.md` holds the human checklist that gates
+`/claudia-ship`.
 
 ### Config — `.planning/config.json`
 
@@ -182,8 +213,26 @@ Python and Nextflow skills; `gh-workflow` plugin.
 4 agents, state files, config); `claudia-new-skill` meta-skill; helper-skill
 auto-triggering.
 
-### 📋 Phase 4 — Extended capabilities
-- [ ] Bioinformatics skills — reproducibility (conda/containers), HPC/SLURM
-- [ ] Nextflow-tier rules (`.claude/rules/nextflow/`)
-- [ ] One-command installer for sharing across the lab
-- [ ] Parallel-wave execution refinement
+### ✅ Phase 4 — `claudia-tools` engine
+Tested Python `claudia` CLI: state/config/phase/template/gate operations
+behind a `{ok,data,error}` JSON envelope. Workflow commands rewritten to
+call it. Marker-delimited regions in shipped templates.
+
+### ✅ Phase 5 — Project-type detection & environment capture
+`claudia detect` recognises Python vs Nextflow. `claudia env capture`
+snapshots tool versions for the bioinformatics stack and renders
+`ENVIRONMENT.md`. `/claudia-verify` branches its automated runner on the
+detected type.
+
+### ✅ Phase 6 — Two-tier verification + review agents + this doc update
+`claudia verify init/add/confirm/ready` tracks a human checklist (e.g. full
+pipeline runs) that gates `/claudia-ship`. New `nextflow-reviewer` and
+`domain-reviewer` agents pair with `code-reviewer` for pipeline / output
+review. Documentation refreshed.
+
+### 📋 Deferred
+- [ ] Commit-validation and context-monitor hooks (originally Phase 5 of
+      the roadmap).
+- [ ] `rules/` → `references/` split (deferred from Phase 6 — kept the
+      diff focused on capability).
+- [ ] Parallel-wave execution refinement.

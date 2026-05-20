@@ -29,10 +29,27 @@ completed since the last verification.
      - `nextflow` → `nf-test test` against the bundled stub profile;
        `nextflow lint` if installed.
      - `unknown` → ask the user how to verify; do not invent a runner.
-4. **Secret scan** the phase's diff per the secure-ai-use rule. Always
+4. **Generate the human checklist.** For pipelines, automated stub runs
+   alone do not prove the work; produce specific manual checks the user
+   must run before shipping. Initialise the artifact if it does not exist:
+   ```
+   claudia verify init --name <project>
+   ```
+   then add one item per check, e.g.:
+   ```
+   claudia verify add "Run nextflow run . -profile test"
+   claudia verify add "Confirm results/multiqc_report.html opens cleanly"
+   claudia verify add "Confirm row count of results/summary.tsv ≈ <expected>"
+   ```
+   For a pure-Python phase where automated tests are sufficient, skip the
+   checklist (no items added). The ship gate then permits the phase if the
+   automated tests pass.
+5. **Secret scan** the phase's diff per the secure-ai-use rule. Always
    runs; cannot be skipped.
-5. **Report** per task: stage-1 pass/fail, stage-2 findings classified
-   CRITICAL/HIGH/MEDIUM/LOW, overall verdict.
+6. **Report** per task: stage-1 pass/fail, stage-2 findings classified
+   CRITICAL/HIGH/MEDIUM/LOW, overall verdict. If a human checklist was
+   added, list its items and tell the user how to confirm them
+   (`claudia verify confirm V<N>`).
 
 ## Review gate
 

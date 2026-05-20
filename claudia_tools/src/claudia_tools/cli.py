@@ -16,7 +16,17 @@ from typing import Any
 
 import click
 
-from claudia_tools import __version__, config, detect, env, gates, phase, state, templates
+from claudia_tools import (
+    __version__,
+    config,
+    detect,
+    env,
+    gates,
+    phase,
+    state,
+    templates,
+    verification,
+)
 from claudia_tools.output import ClaudiaError, Result, emit
 
 
@@ -353,12 +363,68 @@ def env_capture(
     _run(ctx, _do)
 
 
+# --- verify ----------------------------------------------------------------
+
+
+@click.group()
+def verify_cmd() -> None:
+    """Manage the human-checklist verification artifact."""
+
+
+@verify_cmd.command("init")
+@click.option("--name", "project_name", default="project", help="Project name in the heading.")
+@click.option("--force", is_flag=True, help="Overwrite an existing VERIFICATION.md.")
+@click.pass_context
+def verify_init(ctx: click.Context, project_name: str, force: bool) -> None:
+    """Write a fresh .planning/VERIFICATION.md from the bundled template."""
+    _run(
+        ctx,
+        lambda: str(verification.init_verification(_planning(ctx), project_name, force=force)),
+    )
+
+
+@verify_cmd.command("add")
+@click.argument("description")
+@click.pass_context
+def verify_add(ctx: click.Context, description: str) -> None:
+    """Append DESCRIPTION as a new checklist item."""
+    _run(ctx, lambda: asdict(verification.add_item(_planning(ctx), description)))
+
+
+@verify_cmd.command("confirm")
+@click.argument("item_id")
+@click.pass_context
+def verify_confirm(ctx: click.Context, item_id: str) -> None:
+    """Tick the checkbox of ITEM_ID (e.g. V1)."""
+    _run(ctx, lambda: asdict(verification.confirm_item(_planning(ctx), item_id)))
+
+
+@verify_cmd.command("list")
+@click.pass_context
+def verify_list(ctx: click.Context) -> None:
+    """List every checklist item."""
+    _run(ctx, lambda: [asdict(item) for item in verification.list_items(_planning(ctx))])
+
+
+@verify_cmd.command("ready")
+@click.pass_context
+def verify_ready(ctx: click.Context) -> None:
+    """Exit 0 if every checklist item is confirmed; non-zero otherwise."""
+
+    def _check() -> str:
+        verification.require_ready(_planning(ctx))
+        return "verification checklist clear"
+
+    _run(ctx, _check)
+
+
 main.add_command(state_cmd, "state")
 main.add_command(config_cmd, "config")
 main.add_command(phase_cmd, "phase")
 main.add_command(template_cmd, "template")
 main.add_command(gate_cmd, "gate")
 main.add_command(env_cmd, "env")
+main.add_command(verify_cmd, "verify")
 
 
 if __name__ == "__main__":  # pragma: no cover
