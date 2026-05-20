@@ -41,6 +41,14 @@ Argument: `$ARGUMENTS` — optional one-line description of the project.
        --var updated=<YYYY-MM-DD> \
        --output .planning/STATE.md
    ```
+7. **Capture the environment** and write `ENVIRONMENT.md`:
+   ```
+   claudia env capture --name <project> --output .planning/ENVIRONMENT.md
+   ```
+   The captured `project_type` (output of `claudia detect`) determines which
+   automated tests `/claudia-verify` will run. Manually fill the
+   **Containers** and **Datasets** sections — `claudia env capture` never
+   touches them.
 
 ## Review gate
 
