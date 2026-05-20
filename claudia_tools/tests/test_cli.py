@@ -183,3 +183,32 @@ def test_env_capture_invalid_probe_exits_nonzero(
     result = _invoke(planning_dir, "env", "capture", str(tmp_path), "--probe", "broken")
 
     assert result.exit_code == 1
+
+
+def test_verify_init_add_confirm_ready_round_trip(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    assert _invoke(planning, "verify", "init", "--name", "demo").exit_code == 0
+    assert _invoke(planning, "verify", "add", "Check output BAMs").exit_code == 0
+    assert _invoke(planning, "verify", "add", "Open MultiQC report").exit_code == 0
+    # Not ready yet — two pending items.
+    assert _invoke(planning, "verify", "ready").exit_code == 1
+    assert _invoke(planning, "verify", "confirm", "V1").exit_code == 0
+    assert _invoke(planning, "verify", "ready").exit_code == 1
+    assert _invoke(planning, "verify", "confirm", "V2").exit_code == 0
+    # All confirmed.
+    assert _invoke(planning, "verify", "ready").exit_code == 0
+
+
+def test_verify_list_reflects_state(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    _invoke(planning, "verify", "init")
+    _invoke(planning, "verify", "add", "An item")
+
+    items = _data(_invoke(planning, "verify", "list"))
+
+    assert len(items) == 1
+    assert items[0]["id"] == "V1"
+    assert items[0]["confirmed"] is False
