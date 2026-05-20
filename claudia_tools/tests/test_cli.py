@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from claudia_tools.cli import main
@@ -137,3 +138,48 @@ def test_template_render_to_file_via_cli(planning_dir: Path, tmp_path: Path) -> 
 
     assert result.exit_code == 0
     assert target.read_text(encoding="utf-8") == "# Done"
+
+
+def test_detect_via_cli(planning_dir: Path, tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("", encoding="utf-8")
+
+    result = _invoke(planning_dir, "detect", str(tmp_path))
+
+    assert result.exit_code == 0
+    assert _data(result)["primary"] == "python"
+
+
+def test_env_capture_writes_file_via_cli(
+    planning_dir: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from claudia_tools import env as env_mod
+
+    class _Fake:
+        stdout = "ver-9"
+        stderr = ""
+        returncode = 0
+
+    monkeypatch.setattr(env_mod.subprocess, "run", lambda *_a, **_kw: _Fake())
+    (tmp_path / "pyproject.toml").write_text("", encoding="utf-8")
+    target = tmp_path / "ENVIRONMENT.md"
+
+    result = _invoke(
+        planning_dir,
+        "env", "capture", str(tmp_path),
+        "--output", str(target),
+        "--name", "demo",
+    )
+
+    assert result.exit_code == 0
+    assert "primary: python" in target.read_text(encoding="utf-8")
+    assert "- python: ver-9" in target.read_text(encoding="utf-8")
+
+
+def test_env_capture_invalid_probe_exits_nonzero(
+    planning_dir: Path, tmp_path: Path
+) -> None:
+    result = _invoke(planning_dir, "env", "capture", str(tmp_path), "--probe", "broken")
+
+    assert result.exit_code == 1

@@ -8,6 +8,7 @@ exit code; it never reaches the user as a traceback.
 
 from __future__ import annotations
 
+import shlex
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Any
 
 import click
 
-from claudia_tools import __version__, config, gates, phase, state, templates
+from claudia_tools import __version__, config, detect, env, gates, phase, state, templates
 from claudia_tools.output import ClaudiaError, Result, emit
 
 
@@ -44,6 +45,29 @@ def _parse_vars(pairs: tuple[str, ...]) -> dict[str, str]:
         key, value = pair.split("=", 1)
         parsed[key] = value
     return parsed
+
+
+def _parse_probes(probes: tuple[str, ...]) -> dict[str, tuple[str, ...]]:
+    """Parse ``name='cmd args'`` strings from repeated ``--probe`` options."""
+    parsed: dict[str, tuple[str, ...]] = {}
+    for probe in probes:
+        if "=" not in probe:
+            raise ClaudiaError(f"--probe must be name='cmd args', got '{probe}'")
+        name, command = probe.split("=", 1)
+        argv = tuple(shlex.split(command))
+        if not argv:
+            raise ClaudiaError(f"--probe '{name}' has no command")
+        parsed[name] = argv
+    return parsed
+
+
+def _environment_dict(snapshot: env.Environment) -> dict[str, Any]:
+    """Convert an :class:`env.Environment` to a plain dict for JSON output."""
+    return {
+        "project_type": asdict(snapshot.project_type),
+        "tools": [asdict(tool) for tool in snapshot.tools],
+        "captured_at": snapshot.captured_at,
+    }
 
 
 @click.group()
@@ -259,11 +283,82 @@ def gate_status(ctx: click.Context) -> None:
     _run(ctx, lambda: gates.status(_planning(ctx)))
 
 
+# --- detect ----------------------------------------------------------------
+
+
+@main.command("detect")
+@click.argument(
+    "root",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=".",
+)
+@click.pass_context
+def detect_cmd(ctx: click.Context, root: Path) -> None:
+    """Detect the primary project type of ROOT (default: cwd)."""
+    _run(ctx, lambda: asdict(detect.detect_project_type(root)))
+
+
+# --- env -------------------------------------------------------------------
+
+
+@click.group()
+def env_cmd() -> None:
+    """Capture environment reproducibility data."""
+
+
+@env_cmd.command("capture")
+@click.argument(
+    "root",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=".",
+)
+@click.option(
+    "--output",
+    "output_path",
+    type=click.Path(path_type=Path),
+    help="Write a rendered ENVIRONMENT.md to this path.",
+)
+@click.option("--force", is_flag=True, help="Overwrite the output path if it exists.")
+@click.option(
+    "--probe",
+    "probes",
+    multiple=True,
+    help="Extra probe: name='cmd args'.",
+)
+@click.option(
+    "--name",
+    "project_name",
+    default=None,
+    help="Project name for the artifact (default: ROOT directory name).",
+)
+@click.pass_context
+def env_capture(
+    ctx: click.Context,
+    root: Path,
+    output_path: Path | None,
+    force: bool,
+    probes: tuple[str, ...],
+    project_name: str | None,
+) -> None:
+    """Capture the environment of ROOT (default: cwd)."""
+
+    def _do() -> Any:
+        extras = _parse_probes(probes)
+        snapshot = env.capture_environment(root, extra_probes=extras)
+        if output_path is None:
+            return _environment_dict(snapshot)
+        name = project_name or Path(root).resolve().name
+        return str(env.write_environment_file(snapshot, name, output_path, force=force))
+
+    _run(ctx, _do)
+
+
 main.add_command(state_cmd, "state")
 main.add_command(config_cmd, "config")
 main.add_command(phase_cmd, "phase")
 main.add_command(template_cmd, "template")
 main.add_command(gate_cmd, "gate")
+main.add_command(env_cmd, "env")
 
 
 if __name__ == "__main__":  # pragma: no cover
