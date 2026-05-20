@@ -23,10 +23,29 @@ Two principles run through everything:
 
 ---
 
+## The deterministic engine — `claudia-tools`
+
+The workflow's mechanical work — parsing and updating planning files,
+validating config, transitioning phases, rendering templates, gating
+review acceptance, detecting project type, capturing the tool environment,
+tracking the human verification checklist — runs through a tested Python
+CLI called `claudia`. The orchestrating model only reads and judges; it
+never hand-edits planning files.
+
+```bash
+uv tool install ./claudia_tools     # or pipx install ./claudia_tools
+claudia --help
+```
+
+See [claudia_tools/README.md](claudia_tools/README.md).
+
 ## The workflow — `claudia-workflow` plugin
 
 Explicit-command workflow. State persists in `.planning/` so
-work resumes cold across sessions.
+work resumes cold across sessions. Every command is a thin entry point
+pointing at a workflow file under
+[plugins/claudia-workflow/workflows/](plugins/claudia-workflow/workflows/),
+which invokes the `claudia` CLI for every deterministic op.
 
 | Command | Phase |
 |---|---|
@@ -51,11 +70,17 @@ in a fresh context. See [plugins/claudia-workflow/README.md](plugins/claudia-wor
 claudia/
 ├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
 ├── .claude/
-│   ├── agents/                      # Subagent definitions (code-explorer, code-reviewer)
-│   ├── rules/                       # Conventions — common/ (incl. review-gate, secure-ai-use) 
+│   ├── agents/                      # code-explorer, code-reviewer, nextflow-reviewer, domain-reviewer
+│   ├── rules/                       # Conventions — common/ (incl. review-gate, secure-ai-use)
 │   └── skills/                      # Skills, invokable as /<skill-name>
+├── claudia_tools/                   # Python package: the `claudia` CLI (state, config, phase,
+│                                    #   templates, gates, detect, env, verify)
 ├── plugins/
 │   ├── claudia-workflow/             # The phased development workflow
+│   │   ├── commands/                # Thin /claudia-* entry points
+│   │   ├── workflows/               # Orchestration text (calls the `claudia` CLI)
+│   │   ├── templates/               # PROJECT.md, ROADMAP.md, STATE.md, DECISIONS.md, ENVIRONMENT.md
+│   │   └── agents/                  # researcher, planner, executor, verifier
 │   └── gh-workflow/                 # GitHub issue / PR commands
 ├── docs/                            # docs/INDEX.md — architecture overview
 └── README.md                        # This file
@@ -85,6 +110,8 @@ Invokable as `/<skill-name>`, or triggered automatically when relevant.
 |---|---|
 | `code-explorer` | Deep codebase exploration — traces execution paths, maps architecture |
 | `code-reviewer` | Security, correctness, and quality review |
+| `nextflow-reviewer` | Nextflow DSL2 review — reproducibility, channel safety, resource directives, nf-test coverage |
+| `domain-reviewer` | Bioinformatics output sanity — reference builds, coordinate systems, count-of-magnitude checks, multiple-testing |
 | `researcher` / `planner` / `executor` / `verifier` | The four `claudia-workflow` roles |
 
 ---

@@ -13,10 +13,11 @@ The framework is **control-first**: every direction-locking artifact and every o
 The project is organized into several core components:
 
 - **`CLAUDE.md`** — this file; read automatically by Claude Code in every project that includes it
-- **`.claude/agents/`** — subagent definitions (`code-explorer`, `code-reviewer`) for multi-step automated workflows
+- **`.claude/agents/`** — subagent definitions (`code-explorer`, `code-reviewer`, `nextflow-reviewer`, `domain-reviewer`)
 - **`.claude/rules/`** — always-follow conventions, split into `common/` and `python/`; `common/` includes the framework's `review-gate.md` and `secure-ai-use.md`
 - **`.claude/skills/`** — skills that guide Claude through specific tasks (testing, docstrings, language patterns, authoring new skills)
-- **`plugins/`** — bundled Claude Code plugins: `claudia-workflow` (the phased workflow engine) and `gh-workflow` (GitHub commands)
+- **`claudia_tools/`** — Python package exposing the `claudia` CLI: the deterministic engine the workflow calls for every state/config/phase/template/gate/detect/env/verify operation. Install with `uv tool install ./claudia_tools`.
+- **`plugins/`** — bundled Claude Code plugins: `claudia-workflow` (thin commands + a `workflows/` orchestration layer that invokes `claudia ...`) and `gh-workflow` (GitHub commands)
 
 ## Skills
 
@@ -37,16 +38,24 @@ Invokable as `/<skill-name>`, or triggered automatically when relevant:
 A phased, control-first workflow. Each command is invoked explicitly; state persists in `.planning/`. See `plugins/claudia-workflow/README.md`.
 
 - `/claudia-map` — analyze an existing codebase → `.planning/CONTEXT.md`
-- `/claudia-new` — start a project, build the roadmap → `PROJECT.md`, `ROADMAP.md`, `config.json`
+- `/claudia-new` — start a project, build the roadmap → `PROJECT.md`, `ROADMAP.md`, `ENVIRONMENT.md`, `config.json`
 - `/claudia-discuss` — pin down design decisions before planning → `DECISIONS.md`
 - `/claudia-plan` — research + ordered task breakdown → `STATE.md`
 - `/claudia-execute` — implement tasks via executor subagents (sequential by default)
-- `/claudia-verify` — two-stage review (spec compliance, then code quality) + secret scan
-- `/claudia-ship` — open a PR via `/gh-pr-draft`
+- `/claudia-verify` — two-stage review + secret scan; for pipelines, generates a human checklist in `VERIFICATION.md`
+- `/claudia-ship` — open a PR via `/gh-pr-draft`; blocked by `claudia verify ready` until the checklist is clear
 - `/claudia-progress` — where the workflow stands / suggested next step (read-only)
 - `/claudia-settings` — view or edit `.planning/config.json`
 
+Every command is a thin entry point in `plugins/claudia-workflow/commands/`
+that points at the matching file in `plugins/claudia-workflow/workflows/`.
+The workflow file calls `claudia ...` (the `claudia-tools` CLI) for every
+deterministic operation; the orchestrating model never hand-edits
+`.planning/` files.
+
 Workflow agents: `researcher`, `planner`, `executor`, `verifier`.
+Review agents (pair with `code-reviewer` for pipelines/outputs):
+`nextflow-reviewer`, `domain-reviewer`.
 
 ### GitHub workflow — `gh-workflow` plugin (`plugins/gh-workflow/`)
 
