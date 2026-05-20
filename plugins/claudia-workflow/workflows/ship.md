@@ -10,9 +10,13 @@ Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
    ```
    claudia state get
    claudia gate check ROADMAP.md DECISIONS.md
+   claudia verify ready
    ```
-   If `claudia gate check` exits non-zero, stop and tell the user which
-   gates are still open.
+   If `claudia gate check` or `claudia verify ready` exits non-zero, stop
+   and tell the user which gates or checklist items are still open. The
+   `verify ready` check is skipped only when no `.planning/VERIFICATION.md`
+   exists (pure-Python phases that didn't add a human checklist) — in that
+   case run `ls .planning/VERIFICATION.md` first to decide.
 2. **Final secret scan** of the branch diff against the base per the
    secure-ai-use rule. If anything is found, stop.
 3. **Hand off to `/gh-pr-draft`.** It drafts the PR in the fixed structure
