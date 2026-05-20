@@ -14,16 +14,24 @@ completed since the last verification.
    claudia state get
    claudia config get agents.verifier
    ```
-2. **Verify.** If `agents.verifier` is enabled, dispatch the `verifier`
+2. **Resolve project type** to choose the automated-test runner:
+   ```
+   claudia detect
+   ```
+3. **Verify.** If `agents.verifier` is enabled, dispatch the `verifier`
    agent (which runs both stages and delegates the quality pass to
    `code-reviewer`). Otherwise run the two stages directly:
    - **Stage 1 — spec compliance:** each completed task does what its spec
      said; "done when" actually holds; no out-of-scope changes.
    - **Stage 2 — code quality:** project rules; run the test suite; confirm
-     coverage.
-3. **Secret scan** the phase's diff per the secure-ai-use rule. Always
+     coverage. **Branch the test runner on `primary` from `claudia detect`:**
+     - `python` → `uv run pytest` (or `pytest`); `ruff check .`; `mypy`.
+     - `nextflow` → `nf-test test` against the bundled stub profile;
+       `nextflow lint` if installed.
+     - `unknown` → ask the user how to verify; do not invent a runner.
+4. **Secret scan** the phase's diff per the secure-ai-use rule. Always
    runs; cannot be skipped.
-4. **Report** per task: stage-1 pass/fail, stage-2 findings classified
+5. **Report** per task: stage-1 pass/fail, stage-2 findings classified
    CRITICAL/HIGH/MEDIUM/LOW, overall verdict.
 
 ## Review gate
