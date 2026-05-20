@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from claudia_tools.output import ClaudiaError
-from claudia_tools.templates import render, render_file, template_variables
+from claudia_tools.templates import render, render_file, render_to_file, template_variables
 
 
 def test_template_variables() -> None:
@@ -39,3 +39,35 @@ def test_render_file(tmp_path: Path) -> None:
 def test_render_file_missing_raises(tmp_path: Path) -> None:
     with pytest.raises(ClaudiaError, match="no template"):
         render_file(tmp_path / "absent.md", {})
+
+
+def test_render_to_file_writes_target(tmp_path: Path) -> None:
+    template = tmp_path / "t.md"
+    template.write_text("# {{ title }}", encoding="utf-8")
+    target = tmp_path / "out.md"
+
+    written = render_to_file(template, target, {"title": "Hi"})
+
+    assert written == target
+    assert target.read_text(encoding="utf-8") == "# Hi"
+
+
+def test_render_to_file_refuses_existing(tmp_path: Path) -> None:
+    template = tmp_path / "t.md"
+    template.write_text("hi", encoding="utf-8")
+    target = tmp_path / "out.md"
+    target.write_text("existing", encoding="utf-8")
+
+    with pytest.raises(ClaudiaError, match="already exists"):
+        render_to_file(template, target, {})
+
+
+def test_render_to_file_force_overwrites(tmp_path: Path) -> None:
+    template = tmp_path / "t.md"
+    template.write_text("new", encoding="utf-8")
+    target = tmp_path / "out.md"
+    target.write_text("old", encoding="utf-8")
+
+    render_to_file(template, target, {}, force=True)
+
+    assert target.read_text(encoding="utf-8") == "new"

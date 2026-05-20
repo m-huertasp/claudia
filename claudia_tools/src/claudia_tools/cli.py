@@ -109,6 +109,14 @@ def config_cmd() -> None:
     """Read and update config.json."""
 
 
+@config_cmd.command("init")
+@click.option("--force", is_flag=True, help="Overwrite an existing config.json.")
+@click.pass_context
+def config_init(ctx: click.Context, force: bool) -> None:
+    """Write the bundled default config to .planning/config.json."""
+    _run(ctx, lambda: str(config.init_config(_planning(ctx), force=force)))
+
+
 @config_cmd.command("get")
 @click.argument("key", required=False)
 @click.pass_context
@@ -169,10 +177,32 @@ def template_cmd() -> None:
 @template_cmd.command("render")
 @click.argument("template_path", type=click.Path(path_type=Path))
 @click.option("--var", "variables", multiple=True, help="A key=value substitution.")
+@click.option(
+    "--output",
+    "output_path",
+    type=click.Path(path_type=Path),
+    help="Write the rendered text to this path instead of returning it.",
+)
+@click.option("--force", is_flag=True, help="Overwrite the output path if it exists.")
 @click.pass_context
-def template_render(ctx: click.Context, template_path: Path, variables: tuple[str, ...]) -> None:
+def template_render(
+    ctx: click.Context,
+    template_path: Path,
+    variables: tuple[str, ...],
+    output_path: Path | None,
+    force: bool,
+) -> None:
     """Render TEMPLATE_PATH with the given --var substitutions."""
-    _run(ctx, lambda: templates.render_file(template_path, _parse_vars(variables)))
+    parsed = _parse_vars(variables)
+    if output_path is None:
+        _run(ctx, lambda: templates.render_file(template_path, parsed))
+    else:
+        _run(
+            ctx,
+            lambda: str(
+                templates.render_to_file(template_path, output_path, parsed, force=force)
+            ),
+        )
 
 
 # --- gate ------------------------------------------------------------------

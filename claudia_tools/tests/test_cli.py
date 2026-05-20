@@ -111,3 +111,29 @@ def test_os_error_is_caught_as_envelope(planning_dir: Path, tmp_path: Path) -> N
     result = _invoke(planning_dir, "template", "render", str(a_directory))
 
     assert result.exit_code == 1
+
+
+def test_config_init_via_cli(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    result = _invoke(planning, "config", "init")
+
+    assert result.exit_code == 0
+    assert (planning / "config.json").exists()
+
+
+def test_template_render_to_file_via_cli(planning_dir: Path, tmp_path: Path) -> None:
+    template = tmp_path / "t.md"
+    template.write_text("# {{ title }}", encoding="utf-8")
+    target = tmp_path / "out.md"
+
+    result = _invoke(
+        planning_dir,
+        "template", "render", str(template),
+        "--var", "title=Done",
+        "--output", str(target),
+    )
+
+    assert result.exit_code == 0
+    assert target.read_text(encoding="utf-8") == "# Done"
