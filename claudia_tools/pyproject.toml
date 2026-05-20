@@ -1,0 +1,44 @@
+[project]
+name = "claudia-tools"
+version = "0.1.0"
+description = "Deterministic engine for the claudia development workflow."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+claudia = "claudia_tools.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=claudia_tools --cov-report=term-missing --cov-fail-under=80"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]

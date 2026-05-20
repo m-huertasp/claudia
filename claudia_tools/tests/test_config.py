@@ -1,0 +1,73 @@
+"""Tests for the config.json module."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from claudia_tools.config import get_value, read_config, set_value
+from claudia_tools.output import ClaudiaError
+
+
+def test_read_config(planning_dir: Path) -> None:
+    config = read_config(planning_dir / "config.json")
+
+    assert config["mode"] == "interactive"
+
+
+def test_read_missing_config_raises(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no config"):
+        read_config(tmp_path / "config.json")
+
+
+def test_get_value_scalar_and_nested(planning_dir: Path) -> None:
+    config = planning_dir / "config.json"
+
+    assert get_value(config, "mode") == "interactive"
+    assert get_value(config, "agents.planner") is True
+
+
+def test_get_unknown_key_raises(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="unknown config key"):
+        get_value(planning_dir / "config.json", "agents.bogus")
+
+
+def test_set_enum_value_persists(planning_dir: Path) -> None:
+    config = planning_dir / "config.json"
+
+    set_value(config, "mode", "yolo")
+
+    assert get_value(config, "mode") == "yolo"
+
+
+def test_set_bool_value_coerces_string(planning_dir: Path) -> None:
+    config = planning_dir / "config.json"
+
+    set_value(config, "execution.parallel", "true")
+
+    assert get_value(config, "execution.parallel") is True
+
+
+def test_set_unknown_key_raises(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="unknown config key"):
+        set_value(planning_dir / "config.json", "speed", "fast")
+
+
+def test_set_invalid_enum_value_raises(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="must be one of"):
+        set_value(planning_dir / "config.json", "model_profile", "turbo")
+
+
+def test_set_invalid_bool_value_raises(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="must be true or false"):
+        set_value(planning_dir / "config.json", "execution.parallel", "maybe")
+
+
+def test_set_value_does_not_mutate_a_prior_read(planning_dir: Path) -> None:
+    config = planning_dir / "config.json"
+    before = read_config(config)
+
+    set_value(config, "mode", "yolo")
+
+    assert before["mode"] == "interactive"

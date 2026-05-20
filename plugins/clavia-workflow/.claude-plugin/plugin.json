@@ -1,9 +1,0 @@
-{
-  "name": "clavia-workflow",
-  "description": "Phased, control-first development workflow: map a codebase, start a project, discuss design, plan, execute with subagents, verify, and ship. Explicit phase commands keep the user in control; every direction-locking artifact and every outward action passes through a review gate before it is accepted. State persists in .planning/ across sessions.",
-  "version": "0.1.0",
-  "author": {
-    "name": "Marta H."
-  },
-  "keywords": ["workflow", "planning", "subagents", "orchestration", "review-gate"]
-}
