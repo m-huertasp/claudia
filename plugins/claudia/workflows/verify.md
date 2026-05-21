@@ -69,14 +69,26 @@ completed since the last verification.
 ## Review gate
 
 The verification report is presented to the user — verification never edits
-or commits. If issues are found, ask: **fix now** (loop back to
-`/claudia-execute` with fix tasks), **accept with warnings**, or **stop**.
-Shipping is blocked on any CRITICAL finding.
+or commits. If issues are found, branch the fix prompt on
+`claudia config get mode`:
+
+- **`yolo`** — `AskUserQuestion`: *fix now (executor)* / *accept with
+  warnings* / *stop*.
+- **`pair`** — `AskUserQuestion`: *fix now (executor)* / *fix now
+  (I'll fix it myself)* / *accept with warnings* / *stop*.
+
+On **fix now (executor)** in either mode, create fix tasks and loop back
+to `/claudia-execute`. On **fix now (I'll fix it myself)** in `pair`,
+list every issue with `file:line` and severity, then wait for the user
+to signal *fixed* / *cancel* before re-running verify. Do **not**
+re-dispatch the executor in this branch.
+
+Shipping is blocked on any CRITICAL finding regardless of mode.
 
 On a passing verdict, advance state:
 ```
 claudia state set last_command /claudia-verify
-claudia state set next_step /claudia-ship
+claudia state set next_step /claudia-close
 ```
 
 ## Rules
