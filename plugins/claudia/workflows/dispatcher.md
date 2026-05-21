@@ -40,9 +40,9 @@ framework; direct slash commands still work for users who already know them.
 | `ship`, `open pr`, `pull request`, `create pr` | `/claudia-ship` | |
 | `progress`, `status`, `where am i`, `next step` | `/claudia-progress` | |
 | `settings`, `config` | `/claudia-settings` | |
-| `file issue`, `github issue`, `open issue` | `/gh-issue` | |
-| `draft pr`, `pr draft` | `/gh-pr-draft` | |
-| `review pr`, `pr review` | `/gh-pr-review` | Pass `<num\|owner/repo#num\|url>` |
+| `file issue`, `github issue`, `open issue`, `write issue` | `/claudia-write-issue` | |
+| `draft pr`, `pr draft` | `/claudia-draft-pr` | |
+| `review pr`, `pr review` | `/claudia-pr-review` | Pass `<num\|owner/repo#num\|url>` |
 
 ## Invocation rules
 

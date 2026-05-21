@@ -68,7 +68,7 @@ A phased, control-first workflow. Each command is invoked explicitly; state pers
 - `/claudia-plan` — research + ordered task breakdown → `STATE.md`
 - `/claudia-execute` — implement tasks via executor subagents (sequential by default)
 - `/claudia-verify` — two-stage review + secret scan; for pipelines, generates a human checklist in `VERIFICATION.md`
-- `/claudia-ship` — open a PR via `/gh-pr-draft`; blocked by `claudia verify ready` until the checklist is clear
+- `/claudia-ship` — open a PR via `/claudia-draft-pr`; blocked by `claudia verify ready` until the checklist is clear
 - `/claudia-progress` — where the workflow stands / suggested next step (read-only)
 - `/claudia-settings` — view or edit `.planning/config.json`
 
@@ -79,11 +79,11 @@ Review agents (pair with `code-reviewer` for pipelines/outputs): `nextflow-revie
 
 ### GitHub commands
 
-Require a GitHub MCP server (the official `github` plugin) and `GITHUB_PERSONAL_ACCESS_TOKEN` set in the environment.
+Require the [`gh` CLI](https://cli.github.com/) installed and authenticated via `gh auth login`. Issues and PRs are created under the authenticated GitHub account — i.e. attributed to the user, not to Claude.
 
-- `/gh-issue [owner/repo:] <description>` — draft a structured GitHub issue and create it in the target repo, **only after the user confirms the draft**
-- `/gh-pr-draft [base:branch]` — draft a PR for the current branch in a fixed, human-readable structure and create it **only after the user accepts the draft**
-- `/gh-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
+- `/claudia-write-issue [owner/repo:] <description>` — draft a structured GitHub issue and create it in the target repo, **only after the user confirms the draft**
+- `/claudia-draft-pr [base:branch]` — draft a PR for the current branch in a fixed, human-readable structure and create it **only after the user accepts the draft**
+- `/claudia-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
 
 ## Development Notes
 

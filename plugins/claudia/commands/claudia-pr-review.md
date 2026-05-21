@@ -36,6 +36,6 @@ Do **not** offer to post the review for them. That is intentionally not a suppor
 
 ## Hard rules
 
-- No MCP write calls. Ever. The `github` plugin exposes mutation tools (`create_review`, `add_comment`, `submit_review`, `merge_pull_request`, label/assignee changes) — none of them are allowed here.
+- No `gh` write/mutation commands. Ever. Read-only operations only (`gh pr view`, `gh pr diff`, `gh pr checks`, `gh issue view`, `gh api repos/.../pulls/N/...`). The following are forbidden through this command: `gh pr review`, `gh pr comment`, `gh pr merge`, `gh pr close`, `gh pr edit`, `gh pr ready`, label/assignee/reviewer changes, and any `gh api` POST/PATCH/DELETE.
 - If the user pushes back with "just post it", confirm explicitly before doing anything that touches GitHub state. This command's contract is local-only review.
-- If an MCP call fails with an auth error, `GITHUB_PERSONAL_ACCESS_TOKEN` is likely unset or under-scoped — tell the user rather than retrying blindly.
+- If `gh` exits with an auth error, tell the user to run `gh auth login` (or `gh auth status` to check) rather than retrying blindly.

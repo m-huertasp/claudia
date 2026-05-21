@@ -2,7 +2,7 @@
 description: Draft a well-structured GitHub issue and create it in a specified repo — only after the user reviews and confirms the draft.
 ---
 
-# Create a GitHub Issue
+# Write a GitHub Issue
 
 The user wants to file a new GitHub issue. Draft it in the standard structure below, **show the full draft for review, and create it only after explicit confirmation.**
 
@@ -23,8 +23,8 @@ Argument: `$ARGUMENTS` — free text describing the issue and, ideally, the targ
 ### 2. Gather repo-side context (read-only)
 
 - Grep the codebase for files, symbols, or errors named in the description so the issue can cite concrete locations.
-- Check the repo's existing labels via the `github` MCP plugin so suggested labels are real.
-- Scan recent open issues for an obvious duplicate; if one exists, surface it before drafting further and let the user decide whether to continue.
+- Check the repo's existing labels with `gh label list --repo <owner/repo> --limit 200` so suggested labels are real.
+- Scan recent open issues with `gh issue list --repo <owner/repo> --state open --search "<keywords>" --limit 20` for an obvious duplicate; if one exists, surface it before drafting further and let the user decide whether to continue.
 
 ### 3. Draft the issue
 
@@ -74,18 +74,31 @@ Show the user, in chat, the complete proposed issue:
 
 Then ask explicitly whether to create it, offering: **create as-is**, **edit something first**, or **cancel**. Use the `AskUserQuestion` tool for this.
 
-**Do not call the create-issue MCP tool until the user confirms.** If they ask for edits, revise the draft and present it again — re-confirm every time.
+**Do not run `gh issue create` until the user confirms.** If they ask for edits, revise the draft and present it again — re-confirm every time.
 
 ### 5. Create and report
 
-- On confirmation, create the issue via the `github` MCP plugin's create-issue tool with the confirmed title, body, labels, and assignees.
-- Report back the new issue number and URL.
+On confirmation, create the issue with `gh`. Pass the body via a HEREDOC and stdin (`--body-file -`) so Markdown formatting survives shell quoting:
+
+```bash
+gh issue create \
+  --repo <owner/repo> \
+  --title "<title>" \
+  --body-file - \
+  --label "<label1>,<label2>" \
+  --assignee "<user>" <<'EOF'
+<full body markdown>
+EOF
+```
+
+Drop `--label`, `--assignee`, or `--milestone` flags entirely if there are none — do not pass empty strings. Report back the new issue number and URL from `gh`'s output.
 
 ## Rules
 
 - **Confirmation is mandatory.** Creating an issue is a visible, shared action — never skip step 4, even if the user said "just do it" in the original request. Surface the draft, then create.
+- The issue will be created under the GitHub account authenticated via `gh auth login` — i.e. attributed to the user, not to Claude. Mention this if the user asks.
 - Only attach labels/assignees/milestones that actually exist in the target repo.
 - Do not create duplicates — if step 2 found a likely duplicate, raise it before drafting further.
 - Treat the user's description as the source of truth; do not invent acceptance criteria or scope the user did not imply. If a section would be guesswork, ask instead.
 - This command only *creates* issues. It does not edit, close, comment on, or label existing ones.
-- If an MCP call fails with an auth error, `GITHUB_PERSONAL_ACCESS_TOKEN` is likely unset or under-scoped — tell the user rather than retrying blindly.
+- If `gh` exits with an auth error, tell the user to run `gh auth login` (or `gh auth status` to check) rather than retrying blindly.

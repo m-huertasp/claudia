@@ -67,20 +67,34 @@ Show the user, in chat:
 - Full rendered body
 - Whether the branch still needs to be pushed
 
-Use the `AskUserQuestion` tool to ask: **accept and create the PR**, **edit something first**, or **refuse / cancel**. Do not call any PR-creating tool before an explicit accept. On "edit", revise and re-present — re-ask every time.
+Use the `AskUserQuestion` tool to ask: **accept and create the PR**, **edit something first**, or **refuse / cancel**. Do not run `gh pr create` before an explicit accept. On "edit", revise and re-present — re-ask every time.
 
 ### 4. Create and report
 
 Only after the user accepts:
 
 - If the branch is not pushed, push it (`git push -u origin <branch>`) — this is a shared action, so mention it explicitly as you do it.
-- Create the PR via the `github` MCP plugin's create-pull-request tool, using the accepted title and body and the resolved base branch. Open it as a draft PR if the user asked for that.
-- Report the new PR number and URL.
+- Create the PR with `gh`. Pass the body via stdin (`--body-file -`) so Markdown survives shell quoting:
+
+  ```bash
+  gh pr create \
+    --base <base> \
+    --head <head> \
+    --title "<title>" \
+    --body-file - <<'EOF'
+  <full body markdown>
+  EOF
+  ```
+
+  Add `--draft` if the user asked for a draft PR. `gh` infers the repo from the current working directory's git remote — pass `--repo <owner/repo>` explicitly only if the user named a different target.
+
+- Report the new PR number and URL from `gh`'s output.
 
 ## Rules
 
 - **Acceptance is mandatory.** Opening a PR is visible to others — never skip step 3, even if the original request said "just open it". Show the draft, then create.
+- The PR will be created under the GitHub account authenticated via `gh auth login` — i.e. attributed to the user, not to Claude.
 - The structure in step 2 is fixed. Do not add, drop, or reorder sections per PR.
 - Keep it shallow and readable. A reviewer should grasp the PR in under a minute.
-- This command only *creates* PRs. It does not review, merge, or comment — use `/gh-pr-review` for review.
-- If an MCP call fails with an auth error, `GITHUB_PERSONAL_ACCESS_TOKEN` is likely unset or under-scoped — tell the user rather than retrying blindly.
+- This command only *creates* PRs. It does not review, merge, or comment — use `/claudia-pr-review` for review.
+- If `gh` exits with an auth error, tell the user to run `gh auth login` (or `gh auth status` to check) rather than retrying blindly.

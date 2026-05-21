@@ -2,7 +2,7 @@
 
 Open a pull request for the completed, verified phase.
 
-Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
+Argument: `$ARGUMENTS` — passed through to `/claudia-draft-pr` (e.g. `base:dev`).
 
 ## Steps
 
@@ -19,7 +19,7 @@ Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
    case run `ls .planning/VERIFICATION.md` first to decide.
 2. **Final secret scan** of the branch diff against the base per the
    secure-ai-use rule. If anything is found, stop.
-3. **Hand off to `/gh-pr-draft`.** It drafts the PR in the fixed structure
+3. **Hand off to `/claudia-draft-pr`.** It drafts the PR in the fixed structure
    and runs its own accept / edit / cancel gate. The PR is created only on
    accept.
 4. **On success**, advance the state machine:
@@ -33,13 +33,13 @@ Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).
 
 ## Review gate
 
-Opening a PR is outward-facing — fully gated by `/gh-pr-draft`'s
+Opening a PR is outward-facing — fully gated by `/claudia-draft-pr`'s
 accept/edit/cancel flow. Never push or create anything before the user
 accepts the draft.
 
 ## Rules
 
-- Requires the `gh-workflow` plugin. If it is not available, tell the user
-  and stop.
+- Requires the `gh` CLI authenticated via `gh auth login`. If `gh` is not
+  installed or not authenticated, tell the user and stop.
 - Do not ship a phase that failed verification.
 - The final secret scan is mandatory.

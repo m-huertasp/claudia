@@ -66,7 +66,7 @@ slash commands also work.
 | `/claudia-plan` | Research + ordered task breakdown |
 | `/claudia-execute` | Implement tasks via executor subagents (sequential by default) |
 | `/claudia-verify` | Two-stage review + secret scan |
-| `/claudia-ship` | Open a PR via `/gh-pr-draft` |
+| `/claudia-ship` | Open a PR via `/claudia-draft-pr` |
 | `/claudia-progress` | Where things stand / next step |
 | `/claudia-settings` | View or edit `.planning/config.json` |
 
@@ -88,7 +88,7 @@ claudia/
 ├── plugins/
 │   └── claudia/                     # The unified Claude Code plugin
 │       ├── .claude-plugin/plugin.json
-│       ├── commands/                # /claudia, /claudia-*, /gh-* entry points
+│       ├── commands/                # /claudia, /claudia-* entry points
 │       ├── workflows/               # Orchestration text (calls the `claudia` CLI)
 │       ├── agents/                  # researcher, planner, executor, verifier,
 │       │                            #   code-explorer, code-reviewer, nextflow-reviewer,
@@ -135,14 +135,16 @@ invoke directly, or let them auto-trigger.
 
 ## GitHub commands
 
-Require the official `github` MCP plugin and `GITHUB_PERSONAL_ACCESS_TOKEN`.
-Every write action is gated behind explicit confirmation.
+Require the [`gh` CLI](https://cli.github.com/) installed and authenticated
+via `gh auth login`. Issues and PRs are created under the authenticated
+GitHub account — i.e. attributed to the user, not to Claude. Every write
+action is gated behind explicit confirmation.
 
 | Command | Purpose |
 |---|---|
-| `/gh-issue [owner/repo:] <description>` | Draft and create a structured issue (gated) |
-| `/gh-pr-draft [base:branch]` | Draft and create a PR (gated) |
-| `/gh-pr-review <num\|url>` | Structured PR review — never posts to GitHub |
+| `/claudia-write-issue [owner/repo:] <description>` | Draft and create a structured issue (gated) |
+| `/claudia-draft-pr [base:branch]` | Draft and create a PR (gated) |
+| `/claudia-pr-review <num\|url>` | Structured PR review — never posts to GitHub |
 
 ---
 

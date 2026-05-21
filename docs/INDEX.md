@@ -146,7 +146,7 @@ invokes the matching skill or workflow command. Ambiguous intent triggers
 | `/claudia-plan` | task breakdown in `STATE.md` |
 | `/claudia-execute` | code + atomic commits |
 | `/claudia-verify` | verification report |
-| `/claudia-ship` | pull request (via `/gh-pr-draft`) |
+| `/claudia-ship` | pull request (via `/claudia-draft-pr`) |
 | `/claudia-progress` | status report (read-only) |
 | `/claudia-settings` | updated `config.json` |
 
@@ -154,11 +154,11 @@ invokes the matching skill or workflow command. Ambiguous intent triggers
 
 | Command | Purpose | Writes? |
 |---|---|---|
-| `/gh-issue` | Draft + create structured issue | Yes (gated) |
-| `/gh-pr-draft` | Draft + create PR | Yes (gated) |
-| `/gh-pr-review` | Structured PR review | **Never** |
+| `/claudia-write-issue` | Draft + create structured issue | Yes (gated) |
+| `/claudia-draft-pr` | Draft + create PR | Yes (gated) |
+| `/claudia-pr-review` | Structured PR review | **Never** |
 
-Requires the official `github` MCP plugin and `GITHUB_PERSONAL_ACCESS_TOKEN`.
+Requires the [`gh` CLI](https://cli.github.com/) authenticated via `gh auth login`. Issues and PRs are attributed to the authenticated user, not to Claude.
 
 ### State — `.planning/`
 
@@ -186,7 +186,7 @@ are not configurable.
 /claudia-plan     → task breakdown   [review gate: plan]
 /claudia-execute  → code + commits   (executor subagents, sequential)
 /claudia-verify   → report           (two-stage review + secret scan)
-/claudia-ship     → pull request     [review gate: PR draft, via /gh-pr-draft]
+/claudia-ship     → pull request     [review gate: PR draft, via /claudia-draft-pr]
                  ↑ /claudia-progress reads STATE.md at any point
                  ↑ /claudia <natural-language> dispatches into any of the above
 ```
@@ -198,8 +198,7 @@ are not configurable.
 | Dependency | Purpose |
 |------------|---------|
 | Claude Code (VS Code extension) | Chat interface and code generation |
-| Official `github` MCP plugin | GitHub API access for `/gh-*` and `/claudia-ship` |
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | Auth for GitHub MCP |
+| [`gh` CLI](https://cli.github.com/) | GitHub API access for `/claudia-write-issue`, `/claudia-draft-pr`, `/claudia-pr-review`, `/claudia-ship` (authenticated via `gh auth login`) |
 | `claudia_tools` Python CLI | Deterministic state/config/phase/template/gate ops |
 
 ---

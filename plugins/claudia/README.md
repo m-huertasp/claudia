@@ -18,12 +18,16 @@ action passes through a review gate before it is accepted.
   uv tool install ../../claudia_tools     # or pipx install
   claudia --help
   ```
-- For GitHub commands (`/gh-*` and `/claudia-ship`): the official `github`
-  MCP plugin and a token set in the environment:
+- For GitHub commands (`/claudia-write-issue`, `/claudia-draft-pr`,
+  `/claudia-pr-review`, `/claudia-ship`): the [`gh` CLI](https://cli.github.com/)
+  installed and authenticated:
   ```bash
-  export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxx   # repo + read:org scopes
+  gh auth login        # interactive OAuth or PAT
+  gh auth status       # verify
   ```
-  Without the MCP server, GitHub commands fail at the first MCP call.
+  Issues and PRs are created under the authenticated GitHub account — i.e.
+  attributed to the user, not to Claude. Without `gh`, GitHub commands fail
+  at the first `gh` call.
 
 ## Entry points
 
@@ -50,7 +54,7 @@ than silently guessing. Direct slash commands still work too.
 | `/claudia-plan` | Research + task breakdown | task list in `STATE.md` |
 | `/claudia-execute` | Implement tasks via subagents | code + atomic commits |
 | `/claudia-verify` | Two-stage review + checklist | verification report |
-| `/claudia-ship` | Open a PR (delegates to `/gh-pr-draft`) | pull request |
+| `/claudia-ship` | Open a PR (delegates to `/claudia-draft-pr`) | pull request |
 | `/claudia-progress` | Where am I / what's next (read-only) | reads `STATE.md` |
 | `/claudia-settings` | Edit `.planning/config.json` | updated config |
 
@@ -62,11 +66,11 @@ deterministic op.
 
 | Command | Action | Writes to GitHub? |
 |---|---|---|
-| `/gh-issue [owner/repo:] <description>` | Draft a structured issue and create it | Yes — after a confirmation gate |
-| `/gh-pr-draft [base:branch]` | Draft a PR for the current branch and create it | Yes — after an accept/refuse gate |
-| `/gh-pr-review <num\|owner/repo#num\|url>` | Structured review classified URGENT/HIGH/MEDIUM/LOW | **Never** — output stays in chat |
+| `/claudia-write-issue [owner/repo:] <description>` | Draft a structured issue and create it | Yes — after a confirmation gate |
+| `/claudia-draft-pr [base:branch]` | Draft a PR for the current branch and create it | Yes — after an accept/refuse gate |
+| `/claudia-pr-review <num\|owner/repo#num\|url>` | Structured review classified URGENT/HIGH/MEDIUM/LOW | **Never** — output stays in chat |
 
-`/gh-pr-draft` defaults the base branch to `dev`; override with
+`/claudia-draft-pr` defaults the base branch to `dev`; override with
 `base:main`. Read commands never mutate; write commands always show a draft
 first.
 
@@ -146,7 +150,7 @@ always run.
 - Read commands never mutate.
 - Write commands always show a full draft and require explicit confirmation
   via `AskUserQuestion`. Editing the draft re-triggers the gate.
-- `/gh-pr-review` and `pr-reviewer` **never post to GitHub**. No comment,
+- `/claudia-pr-review` and `pr-reviewer` **never post to GitHub**. No comment,
   review, approval, merge, or label change — output stays in chat.
 
 ## Install
