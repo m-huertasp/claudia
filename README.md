@@ -141,8 +141,6 @@ Every write action is gated behind explicit confirmation.
 | Command | Purpose |
 |---|---|
 | `/gh-issue [owner/repo:] <description>` | Draft and create a structured issue (gated) |
-| `/gh-my-issues [filters]` | List issues assigned to me |
-| `/gh-my-prs [filters]` | List my PRs |
 | `/gh-pr-draft [base:branch]` | Draft and create a PR (gated) |
 | `/gh-pr-review <num\|url>` | Structured PR review — never posts to GitHub |
 

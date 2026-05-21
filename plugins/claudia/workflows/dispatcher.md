@@ -41,8 +41,6 @@ framework; direct slash commands still work for users who already know them.
 | `progress`, `status`, `where am i`, `next step` | `/claudia-progress` | |
 | `settings`, `config` | `/claudia-settings` | |
 | `file issue`, `github issue`, `open issue` | `/gh-issue` | |
-| `my issues` | `/gh-my-issues` | |
-| `my prs`, `my pulls`, `my pull requests` | `/gh-my-prs` | |
 | `draft pr`, `pr draft` | `/gh-pr-draft` | |
 | `review pr`, `pr review` | `/gh-pr-review` | Pass `<num\|owner/repo#num\|url>` |
 

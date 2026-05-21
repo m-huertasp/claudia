@@ -63,8 +63,6 @@ deterministic op.
 | Command | Action | Writes to GitHub? |
 |---|---|---|
 | `/gh-issue [owner/repo:] <description>` | Draft a structured issue and create it | Yes — after a confirmation gate |
-| `/gh-my-issues [filters]` | List issues assigned to me, grouped by repo | No |
-| `/gh-my-prs [filters]` | List PRs I authored / am review-requested on | No |
 | `/gh-pr-draft [base:branch]` | Draft a PR for the current branch and create it | Yes — after an accept/refuse gate |
 | `/gh-pr-review <num\|owner/repo#num\|url>` | Structured review classified URGENT/HIGH/MEDIUM/LOW | **Never** — output stays in chat |
 
