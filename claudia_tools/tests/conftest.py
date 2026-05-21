@@ -39,7 +39,7 @@ ROADMAP_MD = """# Roadmap — demo
 """
 
 CONFIG_JSON = """{
-  "mode": "interactive",
+  "mode": "pair",
   "model_profile": "balanced",
   "agents": { "researcher": true, "planner": true, "verifier": true },
   "execution": { "parallel": false }

@@ -1,6 +1,6 @@
 {
   "$comment": "Copied to .planning/config.json by /claudia-understand. Edit with /claudia-settings.",
-  "mode": "interactive",
+  "mode": "pair",
   "model_profile": "balanced",
   "agents": {
     "researcher": true,

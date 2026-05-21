@@ -57,7 +57,7 @@ def test_state_task_done(planning_dir: Path) -> None:
 
 
 def test_config_get_and_set(planning_dir: Path) -> None:
-    assert _data(_invoke(planning_dir, "config", "get", "mode")) == "interactive"
+    assert _data(_invoke(planning_dir, "config", "get", "mode")) == "pair"
     assert _invoke(planning_dir, "config", "set", "mode", "yolo").exit_code == 0
     assert _data(_invoke(planning_dir, "config", "get", "mode")) == "yolo"
 

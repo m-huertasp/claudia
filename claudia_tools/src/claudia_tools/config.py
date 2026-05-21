@@ -16,7 +16,7 @@ from typing import Any
 from claudia_tools.output import ClaudiaError
 
 _ENUMS: dict[str, set[str]] = {
-    "mode": {"interactive", "yolo"},
+    "mode": {"pair", "yolo"},
     "model_profile": {"quality", "balanced", "budget"},
 }
 _BOOL_KEYS = frozenset(
