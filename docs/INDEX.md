@@ -140,15 +140,16 @@ invokes the matching skill or workflow command. Ambiguous intent triggers
 
 | Command | Output |
 |---------|--------|
-| `/claudia-map` | `.planning/CONTEXT.md` |
-| `/claudia-new` | `PROJECT.md`, `ROADMAP.md`, `config.json` |
-| `/claudia-discuss` | `.planning/DECISIONS.md` |
-| `/claudia-plan` | task breakdown in `STATE.md` |
+| `/claudia-understand` | `CONTEXT.md`, `ENVIRONMENT.md`, `config.json` (one-time; refreshable on drift) |
+| `/claudia-brief` | `ISSUE_BRIEF.md` + `DECISIONS.md` (intent) + `{keyword}/{slug}` branch |
+| `/claudia-plan` | `ROADMAP.md` + `DECISIONS.md` (approach) + task breakdown in `STATE.md` |
 | `/claudia-execute` | code + atomic commits |
-| `/claudia-verify` | verification report |
-| `/claudia-ship` | pull request (via `/claudia-draft-pr`) |
+| `/claudia-verify` | verification report + `CONTEXT.md` drift check |
+| `/claudia-ship` | pull request (via `/claudia-draft-pr`); re-runs drift check |
 | `/claudia-progress` | status report (read-only) |
 | `/claudia-settings` | updated `config.json` |
+
+The discuss step is internal — it runs in **intent mode** from `/claudia-brief` and **approach mode** from `/claudia-plan`, both appending to a single `.planning/DECISIONS.md`.
 
 ### GitHub commands
 
@@ -162,12 +163,17 @@ Requires the [`gh` CLI](https://cli.github.com/) authenticated via `gh auth logi
 
 ### State — `.planning/`
 
-`PROJECT.md`, `ROADMAP.md`, `CONTEXT.md`, `DECISIONS.md`, `STATE.md`,
-`ENVIRONMENT.md`, `VERIFICATION.md`, `config.json`, `gates.json`. Persists
-across sessions; gitignored by default. `ROADMAP.md`, `DECISIONS.md`, and
-the plan task breakdown are direction-locking — changes pass through the
-review gate. `VERIFICATION.md` holds the human checklist that gates
-`/claudia-ship`.
+**Project-level** (written by `/claudia-understand`, refreshed on drift):
+`CONTEXT.md`, `ENVIRONMENT.md`, `config.json`.
+
+**Per-issue** (rotated on each `/claudia-brief`; prior set archived under
+`.planning/archive/<timestamp>/`): `ISSUE_BRIEF.md`, `ROADMAP.md`,
+`DECISIONS.md`, `STATE.md`, `VERIFICATION.md`, `gates.json`.
+
+Persists across sessions; gitignored by default. `ISSUE_BRIEF.md`,
+`ROADMAP.md`, `DECISIONS.md`, and the plan task breakdown are
+direction-locking — changes pass through the review gate.
+`VERIFICATION.md` holds the human checklist that gates `/claudia-ship`.
 
 ### Config — `.planning/config.json`
 
@@ -180,15 +186,17 @@ are not configurable.
 ## Data Flow — the workflow loop
 
 ```
-/claudia-map      → CONTEXT.md       (existing repo only)
-/claudia-new      → PROJECT.md, ROADMAP.md, config.json   [review gate: roadmap]
-/claudia-discuss  → DECISIONS.md     [review gate: decisions]
-/claudia-plan     → task breakdown   [review gate: plan]
-/claudia-execute  → code + commits   (executor subagents, sequential)
-/claudia-verify   → report           (two-stage review + secret scan)
-/claudia-ship     → pull request     [review gate: PR draft, via /claudia-draft-pr]
-                 ↑ /claudia-progress reads STATE.md at any point
-                 ↑ /claudia <natural-language> dispatches into any of the above
+/claudia-understand → CONTEXT.md, ENVIRONMENT.md, config.json   (one-time; refreshable on drift)
+/claudia-brief      → ISSUE_BRIEF.md + branch                  [review gate: brief]
+                    │   └── chains into intent-mode discuss    → DECISIONS.md (intent)  [gate: decisions]
+/claudia-plan       → ROADMAP.md                              [review gate: roadmap]
+                    │   └── chains into approach-mode discuss → DECISIONS.md (approach) [gate: decisions]
+                    └── task breakdown in STATE.md            [review gate: plan]
+/claudia-execute    → code + commits   (executor subagents, sequential)
+/claudia-verify     → report           (two-stage review + secret scan + drift check)
+/claudia-ship       → pull request     [review gate: PR draft, via /claudia-draft-pr]
+                   ↑ /claudia-progress reads STATE.md at any point
+                   ↑ /claudia <natural-language> dispatches into any of the above
 ```
 
 ---

@@ -7,8 +7,8 @@
 ## What this is
 
 **claudia** is a Claude Code framework bundled as a single plugin. It provides
-a phased development **workflow** — map, discuss, plan, execute, verify, ship
-— plus reusable agents, rules, and skills, all in one place.
+a phased development **workflow** — understand, brief, plan, execute, verify,
+ship — plus reusable agents, rules, and skills, all in one place.
 
 As of now, it works with Claude Code in VS Code, and the rules are written to hold for any AI model.
 
@@ -60,13 +60,12 @@ slash commands also work.
 
 | Command | Phase |
 |---|---|
-| `/claudia-map` | Analyze an existing codebase → `CONTEXT.md` |
-| `/claudia-new` | Start a project, build the roadmap |
-| `/claudia-discuss` | Pin down design decisions before planning |
-| `/claudia-plan` | Research + ordered task breakdown |
+| `/claudia-understand` | One-time codebase bootstrap → `CONTEXT.md`, `ENVIRONMENT.md`, `config.json`. Re-runnable as a refresh on drift. |
+| `/claudia-brief` | Per-issue entry point → `ISSUE_BRIEF.md`, proposes a `{keyword}/{description}` branch, then chains into intent-mode discuss |
+| `/claudia-plan` | Reads brief + decisions → drafts `ROADMAP.md`, chains into approach-mode discuss, initializes `STATE.md` task breakdown |
 | `/claudia-execute` | Implement tasks via executor subagents (sequential by default) |
-| `/claudia-verify` | Two-stage review + secret scan |
-| `/claudia-ship` | Open a PR via `/claudia-draft-pr` |
+| `/claudia-verify` | Two-stage review + secret scan + `CONTEXT.md` drift check |
+| `/claudia-ship` | Open a PR via `/claudia-draft-pr` (re-runs the drift check) |
 | `/claudia-progress` | Where things stand / next step |
 | `/claudia-settings` | View or edit `.planning/config.json` |
 
@@ -96,7 +95,7 @@ claudia/
 │       ├── skills/                  # prepare-docstrings, add-type-hints, python-testing,
 │       │                            #   python-patterns, nextflow-patterns, nextflow-testing
 │       ├── rules/                   # common/ + python/ (loaded via @-imports in CLAUDE.md)
-│       ├── templates/               # PROJECT, ROADMAP, STATE, CONTEXT, DECISIONS, ENVIRONMENT
+│       ├── templates/               # ISSUE_BRIEF, ROADMAP, STATE, CONTEXT, DECISIONS, ENVIRONMENT
 │       └── config.template.json
 ├── docs/                            # docs/INDEX.md — architecture overview
 └── README.md                        # This file

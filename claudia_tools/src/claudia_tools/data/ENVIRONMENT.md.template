@@ -1,6 +1,6 @@
 # Environment — {{ name }}
 
-<!-- Initial render by /claudia-new; refresh by re-running
+<!-- Initial render by /claudia-understand; refresh by re-running
      `claudia env capture --output .planning/ENVIRONMENT.md --force`. The two
      HTML-comment marked regions below are owned by the `claudia` CLI — do
      not edit them by hand. The Containers and Datasets sections are

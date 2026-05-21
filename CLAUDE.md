@@ -62,15 +62,16 @@ invoked directly, or auto-triggered by description matching:
 
 A phased, control-first workflow. Each command is invoked explicitly; state persists in `.planning/`. See [plugins/claudia/README.md](plugins/claudia/README.md).
 
-- `/claudia-map` — analyze an existing codebase → `.planning/CONTEXT.md`
-- `/claudia-new` — start a project, build the roadmap → `PROJECT.md`, `ROADMAP.md`, `ENVIRONMENT.md`, `config.json`
-- `/claudia-discuss` — pin down design decisions before planning → `DECISIONS.md`
-- `/claudia-plan` — research + ordered task breakdown → `STATE.md`
-- `/claudia-execute` — implement tasks via executor subagents (sequential by default)
-- `/claudia-verify` — two-stage review + secret scan; for pipelines, generates a human checklist in `VERIFICATION.md`
-- `/claudia-ship` — open a PR via `/claudia-draft-pr`; blocked by `claudia verify ready` until the checklist is clear
-- `/claudia-progress` — where the workflow stands / suggested next step (read-only)
-- `/claudia-settings` — view or edit `.planning/config.json`
+- `/claudia-understand` — one-time codebase bootstrap → `CONTEXT.md`, `ENVIRONMENT.md`, `config.json`. Re-runnable as a refresh when `/claudia-verify` or `/claudia-ship` detects drift.
+- `/claudia-brief` — start a new issue → `ISSUE_BRIEF.md`; proposes a `{keyword}/{description}` branch (one of `feat | fix | dev | chore | test | hotfix`) and chains into intent-mode discuss to align on what we're tackling.
+- `/claudia-plan` — reads `ISSUE_BRIEF.md` + `DECISIONS.md` → drafts `ROADMAP.md`, chains into approach-mode discuss, then initializes `STATE.md`.
+- `/claudia-execute` — implement tasks via executor subagents (sequential by default).
+- `/claudia-verify` — two-stage review + secret scan + `CONTEXT.md` drift check; for pipelines, generates a human checklist in `VERIFICATION.md`.
+- `/claudia-ship` — open a PR via `/claudia-draft-pr`; blocked by `claudia verify ready` until the checklist is clear; re-runs the drift check.
+- `/claudia-progress` — where the workflow stands / suggested next step (read-only).
+- `/claudia-settings` — view or edit `.planning/config.json`.
+
+The discuss step is **not user-callable** — it runs internally from `/claudia-brief` (intent mode) and `/claudia-plan` (approach mode), both appending to a single `.planning/DECISIONS.md`.
 
 Every `/claudia-*` command is a thin entry point in [plugins/claudia/commands/](plugins/claudia/commands/) that points at the matching file in [plugins/claudia/workflows/](plugins/claudia/workflows/). The workflow file calls `claudia ...` (the `claudia-tools` CLI) for every deterministic operation; the orchestrating model never hand-edits `.planning/` files.
 
