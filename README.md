@@ -8,8 +8,9 @@
 
 **claudia** is a Claude Code framework bundled as a single plugin. It provides
 a phased development **workflow** — map, discuss, plan, execute, verify, ship
-— plus reusable agents, rules, and skills, all in one place. It works with
-Claude Code in VS Code, and the rules are written to hold for any AI model.
+— plus reusable agents, rules, and skills, all in one place.
+
+As of now, it works with Claude Code in VS Code, and the rules are written to hold for any AI model.
 
 Two principles run through everything:
 
@@ -42,7 +43,7 @@ See [claudia_tools/README.md](claudia_tools/README.md).
 ## The plugin — `plugins/claudia/`
 
 Everything else lives here: commands, workflows, agents, skills, rules, and
-templates. One unified Claude Code plugin with one manifest.
+templates.
 
 ### Entry point — `/claudia` dispatcher
 
@@ -127,7 +128,7 @@ invoke directly, or let them auto-trigger.
 | `code-reviewer` | Security, correctness, and quality review |
 | `nextflow-reviewer` | Nextflow DSL2 review — reproducibility, channel safety, resource directives, nf-test coverage |
 | `domain-reviewer` | Bioinformatics output sanity — reference builds, coordinate systems, count-of-magnitude checks, multiple-testing |
-| `pr-reviewer` | Confidence-gated PR review; **never posts to GitHub** |
+| `pr-reviewer` | Confidence-gated PR review; **doesn't post to GitHub** |
 | `researcher` / `planner` / `executor` / `verifier` | The four phased-workflow roles |
 
 ---
