@@ -46,10 +46,25 @@ completed since the last verification.
    automated tests pass.
 5. **Secret scan** the phase's diff per the secure-ai-use rule. Always
    runs; cannot be skipped.
-6. **Report** per task: stage-1 pass/fail, stage-2 findings classified
+6. **CONTEXT.md drift check.** Compare the branch's changed paths
+   against `.planning/CONTEXT.md`. Drift signals:
+   - A new top-level directory not mentioned in CONTEXT.md's "Key files"
+     or "Architecture" section.
+   - A new dependency added to `pyproject.toml` / `nextflow.config` /
+     equivalent that CONTEXT.md does not list.
+   - A file mentioned in CONTEXT.md as a "key file" was renamed or
+     deleted.
+   If any signal fires, ask the user via `AskUserQuestion`:
+   - *Refresh CONTEXT.md now* — run `/claudia-understand refresh` before
+     proceeding.
+   - *Continue, refresh later* — note the drift in the verification
+     report and proceed.
+   - *Stop.*
+7. **Report** per task: stage-1 pass/fail, stage-2 findings classified
    CRITICAL/HIGH/MEDIUM/LOW, overall verdict. If a human checklist was
    added, list its items and tell the user how to confirm them
-   (`claudia verify confirm V<N>`).
+   (`claudia verify confirm V<N>`). Surface any CONTEXT.md drift the
+   user opted to defer.
 
 ## Review gate
 

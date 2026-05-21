@@ -29,9 +29,9 @@ code with a human-readable error.
 | Workflow | Command entry point |
 |---|---|
 | `dispatcher.md` | `/claudia` (natural-language router) |
-| `map.md` | `/claudia-map` |
-| `new.md` | `/claudia-new` |
-| `discuss.md` | `/claudia-discuss` |
+| `understand.md` | `/claudia-understand` |
+| `brief.md` | `/claudia-brief` |
+| `discuss.md` | _internal_ — called from `brief.md` (intent) and `plan.md` (approach) |
 | `plan.md` | `/claudia-plan` |
 | `execute.md` | `/claudia-execute` |
 | `verify.md` | `/claudia-verify` |

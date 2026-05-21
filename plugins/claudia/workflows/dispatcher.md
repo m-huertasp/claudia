@@ -31,10 +31,9 @@ framework; direct slash commands still work for users who already know them.
 | `python pattern`, `decorator`, `dataclass`, `paramspec` | Skill `claudia:python-patterns` | |
 | `nextflow`, `dsl2`, `.nf`, `channel` | Skill `claudia:nextflow-patterns` | |
 | `nf-test`, `nftest`, `pipeline test` | Skill `claudia:nextflow-testing` | |
-| `map`, `map codebase`, `explore repo`, `analyze codebase` | `/claudia-map` | |
-| `start project`, `new project`, `roadmap`, `init project` | `/claudia-new` | |
-| `discuss`, `design decision`, `decisions` | `/claudia-discuss` | |
-| `plan`, `task breakdown`, `break down` | `/claudia-plan` | |
+| `understand`, `map`, `map codebase`, `explore repo`, `analyze codebase`, `bootstrap` | `/claudia-understand` | One-time codebase bootstrap |
+| `brief`, `new issue`, `start issue`, `tackle`, `issue brief` | `/claudia-brief` | Per-issue entry point; chains into intent discuss |
+| `plan`, `roadmap`, `task breakdown`, `break down` | `/claudia-plan` | Drafts ROADMAP, chains into approach discuss |
 | `execute`, `implement task`, `run task` | `/claudia-execute` | |
 | `verify`, `review gate`, `secret scan`, `check work` | `/claudia-verify` | |
 | `ship`, `open pr`, `pull request`, `create pr` | `/claudia-ship` | |
@@ -60,7 +59,11 @@ framework; direct slash commands still work for users who already know them.
   `claudia:nextflow-testing`. Surface both via `AskUserQuestion`; let the
   user choose.
 - `"Claudia, plan it"` after a clean checkout might mean `/claudia-plan` or
-  `/claudia-new`. Ask which.
+  `/claudia-brief`. Ask which.
+- `"Claudia, discuss this"` no longer matches a user-callable command —
+  discuss runs internally from `/claudia-brief` (intent) and
+  `/claudia-plan` (approach). Surface this and offer `/claudia-brief` or
+  `/claudia-plan` depending on whether a brief already exists.
 - A bare verb with no object (e.g. `"Claudia, run"`) is ambiguous between
   `/claudia-execute` and others. Ask.
 
