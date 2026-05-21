@@ -82,8 +82,6 @@ Review agents (pair with `code-reviewer` for pipelines/outputs): `nextflow-revie
 Require a GitHub MCP server (the official `github` plugin) and `GITHUB_PERSONAL_ACCESS_TOKEN` set in the environment.
 
 - `/gh-issue [owner/repo:] <description>` — draft a structured GitHub issue and create it in the target repo, **only after the user confirms the draft**
-- `/gh-my-issues [filters]` — list issues assigned to me, grouped by repo (read-only)
-- `/gh-my-prs [filters]` — list PRs I authored, was review-requested on, or am assigned (read-only)
 - `/gh-pr-draft [base:branch]` — draft a PR for the current branch in a fixed, human-readable structure and create it **only after the user accepts the draft**
 - `/gh-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
 

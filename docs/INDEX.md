@@ -155,8 +155,6 @@ invokes the matching skill or workflow command. Ambiguous intent triggers
 | Command | Purpose | Writes? |
 |---|---|---|
 | `/gh-issue` | Draft + create structured issue | Yes (gated) |
-| `/gh-my-issues` | List assigned issues | No |
-| `/gh-my-prs` | List my PRs | No |
 | `/gh-pr-draft` | Draft + create PR | Yes (gated) |
 | `/gh-pr-review` | Structured PR review | **Never** |
 
