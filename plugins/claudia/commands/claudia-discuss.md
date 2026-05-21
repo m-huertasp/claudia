@@ -4,6 +4,6 @@ description: Pin down design decisions for the upcoming phase before planning â€
 
 # Discuss the phase
 
-Follow `plugins/claudia-workflow/workflows/discuss.md`.
+Follow `plugins/claudia/workflows/discuss.md`.
 
 Argument: `$ARGUMENTS` â€” optional phase number or topic.

@@ -17,7 +17,7 @@ Argument: `$ARGUMENTS` — optional focus hint. Empty means: map the whole repo.
    embargoed or patient data. See the secure-ai-use rule.
 5. **Render `CONTEXT.md`.** Use the bundled template:
    ```
-   claudia template render plugins/claudia-workflow/templates/CONTEXT.md \
+   claudia template render plugins/claudia/templates/CONTEXT.md \
        --var name=<project> --output .planning/CONTEXT.md
    ```
    Then fill in the prose hint placeholders (`<...>`) with what you

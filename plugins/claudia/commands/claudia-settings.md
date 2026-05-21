@@ -4,6 +4,6 @@ description: View or change the claudia workflow configuration in .planning/conf
 
 # Workflow settings
 
-Follow `plugins/claudia-workflow/workflows/settings.md`.
+Follow `plugins/claudia/workflows/settings.md`.
 
 Argument: `$ARGUMENTS` — optional `key=value` (e.g. `mode=yolo`).

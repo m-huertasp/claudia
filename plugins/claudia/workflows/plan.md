@@ -27,7 +27,7 @@ Argument: `$ARGUMENTS` — optional phase number. Empty means: current phase.
 
 The task breakdown is **direction-locking**. Present the ordered list with
 specs and dependencies, then ask accept / edit / cancel. Follow the
-file-based edit loop in `.claude/rules/common/review-gate.md`.
+file-based edit loop in `plugins/claudia/rules/common/review-gate.md`.
 
 On accept:
 
