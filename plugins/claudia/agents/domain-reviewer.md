@@ -11,9 +11,9 @@ of the code makes biological sense.
 
 ## Review Process
 
-1. **Get oriented.** Read `.planning/PROJECT.md`, `.planning/CONTEXT.md`, and
-   `.planning/ENVIRONMENT.md` to understand the organism, reference build,
-   data modalities, and the expected output shape.
+1. **Get oriented.** Read `.planning/ISSUE_BRIEF.md`, `.planning/CONTEXT.md`,
+   and `.planning/ENVIRONMENT.md` to understand the organism, reference
+   build, data modalities, and the expected output shape.
 2. **Inspect the change.** Use `git diff` to see what was modified. For
    each output the change produces (a TSV, a VCF, a plot), find a real or
    representative example — committed test fixture, CI artifact, or a path

@@ -14,9 +14,11 @@ to run the suggested next command.
    claudia state tasks
    claudia phase current   # may raise "all phases are complete"
    ```
-   If `claudia state get` fails because `.planning/STATE.md` is missing,
-   tell the user no `claudia` project is initialised here and suggest
-   `/claudia-new`.
+   Pick the suggestion based on what is missing in `.planning/`:
+   - No `CONTEXT.md` → suggest `/claudia-understand`.
+   - `CONTEXT.md` exists, no `ISSUE_BRIEF.md` → suggest `/claudia-brief`.
+   - `ISSUE_BRIEF.md` exists, no `ROADMAP.md` → suggest `/claudia-plan`.
+   - Otherwise, report the current phase + tasks normally.
 2. **Report**, concisely:
    - Current phase and its roadmap goal
    - Last command run, next suggested step

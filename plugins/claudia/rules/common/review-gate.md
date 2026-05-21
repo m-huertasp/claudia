@@ -40,13 +40,13 @@ the workflow, commit, or push on the basis of an unaccepted draft.
 ## Example
 
 ```
-/claudia-new drafts PROJECT.md + ROADMAP.md
+/claudia-brief drafts ISSUE_BRIEF.md
    │
    ▼  AskUserQuestion: accept / edit / cancel
-   ├─ accept  → files are final; next step → /claudia-discuss
-   ├─ edit    → write drafts to .planning/*.md → user edits & saves
+   ├─ accept  → file is final; chain into intent-mode discuss
+   ├─ edit    → write draft to .planning/ISSUE_BRIEF.md → user edits & saves
    │            → re-read → re-present gate  ⤴
-   └─ cancel  → delete the draft files; stop
+   └─ cancel  → delete the draft file; stop
 ```
 
 ## Rules

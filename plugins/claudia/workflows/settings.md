@@ -13,7 +13,9 @@ current config.
    ```
    claudia config get
    ```
-   If it returns "no config", tell the user to run `/claudia-new` first.
+   If it returns "no config", tell the user to run `/claudia-understand`
+   first (which writes `.planning/config.json` as part of the one-time
+   codebase bootstrap).
 2. **Apply a setting** when a `key=value` is given:
    ```
    claudia config set <key> <value>

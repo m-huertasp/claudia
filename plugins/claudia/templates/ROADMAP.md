@@ -1,8 +1,9 @@
 # Roadmap — {{ name }}
 
-<!-- Written by /claudia-new, refined as phases complete. One section per
-     phase. A phase is a shippable unit of work. This artifact is
-     direction-locking: changes pass through the review gate.
+<!-- Written by /claudia-plan from the ISSUE_BRIEF.md + DECISIONS.md +
+     CONTEXT.md, refined as phases complete. One section per phase. A
+     phase is a shippable unit of work within this single issue. This
+     artifact is direction-locking: changes pass through the review gate.
 
      CONVENTION: the **Status:** line of every phase wraps its value in a
      `claudia:status-N` marked region (where N is the phase number) so the

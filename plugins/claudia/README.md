@@ -48,15 +48,18 @@ than silently guessing. Direct slash commands still work too.
 
 | Command | Phase | Output |
 |---|---|---|
-| `/claudia-map` | Map an existing codebase | `.planning/CONTEXT.md` |
-| `/claudia-new` | Start a project, build the roadmap | `PROJECT.md`, `ROADMAP.md`, `config.json` |
-| `/claudia-discuss` | Pin down design decisions | `.planning/DECISIONS.md` |
-| `/claudia-plan` | Research + task breakdown | task list in `STATE.md` |
+| `/claudia-understand` | One-time codebase bootstrap (re-runnable on drift) | `CONTEXT.md`, `ENVIRONMENT.md`, `config.json` |
+| `/claudia-brief` | Start a new issue; chains into intent discuss | `ISSUE_BRIEF.md`, `DECISIONS.md` (intent), `{keyword}/{slug}` branch |
+| `/claudia-plan` | Draft per-issue roadmap; chains into approach discuss | `ROADMAP.md`, `DECISIONS.md` (approach), tasks in `STATE.md` |
 | `/claudia-execute` | Implement tasks via subagents | code + atomic commits |
-| `/claudia-verify` | Two-stage review + checklist | verification report |
-| `/claudia-ship` | Open a PR (delegates to `/claudia-draft-pr`) | pull request |
+| `/claudia-verify` | Two-stage review + checklist + drift check | verification report |
+| `/claudia-ship` | Open a PR (delegates to `/claudia-draft-pr`); re-runs drift check | pull request |
 | `/claudia-progress` | Where am I / what's next (read-only) | reads `STATE.md` |
 | `/claudia-settings` | Edit `.planning/config.json` | updated config |
+
+The discuss step is **not user-callable**. It runs internally from
+`/claudia-brief` (intent mode) and `/claudia-plan` (approach mode), both
+appending to a single `.planning/DECISIONS.md`.
 
 Each `/claudia-*` command is a thin pointer. Full orchestration lives in
 [`workflows/`](workflows/) and calls the `claudia` CLI for every
@@ -121,19 +124,24 @@ This is how skills inherit project conventions without per-skill edits.
 
 Persists across sessions; agents reload it cold. Kept out of git by default.
 
-- `PROJECT.md` — vision and scope
-- `ROADMAP.md` — phases
-- `CONTEXT.md` — codebase baseline
-- `DECISIONS.md` — design choices made in discussion
-- `STATE.md` — current position, task list, resume notes
-- `VERIFICATION.md` — human checklist gating `/claudia-ship`
+**Project-level** (written by `/claudia-understand`, refreshed on drift):
+
+- `CONTEXT.md` — codebase baseline (architecture, stack, conventions, sensitive areas)
 - `ENVIRONMENT.md` — tool-version snapshot
 - `config.json` — mode, model profile, agent toggles
+
+**Per-issue** (replaced on each `/claudia-brief`; previous set is archived under `.planning/archive/<timestamp>/`):
+
+- `ISSUE_BRIEF.md` — what we're tackling and why
+- `ROADMAP.md` — the phases to tackle it
+- `DECISIONS.md` — intent-mode and approach-mode design choices
+- `STATE.md` — current position, task list, resume notes
+- `VERIFICATION.md` — human checklist gating `/claudia-ship`
 - `gates.json` — review-gate acceptance ledger
 
 ## Configuration — `config.json`
 
-Created from [config.template.json](config.template.json) by `/claudia-new`.
+Created from [config.template.json](config.template.json) by `/claudia-understand` (one-time, on first run).
 
 | Setting | Values | Effect |
 |---|---|---|
