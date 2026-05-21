@@ -4,6 +4,6 @@ description: Ship the verified phase — run a final secret scan, then hand off 
 
 # Ship the phase
 
-Follow `plugins/claudia-workflow/workflows/ship.md`.
+Follow `plugins/claudia/workflows/ship.md`.
 
 Argument: `$ARGUMENTS` — passed through to `/gh-pr-draft` (e.g. `base:dev`).

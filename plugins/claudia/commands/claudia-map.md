@@ -4,6 +4,6 @@ description: Analyze an existing codebase — stack, architecture, conventions, 
 
 # Map the codebase
 
-Follow `plugins/claudia-workflow/workflows/map.md`.
+Follow `plugins/claudia/workflows/map.md`.
 
 Argument: `$ARGUMENTS` — optional focus hint (a subdirectory or subsystem).

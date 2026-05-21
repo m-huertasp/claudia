@@ -28,6 +28,7 @@ code with a human-readable error.
 
 | Workflow | Command entry point |
 |---|---|
+| `dispatcher.md` | `/claudia` (natural-language router) |
 | `map.md` | `/claudia-map` |
 | `new.md` | `/claudia-new` |
 | `discuss.md` | `/claudia-discuss` |

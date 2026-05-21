@@ -4,6 +4,6 @@ description: Start a claudia project — gather vision and scope, build a phased
 
 # Start a project
 
-Follow `plugins/claudia-workflow/workflows/new.md`.
+Follow `plugins/claudia/workflows/new.md`.
 
 Argument: `$ARGUMENTS` — optional one-line description of the project.

@@ -1,21 +1,21 @@
 # Claudia — Architecture Index
 
-**Last Updated:** May 20, 2026
+**Last Updated:** May 21, 2026
 
 ## Overview
 
 **claudia** is a personal, control-first Claude Code framework for Python and
-Nextflow development. It provides a phased development workflow plus reusable
-instructions, agents, rules, and skills, designed to be symlinked or copied
-into any project.
+Nextflow development. It bundles commands, workflows, agents, skills, and
+rules into a single Claude Code plugin (`plugins/claudia/`) plus a Python
+CLI (`claudia_tools/`).
 
 Two principles are framework-wide:
 
 - **Control-first** — direction-locking artifacts and outward actions pass
-  through a [review gate](../.claude/rules/common/review-gate.md) before
-  being accepted.
+  through a [review gate](../plugins/claudia/rules/common/review-gate.md)
+  before being accepted.
 - **Safe to share** — model-agnostic guardrails for AI use on lab
-  repositories ([secure-ai-use](../.claude/rules/common/secure-ai-use.md)).
+  repositories.
 
 ---
 
@@ -23,30 +23,30 @@ Two principles are framework-wide:
 
 ```
 claudia/
-├── CLAUDE.md                        # Global Claude Code instructions (auto-loaded per project)
-├── .claude/
-│   ├── agents/                      # code-explorer, code-reviewer, nextflow-reviewer,
-│   │                                #   domain-reviewer
-│   ├── rules/
-│   │   ├── common/                  # code-review, coding-style, patterns, security,
-│   │   │                            #   testing, review-gate, secure-ai-use
-│   │   └── python/                  # coding-style, fastapi, patterns, security, tests
-│   └── skills/                      # add-type-hints, prepare-docstrings, python-testing,
-│                                    #   python-patterns, nextflow-patterns, nextflow-testing,
-│                                    #   claudia-new-skill
+├── CLAUDE.md                        # Project instructions; @-imports plugin rules so they
+│                                    #   become always-on for every skill and agent
 ├── claudia_tools/                   # Python package — the `claudia` CLI; modules: output,
 │                                    #   markers, state, config, phase, templates, gates,
 │                                    #   detect, env, verification; pyproject.toml; pytest suite
 ├── plugins/
-│   ├── claudia-workflow/             # Phased development workflow
-│   │   ├── .claude-plugin/plugin.json
-│   │   ├── config.template.json     # Config schema; defaults bundled in claudia_tools/data/
-│   │   ├── templates/               # PROJECT, ROADMAP, STATE, CONTEXT, DECISIONS, ENVIRONMENT
-│   │   ├── agents/                  # researcher, planner, executor, verifier
-│   │   ├── commands/                # 9 thin /claudia-* entry points
-│   │   ├── workflows/               # Orchestration files; call the `claudia` CLI
-│   │   └── README.md
-│   └── gh-workflow/                 # GitHub issue / PR commands
+│   └── claudia/                     # The unified Claude Code plugin
+│       ├── .claude-plugin/plugin.json
+│       ├── config.template.json     # Config schema; defaults bundled in claudia_tools/data/
+│       ├── commands/                # 10 thin entry points: /claudia (dispatcher),
+│       │                            #   9 /claudia-* phase commands, 5 /gh-* GitHub commands
+│       ├── workflows/               # Orchestration files; each calls the `claudia` CLI
+│       ├── agents/                  # researcher, planner, executor, verifier,
+│       │                            #   code-explorer, code-reviewer, nextflow-reviewer,
+│       │                            #   domain-reviewer, pr-reviewer
+│       ├── skills/                  # claudia:prepare-docstrings, claudia:add-type-hints,
+│       │                            #   claudia:python-testing, claudia:python-patterns,
+│       │                            #   claudia:nextflow-patterns, claudia:nextflow-testing
+│       ├── rules/
+│       │   ├── common/              # code-review, coding-style, patterns, security,
+│       │   │                        #   testing, review-gate
+│       │   └── python/              # coding-style, fastapi, patterns, security, tests
+│       ├── templates/               # PROJECT, ROADMAP, STATE, CONTEXT, DECISIONS, ENVIRONMENT
+│       └── README.md
 ├── docs/INDEX.md                    # This file
 └── README.md
 ```
@@ -55,43 +55,49 @@ claudia/
 
 ## Components
 
-### Instructions — `CLAUDE.md`
+### Project instructions — `CLAUDE.md`
 
-Auto-loaded by Claude Code in any project that includes it. Sets global
-behavior and points at the framework's two core rules.
+Auto-loaded by Claude Code. Inlines the plugin's rule files via `@`-imports
+so every skill, agent, and workflow inherits them as always-on context — no
+per-skill modification needed. Consumer projects mirror the same `@`-imports
+block in their own `CLAUDE.md`.
 
-### Rules — `.claude/rules/`
+### Rules — `plugins/claudia/rules/`
 
-Always-loaded conventions. `common/` is language-agnostic, `python/` is
-Python-specific. Two `common/` rules are framework infrastructure:
+Conventions split into `common/` (language-agnostic) and `python/`
+(Python-specific). The framework infrastructure rule:
 
 | Rule | Role |
 |------|------|
 | `review-gate.md` | The control principle — draft → present → accept/edit/cancel for every outward or direction-locking action |
-| `secure-ai-use.md` | Model-agnostic guardrails — never send secrets or unpublished data; pre-publish secret scan |
 
-### Agents — `.claude/agents/`
+### Agents — `plugins/claudia/agents/`
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
+| `researcher` | Sonnet/Opus | Read-only investigation → findings brief |
+| `planner` | Opus | Roadmap phase → ordered task breakdown |
+| `executor` | Sonnet | Implements one task, one atomic commit |
+| `verifier` | Sonnet | Two-stage review: spec compliance, then code quality |
 | `code-explorer` | Sonnet | Deep codebase exploration |
 | `code-reviewer` | Sonnet | Security, correctness, quality review |
 | `nextflow-reviewer` | Sonnet | Nextflow DSL2 review — reproducibility, channels, resources, nf-test |
 | `domain-reviewer` | Sonnet | Bioinformatics output sanity — reference builds, coordinates, counts |
+| `pr-reviewer` | Sonnet | Confidence-gated PR review; never posts to GitHub |
 
-### Skills — `.claude/skills/`
+### Skills — `plugins/claudia/skills/`
 
-Invokable as `/<skill-name>`; helper skills auto-trigger on file context.
+Namespaced `claudia:<name>`. Invoked through `/claudia`, directly, or by
+auto-trigger on description match.
 
 | Skill | Purpose |
 |-------|---------|
-| `prepare-docstrings` | NumPy/SciPy docstrings |
-| `add-type-hints` | Infer type annotations |
-| `python-testing` | pytest TDD |
-| `python-patterns` | Non-obvious Python patterns |
-| `nextflow-patterns` | Nextflow DSL2 habits |
-| `nextflow-testing` | nf-test patterns |
-| `claudia-new-skill` | Author a new skill (extensibility path) |
+| `claudia:prepare-docstrings` | NumPy/SciPy docstrings |
+| `claudia:add-type-hints` | Infer type annotations |
+| `claudia:python-testing` | pytest TDD |
+| `claudia:python-patterns` | Non-obvious Python patterns |
+| `claudia:nextflow-patterns` | Nextflow DSL2 habits |
+| `claudia:nextflow-testing` | nf-test patterns |
 
 ---
 
@@ -115,13 +121,20 @@ Tested Python package that owns every deterministic op the workflow needs:
 Every CLI command emits the JSON envelope by default; `--text` for humans;
 errors set a non-zero exit.
 
-## Plugin — `claudia-workflow`
+---
 
-The phased development workflow. GSD-shaped: explicit phase commands,
-persistent `.planning/` state, a `config.json` of toggles. Each
-`/claudia-*` command file is a thin pointer; orchestration lives in
-[`plugins/claudia-workflow/workflows/`](../plugins/claudia-workflow/workflows/)
-and calls the `claudia` CLI for every deterministic op.
+## Plugin — `claudia`
+
+The unified Claude Code plugin. One manifest, one folder. Every
+`/claudia-*` and `/gh-*` command file is a thin pointer; orchestration lives
+in [`plugins/claudia/workflows/`](../plugins/claudia/workflows/) and calls
+the `claudia` CLI for every deterministic op.
+
+### Entry point — `/claudia` dispatcher
+
+Free-form natural-language router. Parses intent from `$ARGUMENTS` and
+invokes the matching skill or workflow command. Ambiguous intent triggers
+`AskUserQuestion` rather than a silent pick.
 
 ### Phase commands
 
@@ -133,18 +146,21 @@ and calls the `claudia` CLI for every deterministic op.
 | `/claudia-plan` | task breakdown in `STATE.md` |
 | `/claudia-execute` | code + atomic commits |
 | `/claudia-verify` | verification report |
-| `/claudia-ship` | pull request (via `gh-workflow`) |
+| `/claudia-ship` | pull request (via `/gh-pr-draft`) |
 | `/claudia-progress` | status report (read-only) |
 | `/claudia-settings` | updated `config.json` |
 
-### Workflow agents
+### GitHub commands
 
-| Agent | Role |
-|-------|------|
-| `researcher` | Read-only investigation → findings brief |
-| `planner` | Roadmap phase → ordered task breakdown |
-| `executor` | Implements one task, one atomic commit |
-| `verifier` | Two-stage review: spec compliance, then code quality |
+| Command | Purpose | Writes? |
+|---|---|---|
+| `/gh-issue` | Draft + create structured issue | Yes (gated) |
+| `/gh-my-issues` | List assigned issues | No |
+| `/gh-my-prs` | List my PRs | No |
+| `/gh-pr-draft` | Draft + create PR | Yes (gated) |
+| `/gh-pr-review` | Structured PR review | **Never** |
+
+Requires the official `github` MCP plugin and `GITHUB_PERSONAL_ACCESS_TOKEN`.
 
 ### State — `.planning/`
 
@@ -163,15 +179,6 @@ are not configurable.
 
 ---
 
-## Plugin — `gh-workflow`
-
-GitHub issue/PR automation. Requires the official `github` MCP plugin and
-`GITHUB_PERSONAL_ACCESS_TOKEN`. Every write action is confirmation-gated;
-`/gh-pr-review` never posts. Commands: `gh-issue`, `gh-my-issues`,
-`gh-my-prs`, `gh-pr-draft`, `gh-pr-review`. Bundled agent: `pr-reviewer`.
-
----
-
 ## Data Flow — the workflow loop
 
 ```
@@ -181,8 +188,9 @@ GitHub issue/PR automation. Requires the official `github` MCP plugin and
 /claudia-plan     → task breakdown   [review gate: plan]
 /claudia-execute  → code + commits   (executor subagents, sequential)
 /claudia-verify   → report           (two-stage review + secret scan)
-/claudia-ship     → pull request     [review gate: PR draft, via gh-workflow]
+/claudia-ship     → pull request     [review gate: PR draft, via /gh-pr-draft]
                  ↑ /claudia-progress reads STATE.md at any point
+                 ↑ /claudia <natural-language> dispatches into any of the above
 ```
 
 ---
@@ -192,10 +200,9 @@ GitHub issue/PR automation. Requires the official `github` MCP plugin and
 | Dependency | Purpose |
 |------------|---------|
 | Claude Code (VS Code extension) | Chat interface and code generation |
-| Official `github` MCP plugin | GitHub API access for `gh-workflow` / `/claudia-ship` |
+| Official `github` MCP plugin | GitHub API access for `/gh-*` and `/claudia-ship` |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | Auth for GitHub MCP |
-
-No runtime dependencies — this is a configuration/template repository.
+| `claudia_tools` Python CLI | Deterministic state/config/phase/template/gate ops |
 
 ---
 
@@ -205,13 +212,12 @@ No runtime dependencies — this is a configuration/template repository.
 Global instructions, `code-reviewer` / `code-explorer` agents, `common/` and
 `python/` rules.
 
-### ✅ Phase 2 — Skills and gh-workflow
-Python and Nextflow skills; `gh-workflow` plugin.
+### ✅ Phase 2 — Skills and GitHub commands
+Python and Nextflow skills; GitHub commands.
 
 ### ✅ Phase 3 — Workflow framework foundation
-`review-gate` / `secure-ai-use` rules; `claudia-workflow` plugin (9 commands,
-4 agents, state files, config); `claudia-new-skill` meta-skill; helper-skill
-auto-triggering.
+`review-gate` rule; phased-workflow commands (9), agents (4), state files,
+config; helper-skill auto-triggering.
 
 ### ✅ Phase 4 — `claudia-tools` engine
 Tested Python `claudia` CLI: state/config/phase/template/gate operations
@@ -224,15 +230,19 @@ snapshots tool versions for the bioinformatics stack and renders
 `ENVIRONMENT.md`. `/claudia-verify` branches its automated runner on the
 detected type.
 
-### ✅ Phase 6 — Two-tier verification + review agents + this doc update
+### ✅ Phase 6 — Two-tier verification + review agents
 `claudia verify init/add/confirm/ready` tracks a human checklist (e.g. full
-pipeline runs) that gates `/claudia-ship`. New `nextflow-reviewer` and
+pipeline runs) that gates `/claudia-ship`. `nextflow-reviewer` and
 `domain-reviewer` agents pair with `code-reviewer` for pipeline / output
-review. Documentation refreshed.
+review.
+
+### ✅ Phase 7 — Plugin consolidation
+`.claude/{agents,rules,skills}/`, `plugins/claudia-workflow/`, and
+`plugins/gh-workflow/` merged into a single `plugins/claudia/` plugin.
+`/claudia` natural-language dispatcher added as the primary entry point.
+Rules made always-on via `@`-imports in `CLAUDE.md`.
 
 ### 📋 Deferred
-- [ ] Commit-validation and context-monitor hooks (originally Phase 5 of
-      the roadmap).
-- [ ] `rules/` → `references/` split (deferred from Phase 6 — kept the
-      diff focused on capability).
+- [ ] Commit-validation and context-monitor hooks.
+- [ ] `rules/` → `references/` split.
 - [ ] Parallel-wave execution refinement.

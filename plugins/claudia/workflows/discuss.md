@@ -26,7 +26,7 @@ current phase.
 
 `DECISIONS.md` is **direction-locking**. Present the drafted entries and ask
 accept / edit / cancel via `AskUserQuestion`. Follow the file-based edit
-loop in `.claude/rules/common/review-gate.md`. On accept:
+loop in `plugins/claudia/rules/common/review-gate.md`. On accept:
 
 1. Append the entries to `.planning/DECISIONS.md` (never rewrite existing
    accepted entries — supersede them with a new entry instead).

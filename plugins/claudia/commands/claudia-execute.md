@@ -4,6 +4,6 @@ description: Implement the planned tasks by dispatching executor subagents — s
 
 # Execute the plan
 
-Follow `plugins/claudia-workflow/workflows/execute.md`.
+Follow `plugins/claudia/workflows/execute.md`.
 
 Argument: `$ARGUMENTS` — optional task IDs to run (e.g. `T1 T2`).

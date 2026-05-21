@@ -57,7 +57,7 @@ If an MCP call fails with an auth error, report that `GITHUB_PERSONAL_ACCESS_TOK
 
 2. **Context gathering**
    - Read root `CLAUDE.md` and any `CLAUDE.md` inside directories touched by the diff
-   - Read project rule files under `.claude/rules/` that apply to the languages in the diff
+   - Read project rule files under `plugins/claudia/rules/` that apply to the languages in the diff
    - Read linked issues so you understand intent vs. implementation
 
 3. **Read the diff in full** — do not review file-by-file in isolation. Map call sites before flagging anything as broken.

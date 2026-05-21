@@ -19,13 +19,13 @@ Argument: `$ARGUMENTS` — optional one-line description of the project.
    ```
 4. **Draft `PROJECT.md`** by rendering the template:
    ```
-   claudia template render plugins/claudia-workflow/templates/PROJECT.md \
+   claudia template render plugins/claudia/templates/PROJECT.md \
        --var name=<project> --output .planning/PROJECT.md
    ```
    Then fill in the prose placeholders (`<...>`).
 5. **Draft `ROADMAP.md`** by rendering the template:
    ```
-   claudia template render plugins/claudia-workflow/templates/ROADMAP.md \
+   claudia template render plugins/claudia/templates/ROADMAP.md \
        --var name=<project> --output .planning/ROADMAP.md
    ```
    Replace the example phases with the real ones. Every phase's
@@ -33,7 +33,7 @@ Argument: `$ARGUMENTS` — optional one-line description of the project.
    <!-- /claudia:status-N -->` so `claudia phase set-status` can transition it.
 6. **Initialise `STATE.md`** by rendering the template with starting values:
    ```
-   claudia template render plugins/claudia-workflow/templates/STATE.md \
+   claudia template render plugins/claudia/templates/STATE.md \
        --var name=<project> \
        --var current_phase="Phase 1 — <title>" \
        --var last_command=/claudia-new \
@@ -54,7 +54,7 @@ Argument: `$ARGUMENTS` — optional one-line description of the project.
 
 `ROADMAP.md` is **direction-locking**. Present the drafted `PROJECT.md` and
 `ROADMAP.md` and use `AskUserQuestion` for accept / edit / cancel. Follow
-the file-based edit loop in `.claude/rules/common/review-gate.md`. On
+the file-based edit loop in `plugins/claudia/rules/common/review-gate.md`. On
 accept, record it:
 ```
 claudia gate accept ROADMAP.md
