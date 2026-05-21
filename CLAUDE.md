@@ -23,6 +23,7 @@ every skill, agent, and workflow execution without per-skill modification.
 @plugins/claudia/rules/common/review-gate.md
 @plugins/claudia/rules/common/code-review.md
 @plugins/claudia/rules/common/coding-style.md
+@plugins/claudia/rules/common/commit-style.md
 @plugins/claudia/rules/common/patterns.md
 @plugins/claudia/rules/common/security.md
 @plugins/claudia/rules/common/testing.md
