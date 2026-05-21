@@ -1,9 +1,11 @@
 # State — {{ name }}
 
-<!-- The resume point. Updated at the end of every phase command so a fresh
-     session (or a fresh agent) knows exactly where things stand. Read by
-     /claudia-progress. The two HTML-comment marked regions below are owned
-     by the `claudia` CLI — edit through `claudia state ...`, not by hand. -->
+<!-- Initialized by /claudia-plan after the ROADMAP.md is accepted, then
+     updated at the end of every phase command so a fresh session (or a
+     fresh agent) knows exactly where things stand. Read by
+     /claudia-progress. The two HTML-comment marked regions below are
+     owned by the `claudia` CLI — edit through `claudia state ...`, not
+     by hand. -->
 
 <!-- claudia:status -->
 - current_phase: {{ current_phase }}

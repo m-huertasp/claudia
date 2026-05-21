@@ -1,7 +1,8 @@
 # Context — <name>
 
-<!-- Written by /claudia-map. The technical baseline of an existing repo, so
-     downstream agents understand the codebase without re-deriving it. -->
+<!-- Written by /claudia-understand. The technical baseline of an existing
+     repo, so downstream agents understand the codebase without re-deriving
+     it. One-time bootstrap; refreshed on drift via verify/ship prompts. -->
 
 ## Architecture
 
