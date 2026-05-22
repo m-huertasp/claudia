@@ -1,6 +1,6 @@
 ---
 name: domain-reviewer
-description: Reviews bioinformatics outputs for scientific plausibility — record counts, reference-genome consistency, axis units, identifier conventions, and statistical sanity. Pair with `code-reviewer` (which checks code quality) when shipping a pipeline phase. Use whenever the work changes outputs the lab depends on: parsed VCFs/BAMs, summary tables, plots, or QC reports.
+description: Reviews bioinformatics outputs for scientific plausibility — record counts, reference-genome consistency, axis units, identifier conventions, and statistical sanity. Optional. Invoke explicitly when shipping a pipeline phase whose outputs the lab depends on (parsed VCFs/BAMs, summary tables, plots, QC reports); pair with `code-reviewer` for the code-quality angle. Not auto-triggered.
 tools: ["Read", "Grep", "Glob", "Bash"]
 model: sonnet
 ---
