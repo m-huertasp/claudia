@@ -36,11 +36,10 @@ framework; direct slash commands still work for users who already know them.
 | `plan`, `roadmap`, `task breakdown`, `break down` | `/claudia-plan` | Drafts ROADMAP, chains into approach discuss |
 | `execute`, `implement task`, `run task` | `/claudia-execute` | |
 | `verify`, `review gate`, `secret scan`, `check work` | `/claudia-verify` | |
-| `ship`, `open pr`, `pull request`, `create pr` | `/claudia-ship` | |
+| `close`, `wrap up`, `ship`, `open pr`, `pull request`, `create pr` | `/claudia-close` | Drafts PR via internal draft-pr workflow; behavior branches on `mode` |
 | `progress`, `status`, `where am i`, `next step` | `/claudia-progress` | |
 | `settings`, `config` | `/claudia-settings` | |
 | `file issue`, `github issue`, `open issue`, `write issue` | `/claudia-write-issue` | |
-| `draft pr`, `pr draft` | `/claudia-draft-pr` | |
 | `review pr`, `pr review` | `/claudia-pr-review` | Pass `<num\|owner/repo#num\|url>` |
 
 ## Invocation rules
@@ -76,7 +75,7 @@ framework; direct slash commands still work for users who already know them.
 ## Rules
 
 - **Never bypass the review gate.** The dispatcher only routes; the target
-  workflow's own gates still apply (e.g. `/claudia-ship` still calls
+  workflow's own gates still apply (e.g. `/claudia-close` still calls
   `claudia gate check` and `claudia verify ready`).
 - **Never invent a target.** If a request doesn't match any keyword, do not
   guess — surface the fallback message.

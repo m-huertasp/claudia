@@ -23,6 +23,7 @@ every skill, agent, and workflow execution without per-skill modification.
 @plugins/claudia/rules/common/review-gate.md
 @plugins/claudia/rules/common/code-review.md
 @plugins/claudia/rules/common/coding-style.md
+@plugins/claudia/rules/common/commit-style.md
 @plugins/claudia/rules/common/patterns.md
 @plugins/claudia/rules/common/security.md
 @plugins/claudia/rules/common/testing.md
@@ -38,7 +39,7 @@ The primary entry point. `/claudia <natural-language request>` routes to the
 right skill or workflow command. Examples:
 
 - `/claudia prepare docstrings of pipeline.py` → `claudia:prepare-docstrings`
-- `/claudia ship` → `/claudia-ship`
+- `/claudia close` → `/claudia-close`
 - `/claudia plan phase 2` → `/claudia-plan`
 
 When intent is ambiguous, the dispatcher asks via `AskUserQuestion`. Direct
@@ -62,16 +63,16 @@ invoked directly, or auto-triggered by description matching:
 
 A phased, control-first workflow. Each command is invoked explicitly; state persists in `.planning/`. See [plugins/claudia/README.md](plugins/claudia/README.md).
 
-- `/claudia-understand` — one-time codebase bootstrap → `CONTEXT.md`, `ENVIRONMENT.md`, `config.json`. Re-runnable as a refresh when `/claudia-verify` or `/claudia-ship` detects drift.
+- `/claudia-understand` — one-time codebase bootstrap → `CONTEXT.md`, `ENVIRONMENT.md`, `config.json`. Re-runnable as a refresh when `/claudia-verify` or `/claudia-close` detects drift.
 - `/claudia-brief` — start a new issue → `ISSUE_BRIEF.md`; proposes a `{keyword}/{description}` branch (one of `feat | fix | dev | chore | test | hotfix`) and chains into intent-mode discuss to align on what we're tackling.
 - `/claudia-plan` — reads `ISSUE_BRIEF.md` + `DECISIONS.md` → drafts `ROADMAP.md`, chains into approach-mode discuss, then initializes `STATE.md`.
-- `/claudia-execute` — implement tasks via executor subagents (sequential by default).
-- `/claudia-verify` — two-stage review + secret scan + `CONTEXT.md` drift check; for pipelines, generates a human checklist in `VERIFICATION.md`.
-- `/claudia-ship` — open a PR via `/claudia-draft-pr`; blocked by `claudia verify ready` until the checklist is clear; re-runs the drift check.
+- `/claudia-execute` — implement tasks via the executor subagent, one task at a time. Branches on `mode`: `pair` (default) hands the diff to you to commit; `yolo` commits autonomously following the `commit-style` rule.
+- `/claudia-verify` — two-stage review + secret scan + `CONTEXT.md` drift check; for pipelines, generates a human checklist in `VERIFICATION.md`. The fix-loop also branches on `mode` — in `pair` you can choose to fix issues yourself.
+- `/claudia-close` — readiness gates + drift check, then drafts the PR via the internal draft-pr workflow. In `yolo` it pushes and creates the PR via `gh`; in `pair` it pushes and hands you the title + body to open the PR yourself.
 - `/claudia-progress` — where the workflow stands / suggested next step (read-only).
-- `/claudia-settings` — view or edit `.planning/config.json`.
+- `/claudia-settings` — view or edit `.planning/config.json` (including `mode`).
 
-The discuss step is **not user-callable** — it runs internally from `/claudia-brief` (intent mode) and `/claudia-plan` (approach mode), both appending to a single `.planning/DECISIONS.md`.
+The discuss and draft-pr steps are **not user-callable** — discuss runs internally from `/claudia-brief` (intent mode) and `/claudia-plan` (approach mode), both appending to a single `.planning/DECISIONS.md`. draft-pr runs internally from `/claudia-close`.
 
 Every `/claudia-*` command is a thin entry point in [plugins/claudia/commands/](plugins/claudia/commands/) that points at the matching file in [plugins/claudia/workflows/](plugins/claudia/workflows/). The workflow file calls `claudia ...` (the `claudia-tools` CLI) for every deterministic operation; the orchestrating model never hand-edits `.planning/` files.
 
@@ -83,8 +84,9 @@ Review agents (pair with `code-reviewer` for pipelines/outputs): `nextflow-revie
 Require the [`gh` CLI](https://cli.github.com/) installed and authenticated via `gh auth login`. Issues and PRs are created under the authenticated GitHub account — i.e. attributed to the user, not to Claude.
 
 - `/claudia-write-issue [owner/repo:] <description>` — draft a structured GitHub issue and create it in the target repo, **only after the user confirms the draft**
-- `/claudia-draft-pr [base:branch]` — draft a PR for the current branch in a fixed, human-readable structure and create it **only after the user accepts the draft**
 - `/claudia-pr-review <num|owner/repo#num|url>` — structured PR review classified URGENT/HIGH/MEDIUM/LOW, confidence-gated, **never posts to GitHub** (delegates to the `pr-reviewer` subagent)
+
+PR drafting is no longer a standalone command — it is invoked internally by `/claudia-close`.
 
 ## Development Notes
 

@@ -116,7 +116,7 @@ Tested Python package that owns every deterministic op the workflow needs:
 | `gates` | Per-artifact review-gate acceptance ledger |
 | `detect` | Project-type detection: Python lib vs Nextflow pipeline |
 | `env` | Tool-version capture + ENVIRONMENT.md render |
-| `verification` | Human verification checklist (gates `/claudia-ship`) |
+| `verification` | Human verification checklist (gates `/claudia-close`) |
 
 Every CLI command emits the JSON envelope by default; `--text` for humans;
 errors set a non-zero exit.
@@ -143,21 +143,22 @@ invokes the matching skill or workflow command. Ambiguous intent triggers
 | `/claudia-understand` | `CONTEXT.md`, `ENVIRONMENT.md`, `config.json` (one-time; refreshable on drift) |
 | `/claudia-brief` | `ISSUE_BRIEF.md` + `DECISIONS.md` (intent) + `{keyword}/{slug}` branch |
 | `/claudia-plan` | `ROADMAP.md` + `DECISIONS.md` (approach) + task breakdown in `STATE.md` |
-| `/claudia-execute` | code + atomic commits |
-| `/claudia-verify` | verification report + `CONTEXT.md` drift check |
-| `/claudia-ship` | pull request (via `/claudia-draft-pr`); re-runs drift check |
+| `/claudia-execute` | code + atomic commits (`yolo`) or staged diffs you commit (`pair`) |
+| `/claudia-verify` | verification report + `CONTEXT.md` drift check; fix-loop branches on `mode` |
+| `/claudia-close` | PR drafted via internal draft-pr workflow; created via `gh` (`yolo`) or handed to user to open (`pair`); re-runs drift check |
 | `/claudia-progress` | status report (read-only) |
 | `/claudia-settings` | updated `config.json` |
 
-The discuss step is internal — it runs in **intent mode** from `/claudia-brief` and **approach mode** from `/claudia-plan`, both appending to a single `.planning/DECISIONS.md`.
+The discuss and draft-pr steps are internal — discuss runs in **intent mode** from `/claudia-brief` and **approach mode** from `/claudia-plan`, both appending to a single `.planning/DECISIONS.md`. draft-pr runs from `/claudia-close`.
 
 ### GitHub commands
 
 | Command | Purpose | Writes? |
 |---|---|---|
 | `/claudia-write-issue` | Draft + create structured issue | Yes (gated) |
-| `/claudia-draft-pr` | Draft + create PR | Yes (gated) |
 | `/claudia-pr-review` | Structured PR review | **Never** |
+
+PR drafting/creation is no longer a standalone command — `/claudia-close` runs `workflows/draft-pr.md` internally and gates accept before either `gh pr create` (yolo) or handing the title + body back to the user (pair).
 
 Requires the [`gh` CLI](https://cli.github.com/) authenticated via `gh auth login`. Issues and PRs are attributed to the authenticated user, not to Claude.
 
@@ -173,13 +174,15 @@ Requires the [`gh` CLI](https://cli.github.com/) authenticated via `gh auth logi
 Persists across sessions; gitignored by default. `ISSUE_BRIEF.md`,
 `ROADMAP.md`, `DECISIONS.md`, and the plan task breakdown are
 direction-locking — changes pass through the review gate.
-`VERIFICATION.md` holds the human checklist that gates `/claudia-ship`.
+`VERIFICATION.md` holds the human checklist that gates `/claudia-close`.
 
 ### Config — `.planning/config.json`
 
-`mode` (interactive/yolo), `model_profile` (quality/balanced/budget), per-agent
-toggles, `execution.parallel` (default false). The review gate and secret scan
-are not configurable.
+`mode` (`pair` default / `yolo`) drives executor commit behavior,
+verify's fix-loop, and close's PR-creation step. `model_profile`
+(quality/balanced/budget), per-agent toggles, `execution.parallel`
+(default false; ignored in pair). The review gate and secret scan are
+not configurable.
 
 ---
 
@@ -192,9 +195,15 @@ are not configurable.
 /claudia-plan       → ROADMAP.md                              [review gate: roadmap]
                     │   └── chains into approach-mode discuss → DECISIONS.md (approach) [gate: decisions]
                     └── task breakdown in STATE.md            [review gate: plan]
-/claudia-execute    → code + commits   (executor subagents, sequential)
-/claudia-verify     → report           (two-stage review + secret scan + drift check)
-/claudia-ship       → pull request     [review gate: PR draft, via /claudia-draft-pr]
+/claudia-execute    → per-task loop branched on mode:
+                       yolo: executor writes + commits + claudia state task-done
+                       pair: executor writes, user reviews and commits, then
+                             AskUserQuestion done/skip/abort → task-done on done
+/claudia-verify     → report (two-stage review + secret scan + drift check);
+                       fix-loop also branches on mode
+/claudia-close      → drafts PR via workflows/draft-pr.md [review gate: PR draft]
+                       yolo: push + gh pr create
+                       pair: push + print title/body for user to open the PR
                    ↑ /claudia-progress reads STATE.md at any point
                    ↑ /claudia <natural-language> dispatches into any of the above
 ```
@@ -206,7 +215,7 @@ are not configurable.
 | Dependency | Purpose |
 |------------|---------|
 | Claude Code (VS Code extension) | Chat interface and code generation |
-| [`gh` CLI](https://cli.github.com/) | GitHub API access for `/claudia-write-issue`, `/claudia-draft-pr`, `/claudia-pr-review`, `/claudia-ship` (authenticated via `gh auth login`) |
+| [`gh` CLI](https://cli.github.com/) | GitHub API access for `/claudia-write-issue`, `/claudia-pr-review`, and `/claudia-close` in `yolo` mode (authenticated via `gh auth login`) |
 | `claudia_tools` Python CLI | Deterministic state/config/phase/template/gate ops |
 
 ---
@@ -237,7 +246,7 @@ detected type.
 
 ### ✅ Phase 6 — Two-tier verification + review agents
 `claudia verify init/add/confirm/ready` tracks a human checklist (e.g. full
-pipeline runs) that gates `/claudia-ship`. `nextflow-reviewer` and
+pipeline runs) that gates `/claudia-close`. `nextflow-reviewer` and
 `domain-reviewer` agents pair with `code-reviewer` for pipeline / output
 review.
 

@@ -1,5 +1,5 @@
 {
-  "mode": "interactive",
+  "mode": "pair",
   "model_profile": "balanced",
   "agents": {
     "researcher": true,

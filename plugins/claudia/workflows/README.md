@@ -35,6 +35,7 @@ code with a human-readable error.
 | `plan.md` | `/claudia-plan` |
 | `execute.md` | `/claudia-execute` |
 | `verify.md` | `/claudia-verify` |
-| `ship.md` | `/claudia-ship` |
+| `close.md` | `/claudia-close` |
+| `draft-pr.md` | _internal_ — called from `close.md`; gates accept and either `gh pr create`s (yolo) or prints the draft for the user to open (pair) |
 | `progress.md` | `/claudia-progress` |
 | `settings.md` | `/claudia-settings` |

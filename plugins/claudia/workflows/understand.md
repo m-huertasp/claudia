@@ -7,7 +7,7 @@ later issue-scoped commands rely on:
 - `.planning/ENVIRONMENT.md` — tool-version snapshot via `claudia env capture`
 - `.planning/config.json` — claudia mode, model profile, agent toggles
 
-Re-runnable as a **refresh** when `/claudia-verify` or `/claudia-ship`
+Re-runnable as a **refresh** when `/claudia-verify` or `/claudia-close`
 detect drift in the codebase (new top-level dirs, new dependencies,
 renamed key files).
 
