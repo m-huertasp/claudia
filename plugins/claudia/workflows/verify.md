@@ -83,10 +83,40 @@ list every issue with `file:line` and severity, then wait for the user
 to signal *fixed* / *cancel* before re-running verify. Do **not**
 re-dispatch the executor in this branch.
 
+### Fix-loop cap
+
+Before any *fix now* branch dispatches, bump the fix-attempts counter:
+
+```
+claudia verify fix-attempts --increment
+```
+
+The CLI returns `{attempts, cap, cap_reached}`. The cap is **3**. If
+`cap_reached` is true (this would be the 3rd consecutive failed verify
+without a passing pass in between), do **not** silently loop again.
+Surface an escalation prompt via `AskUserQuestion`:
+
+- *Accept with warnings* — close the loop, ship despite the remaining
+  issues (still blocked on CRITICAL).
+- *Stop* — abort the workflow; the user takes over manually.
+- *Override and try once more* — explicit one-pass override; only use
+  when the user has a concrete reason to believe the next fix will
+  succeed.
+
+The counter is **reset on a passing verify verdict**:
+
+```
+claudia verify fix-attempts --reset
+```
+
+This must happen *before* the state-advance below, so a future verify
+loop starts fresh.
+
 Shipping is blocked on any CRITICAL finding regardless of mode.
 
 On a passing verdict, advance state:
 ```
+claudia verify fix-attempts --reset
 claudia state set last_command /claudia-verify
 claudia state set next_step /claudia-close
 ```

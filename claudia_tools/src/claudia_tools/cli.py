@@ -445,6 +445,32 @@ def verify_ready(ctx: click.Context) -> None:
     _run(ctx, _check)
 
 
+@verify_cmd.command("fix-attempts")
+@click.option("--increment", "increment", is_flag=True, help="Bump the counter by one.")
+@click.option("--reset", "reset", is_flag=True, help="Reset the counter to zero.")
+@click.pass_context
+def verify_fix_attempts(ctx: click.Context, increment: bool, reset: bool) -> None:
+    """Read or update the verify fix-loop attempt counter.
+
+    With no flags, returns the current counter. ``--increment`` bumps it by
+    one (called by /claudia-verify each time it loops back to
+    /claudia-execute). ``--reset`` zeroes it (called on a passing verify
+    verdict). The response includes ``cap`` and ``cap_reached`` so the
+    workflow knows when to escalate to the user.
+    """
+    if increment and reset:
+        raise click.UsageError("--increment and --reset are mutually exclusive")
+
+    def _do() -> Any:
+        if increment:
+            return verification.fix_attempts_increment(_planning(ctx))
+        if reset:
+            return verification.fix_attempts_reset(_planning(ctx))
+        return verification.fix_attempts_status(_planning(ctx))
+
+    _run(ctx, _do)
+
+
 main.add_command(state_cmd, "state")
 main.add_command(config_cmd, "config")
 main.add_command(phase_cmd, "phase")
