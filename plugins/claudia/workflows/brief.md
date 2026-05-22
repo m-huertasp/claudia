@@ -33,7 +33,7 @@ to seed the brief title and the suggested branch slug).
    Do not pad thin answers with guesses.
 2. **Render `ISSUE_BRIEF.md`** by rendering the template:
    ```
-   claudia template render plugins/claudia/templates/ISSUE_BRIEF.md \
+   claudia template render ISSUE_BRIEF \
        --var title=<title> --output .planning/ISSUE_BRIEF.md
    ```
    Fill in the prose placeholders with the gathered answers.

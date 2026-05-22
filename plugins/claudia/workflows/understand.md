@@ -47,7 +47,7 @@ exists in `.planning/`:
    embargoed or patient data. See the secure-ai-use rule.
 6. **Render `CONTEXT.md`.** Use the bundled template:
    ```
-   claudia template render plugins/claudia/templates/CONTEXT.md \
+   claudia template render CONTEXT \
        --var name=<project> --output .planning/CONTEXT.md
    ```
    Then fill in the prose hint placeholders (`<...>`) with what you

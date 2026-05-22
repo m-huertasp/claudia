@@ -7,7 +7,13 @@ from pathlib import Path
 import pytest
 
 from claudia_tools.output import ClaudiaError
-from claudia_tools.templates import render, render_file, render_to_file, template_variables
+from claudia_tools.templates import (
+    bundled_template_names,
+    render,
+    render_file,
+    render_to_file,
+    template_variables,
+)
 
 
 def test_template_variables() -> None:
@@ -71,3 +77,38 @@ def test_render_to_file_force_overwrites(tmp_path: Path) -> None:
     render_to_file(template, target, {}, force=True)
 
     assert target.read_text(encoding="utf-8") == "new"
+
+
+def test_bundled_template_names_lists_expected_templates() -> None:
+    names = bundled_template_names()
+
+    assert {"CONTEXT", "ISSUE_BRIEF", "ROADMAP", "STATE", "ENVIRONMENT", "VERIFICATION"} <= set(
+        names
+    )
+
+
+def test_render_file_resolves_bundled_name(tmp_path: Path) -> None:
+    rendered = render_file("ROADMAP", {"name": "claudia"})
+
+    assert rendered.startswith("# Roadmap — claudia")
+
+
+def test_render_to_file_resolves_bundled_name(tmp_path: Path) -> None:
+    target = tmp_path / "ROADMAP.md"
+
+    written = render_to_file("ROADMAP", target, {"name": "claudia"})
+
+    assert written == target
+    assert target.read_text(encoding="utf-8").startswith("# Roadmap — claudia")
+
+
+def test_render_file_unknown_bare_name_lists_bundled(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="bundled names: CONTEXT"):
+        render_file("NOT_A_TEMPLATE", {})
+
+
+def test_path_with_separator_is_not_resolved_as_bundled(tmp_path: Path) -> None:
+    template = tmp_path / "ROADMAP.md"
+    template.write_text("custom {{ name }}", encoding="utf-8")
+
+    assert render_file(template, {"name": "x"}) == "custom x"
