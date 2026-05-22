@@ -13,7 +13,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
-from claudia_tools.output import ClaudiaError
+from claudia_tools.output import ClaudiaError, atomic_write, file_lock
 
 _ENUMS: dict[str, set[str]] = {
     "mode": {"pair", "yolo"},
@@ -111,11 +111,12 @@ def set_value(path: Path, key: str, value: Any) -> dict[str, Any]:
     if key not in _ALLOWED:
         raise ClaudiaError(f"unknown config key '{key}'")
     coerced = _coerce(key, value)
-    config = copy.deepcopy(read_config(path))
-    parts = key.split(".")
-    node = config
-    for part in parts[:-1]:
-        node = node.setdefault(part, {})
-    node[parts[-1]] = coerced
-    Path(path).write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    with file_lock(Path(path)):
+        config = copy.deepcopy(read_config(path))
+        parts = key.split(".")
+        node = config
+        for part in parts[:-1]:
+            node = node.setdefault(part, {})
+        node[parts[-1]] = coerced
+        atomic_write(Path(path), json.dumps(config, indent=2) + "\n")
     return config

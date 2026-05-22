@@ -256,3 +256,67 @@ def test_add_task_replaces_template_placeholder(tmp_path: Path) -> None:
     text = state_path.read_text(encoding="utf-8")
     assert "none yet" not in text
     assert "- [ ] T1 — Real task" in text
+
+
+def test_set_current_phase_resets_verify_fix_attempts(tmp_path: Path) -> None:
+    """Advancing the current phase wipes the verify fix-attempts counter.
+
+    Per-phase fix attempts must not leak into the next phase, otherwise the
+    user gets escalation prompts they didn't cause.
+    """
+    from claudia_tools import verification
+
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    init_state(planning)
+    verification.fix_attempts_increment(planning)
+    verification.fix_attempts_increment(planning)
+    assert verification.fix_attempts_status(planning)["attempts"] == 2
+
+    set_status_field(planning / "STATE.md", "current_phase", "2")
+
+    assert verification.fix_attempts_status(planning)["attempts"] == 0
+
+
+def test_set_current_phase_to_same_value_does_not_reset_counter(tmp_path: Path) -> None:
+    """A no-op phase write keeps the counter — only an actual change resets."""
+    from claudia_tools import verification
+
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    init_state(planning)
+    verification.fix_attempts_increment(planning)
+
+    set_status_field(planning / "STATE.md", "current_phase", "1")  # same value
+
+    assert verification.fix_attempts_status(planning)["attempts"] == 1
+
+
+def test_parallel_add_task_lands_every_write(tmp_path: Path) -> None:
+    """Twenty threads each appending a task must produce twenty unique tasks.
+
+    Before the file-lock + atomic-write rework, a read-modify-write race
+    silently dropped concurrent updates. This test pins the fix.
+    """
+    import threading
+
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    state_path = planning / "STATE.md"
+    init_state(planning)
+
+    def add(i: int) -> None:
+        add_task(state_path, f"rapid {i}")
+
+    threads = [threading.Thread(target=add, args=(i,)) for i in range(20)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    tasks = read_tasks(state_path)
+    titles = {task.title for task in tasks}
+    ids = {task.id for task in tasks}
+    assert len(tasks) == 20
+    assert titles == {f"rapid {i}" for i in range(20)}
+    assert ids == {f"T{i}" for i in range(1, 21)}

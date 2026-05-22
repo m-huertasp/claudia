@@ -3,8 +3,20 @@
 from __future__ import annotations
 
 import json
+import os
+import threading
+from pathlib import Path
 
-from claudia_tools.output import EXIT_ERROR, EXIT_OK, ClaudiaError, Result, emit, render
+from claudia_tools.output import (
+    EXIT_ERROR,
+    EXIT_OK,
+    ClaudiaError,
+    Result,
+    atomic_write,
+    emit,
+    file_lock,
+    render,
+)
 
 
 def test_success_builds_ok_envelope() -> None:
@@ -55,3 +67,54 @@ def test_emit_failure_returns_error_code_on_stderr(capsys) -> None:
 
 def test_claudia_error_is_an_exception() -> None:
     assert issubclass(ClaudiaError, Exception)
+
+
+def test_atomic_write_replaces_existing_file(tmp_path: Path) -> None:
+    target = tmp_path / "foo.md"
+    target.write_text("before", encoding="utf-8")
+
+    atomic_write(target, "after")
+
+    assert target.read_text(encoding="utf-8") == "after"
+
+
+def test_atomic_write_creates_parent_dirs(tmp_path: Path) -> None:
+    target = tmp_path / "nested" / "dir" / "foo.txt"
+
+    atomic_write(target, "hello")
+
+    assert target.read_text(encoding="utf-8") == "hello"
+
+
+def test_atomic_write_leaves_no_tmp_files(tmp_path: Path) -> None:
+    target = tmp_path / "foo.md"
+
+    atomic_write(target, "hello")
+
+    leftovers = [p for p in tmp_path.iterdir() if p.name.startswith("foo.md.")]
+    assert leftovers == []
+
+
+def test_file_lock_serializes_writers(tmp_path: Path) -> None:
+    """Two threads racing on the same file produce a consistent final value.
+
+    Without the lock the read-modify-write sequence loses one update; with
+    the lock the second writer waits for the first to commit, so its
+    increment is applied to the latest value.
+    """
+    target = tmp_path / "counter.txt"
+    target.write_text("0", encoding="utf-8")
+
+    def increment_once() -> None:
+        with file_lock(target):
+            current = int(target.read_text(encoding="utf-8"))
+            os.sched_yield()  # encourage a context switch mid-section
+            atomic_write(target, str(current + 1))
+
+    threads = [threading.Thread(target=increment_once) for _ in range(20)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert target.read_text(encoding="utf-8") == "20"

@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from claudia_tools.output import ClaudiaError
+from claudia_tools.output import ClaudiaError, atomic_write, file_lock
 
 _GATES_FILE = "gates.json"
 _ARTIFACT_NAME = re.compile(r"[A-Za-z0-9_.:-]+")
@@ -67,8 +67,8 @@ def _load(planning_dir: Path) -> dict[str, Any]:
 
 
 def _save(planning_dir: Path, gates: dict[str, Any]) -> None:
-    """Write the gates ledger to disk."""
-    _gates_path(planning_dir).write_text(json.dumps(gates, indent=2) + "\n", encoding="utf-8")
+    """Write the gates ledger to disk atomically."""
+    atomic_write(_gates_path(planning_dir), json.dumps(gates, indent=2) + "\n")
 
 
 def _artifact_file(planning_dir: Path, artifact: str) -> Path:
@@ -107,12 +107,13 @@ def accept(planning_dir: Path, artifact: str) -> dict[str, Any]:
             f"cannot accept '{artifact}': no artifact on disk at {backing}"
         )
     Path(planning_dir).mkdir(parents=True, exist_ok=True)
-    gates = _load(planning_dir)
-    previous = gates.get(artifact, {}) if isinstance(gates.get(artifact), dict) else {}
-    was_accepted = _entry_status(previous) == "accepted"
-    timestamp = datetime.now(UTC).isoformat()
-    gates[artifact] = {"status": "accepted", "at": timestamp}
-    _save(planning_dir, gates)
+    with file_lock(_gates_path(planning_dir)):
+        gates = _load(planning_dir)
+        previous = gates.get(artifact, {}) if isinstance(gates.get(artifact), dict) else {}
+        was_accepted = _entry_status(previous) == "accepted"
+        timestamp = datetime.now(UTC).isoformat()
+        gates[artifact] = {"status": "accepted", "at": timestamp}
+        _save(planning_dir, gates)
     return {
         "artifact": artifact,
         "status": "accepted",
@@ -132,12 +133,13 @@ def cancel(planning_dir: Path, artifact: str) -> None:
     """
     _validate_artifact(artifact)
     Path(planning_dir).mkdir(parents=True, exist_ok=True)
-    gates = _load(planning_dir)
-    gates[artifact] = {
-        "status": "cancelled",
-        "at": datetime.now(UTC).isoformat(),
-    }
-    _save(planning_dir, gates)
+    with file_lock(_gates_path(planning_dir)):
+        gates = _load(planning_dir)
+        gates[artifact] = {
+            "status": "cancelled",
+            "at": datetime.now(UTC).isoformat(),
+        }
+        _save(planning_dir, gates)
 
 
 def revoke(planning_dir: Path, artifact: str) -> None:
@@ -150,13 +152,14 @@ def revoke(planning_dir: Path, artifact: str) -> None:
         tell that the no-op was actually a no-op).
     """
     _validate_artifact(artifact)
-    gates = _load(planning_dir)
-    if artifact not in gates:
-        raise ClaudiaError(
-            f"cannot revoke '{artifact}': no recorded acceptance or cancellation"
-        )
-    gates.pop(artifact)
-    _save(planning_dir, gates)
+    with file_lock(_gates_path(planning_dir)):
+        gates = _load(planning_dir)
+        if artifact not in gates:
+            raise ClaudiaError(
+                f"cannot revoke '{artifact}': no recorded acceptance or cancellation"
+            )
+        gates.pop(artifact)
+        _save(planning_dir, gates)
 
 
 def _entry_status(entry: object) -> str | None:

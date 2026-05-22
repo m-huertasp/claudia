@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from claudia_tools.markers import has_region, read_region, replace_region
-from claudia_tools.output import ClaudiaError
+from claudia_tools.output import ClaudiaError, atomic_write, file_lock
 
 _PHASE_HEADING = re.compile(r"^## Phase (?P<num>\d+) — (?P<title>.+)$", re.MULTILINE)
 
@@ -110,13 +110,12 @@ def set_phase_status(path: Path, number: int, status: str) -> Phase:
         Phase-existence is checked first so a user who passed both wrong
         arguments learns about the missing phase rather than the status.
     """
-    text = _read(path)
-    phases = {phase.number: phase for phase in _parse_phases(text)}
-    if number not in phases:
-        raise ClaudiaError(f"no phase {number} in roadmap")
-    if status not in STATUSES:
-        raise ClaudiaError(f"status must be one of {list(STATUSES)}, got '{status}'")
-    Path(path).write_text(
-        replace_region(text, f"status-{number}", status), encoding="utf-8"
-    )
+    with file_lock(Path(path)):
+        text = _read(path)
+        phases = {phase.number: phase for phase in _parse_phases(text)}
+        if number not in phases:
+            raise ClaudiaError(f"no phase {number} in roadmap")
+        if status not in STATUSES:
+            raise ClaudiaError(f"status must be one of {list(STATUSES)}, got '{status}'")
+        atomic_write(Path(path), replace_region(text, f"status-{number}", status))
     return Phase(number=number, title=phases[number].title, status=status)
