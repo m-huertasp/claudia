@@ -103,6 +103,15 @@ def state_cmd() -> None:
     """Read and update STATE.md."""
 
 
+@state_cmd.command("init")
+@click.option("--name", "project_name", default="project", help="Project name in the heading.")
+@click.option("--force", is_flag=True, help="Overwrite an existing STATE.md.")
+@click.pass_context
+def state_init(ctx: click.Context, project_name: str, force: bool) -> None:
+    """Write a fresh .planning/STATE.md from the bundled template."""
+    _run(ctx, lambda: str(state.init_state(_planning(ctx), project_name, force=force)))
+
+
 @state_cmd.command("get")
 @click.pass_context
 def state_get(ctx: click.Context) -> None:
@@ -209,7 +218,7 @@ def template_cmd() -> None:
 
 
 @template_cmd.command("render")
-@click.argument("template_path", type=click.Path(path_type=Path))
+@click.argument("template_ref")
 @click.option("--var", "variables", multiple=True, help="A key=value substitution.")
 @click.option(
     "--output",
@@ -221,20 +230,25 @@ def template_cmd() -> None:
 @click.pass_context
 def template_render(
     ctx: click.Context,
-    template_path: Path,
+    template_ref: str,
     variables: tuple[str, ...],
     output_path: Path | None,
     force: bool,
 ) -> None:
-    """Render TEMPLATE_PATH with the given --var substitutions."""
+    """Render TEMPLATE_REF with the given --var substitutions.
+
+    TEMPLATE_REF is either a bundled name (e.g. ``ROADMAP``, ``STATE``) or a
+    path to a template file. Bundled names resolve to the matching
+    ``<NAME>.md.template`` shipped with claudia.
+    """
     parsed = _parse_vars(variables)
     if output_path is None:
-        _run(ctx, lambda: templates.render_file(template_path, parsed))
+        _run(ctx, lambda: templates.render_file(template_ref, parsed))
     else:
         _run(
             ctx,
             lambda: str(
-                templates.render_to_file(template_path, output_path, parsed, force=force)
+                templates.render_to_file(template_ref, output_path, parsed, force=force)
             ),
         )
 

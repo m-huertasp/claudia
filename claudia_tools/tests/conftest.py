@@ -54,5 +54,7 @@ def planning_dir(tmp_path: Path) -> Path:
     planning.mkdir()
     (planning / "STATE.md").write_text(STATE_MD, encoding="utf-8")
     (planning / "ROADMAP.md").write_text(ROADMAP_MD, encoding="utf-8")
+    (planning / "DECISIONS.md").write_text("# Decisions\n", encoding="utf-8")
+    (planning / "ISSUE_BRIEF.md").write_text("# Issue brief\n", encoding="utf-8")
     (planning / "config.json").write_text(CONFIG_JSON, encoding="utf-8")
     return planning

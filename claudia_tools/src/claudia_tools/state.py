@@ -9,13 +9,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from claudia_tools.markers import read_region, replace_region
 from claudia_tools.output import ClaudiaError
+from claudia_tools.templates import render_to_file
 
 _STATUS_REGION = "status"
 _TASKS_REGION = "tasks"
+_FILE = "STATE.md"
 
 _STATUS_LINE = re.compile(r"^- (?P<key>[A-Za-z0-9_]+):[ \t]*(?P<value>.*)$", re.MULTILINE)
 _TASK_LINE = re.compile(
@@ -53,6 +56,40 @@ def _write(path: Path, text: str) -> None:
     Path(path).write_text(text, encoding="utf-8")
 
 
+def init_state(
+    planning_dir: Path,
+    name: str = "project",
+    force: bool = False,
+    current_phase: str = "1",
+    last_command: str = "",
+    next_step: str = "",
+) -> Path:
+    """Render the bundled STATE.md template into ``planning_dir``.
+
+    The ``updated`` field is set to today (ISO date). The status fields can
+    be overridden via the keyword arguments; the task region stays at its
+    template default of ``- (none yet — run /claudia-plan)``.
+
+    Raises
+    ------
+    ClaudiaError
+        If ``planning_dir/STATE.md`` already exists and ``force`` is False.
+    """
+    target = Path(planning_dir) / _FILE
+    return render_to_file(
+        "STATE",
+        target,
+        {
+            "name": name,
+            "current_phase": current_phase,
+            "last_command": last_command,
+            "next_step": next_step,
+            "updated": date.today().isoformat(),
+        },
+        force=force,
+    )
+
+
 def read_status(path: Path) -> dict[str, str]:
     """Return the ``status`` region of ``STATE.md`` as an ordered dict."""
     region = read_region(_read(path), _STATUS_REGION)
@@ -62,11 +99,20 @@ def read_status(path: Path) -> dict[str, str]:
 def set_status_field(path: Path, key: str, value: str) -> dict[str, str]:
     """Set one field in the ``status`` region and return the updated status.
 
+    If ``STATE.md`` does not exist yet, it is auto-created from the bundled
+    template with default values; the caller's ``key=value`` is then
+    applied. This keeps ``state set`` callable from early workflow steps
+    (e.g. ``/claudia-understand``, ``/claudia-brief``) without a separate
+    ``state init`` call.
+
     Raises
     ------
     ClaudiaError
-        If ``key`` is not already a recognised status field.
+        If ``key`` is not a recognised status field.
     """
+    path = Path(path)
+    if not path.exists():
+        init_state(path.parent)
     text = _read(path)
     region = read_region(text, _STATUS_REGION)
     status = {m["key"]: m["value"].strip() for m in _STATUS_LINE.finditer(region)}

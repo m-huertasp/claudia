@@ -29,7 +29,7 @@ whole issue.
    directly.
 3. **Draft `ROADMAP.md`.** Render the template:
    ```
-   claudia template render plugins/claudia/templates/ROADMAP.md \
+   claudia template render ROADMAP \
        --var name=<issue-title> --output .planning/ROADMAP.md
    ```
    Replace the example phases with the real ones for this issue. Every
@@ -69,13 +69,13 @@ On both gates passing:
 2. Initialize `.planning/STATE.md` by rendering the template with
    starting values:
    ```
-   claudia template render plugins/claudia/templates/STATE.md \
+   claudia template render STATE \
        --var name=<issue-title> \
        --var current_phase="Phase 1 — <title>" \
        --var last_command=/claudia-plan \
        --var next_step=/claudia-execute \
        --var updated=<YYYY-MM-DD> \
-       --output .planning/STATE.md
+       --output .planning/STATE.md --force
    ```
 3. Write the task lines into the `<!-- claudia:tasks -->...
    <!-- /claudia:tasks -->` region of `.planning/STATE.md` (one line per
