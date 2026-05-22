@@ -82,11 +82,18 @@ def _artifact_file(planning_dir: Path, artifact: str) -> Path:
     return Path(planning_dir) / backing
 
 
-def accept(planning_dir: Path, artifact: str) -> None:
+def accept(planning_dir: Path, artifact: str) -> dict[str, Any]:
     """Record ``artifact`` as having cleared its review gate.
 
     Refuses to accept an artifact whose backing file is not on disk —
     review-gate acceptance must follow, not lead, the artifact itself.
+
+    Returns
+    -------
+    dict
+        ``{"artifact", "status", "at", "first_accept", "previous_at"}``
+        so callers can audit whether this was a fresh acceptance or a
+        re-stamp of a prior one.
 
     Raises
     ------
@@ -101,11 +108,18 @@ def accept(planning_dir: Path, artifact: str) -> None:
         )
     Path(planning_dir).mkdir(parents=True, exist_ok=True)
     gates = _load(planning_dir)
-    gates[artifact] = {
-        "status": "accepted",
-        "at": datetime.now(UTC).isoformat(),
-    }
+    previous = gates.get(artifact, {}) if isinstance(gates.get(artifact), dict) else {}
+    was_accepted = _entry_status(previous) == "accepted"
+    timestamp = datetime.now(UTC).isoformat()
+    gates[artifact] = {"status": "accepted", "at": timestamp}
     _save(planning_dir, gates)
+    return {
+        "artifact": artifact,
+        "status": "accepted",
+        "at": timestamp,
+        "first_accept": not was_accepted,
+        "previous_at": previous.get("at") if was_accepted else None,
+    }
 
 
 def cancel(planning_dir: Path, artifact: str) -> None:
@@ -127,10 +141,21 @@ def cancel(planning_dir: Path, artifact: str) -> None:
 
 
 def revoke(planning_dir: Path, artifact: str) -> None:
-    """Remove any recorded acceptance/cancellation for ``artifact``."""
+    """Remove any recorded acceptance/cancellation for ``artifact``.
+
+    Raises
+    ------
+    ClaudiaError
+        If ``artifact`` was never accepted or cancelled (so the user can
+        tell that the no-op was actually a no-op).
+    """
     _validate_artifact(artifact)
     gates = _load(planning_dir)
-    gates.pop(artifact, None)
+    if artifact not in gates:
+        raise ClaudiaError(
+            f"cannot revoke '{artifact}': no recorded acceptance or cancellation"
+        )
+    gates.pop(artifact)
     _save(planning_dir, gates)
 
 
@@ -170,5 +195,18 @@ def require_accepted(planning_dir: Path, *artifacts: str) -> None:
 
 
 def status(planning_dir: Path) -> dict[str, Any]:
-    """Return the full gates ledger."""
+    """Return the full gates ledger.
+
+    Raises
+    ------
+    ClaudiaError
+        If no ledger has ever been written (no gate has been accepted or
+        cancelled yet). Callers should treat the error as "empty ledger"
+        rather than a hard failure.
+    """
+    path = _gates_path(planning_dir)
+    if not path.exists():
+        raise ClaudiaError(
+            f"no gates ledger at {path}; no gate has been accepted or cancelled yet"
+        )
     return _load(planning_dir)

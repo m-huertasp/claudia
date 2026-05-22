@@ -98,6 +98,11 @@ def init_verification(planning_dir: Path, name: str, force: bool = False) -> Pat
         return render_to_file(template_path, target, {"name": name}, force=force)
 
 
+def exists(planning_dir: Path) -> bool:
+    """Return whether ``.planning/VERIFICATION.md`` is on disk."""
+    return _path(planning_dir).is_file()
+
+
 def list_items(planning_dir: Path) -> list[ChecklistItem]:
     """Return every item in the checklist, in document order."""
     text = _read(_path(planning_dir))
@@ -105,7 +110,16 @@ def list_items(planning_dir: Path) -> list[ChecklistItem]:
 
 
 def add_item(planning_dir: Path, description: str) -> ChecklistItem:
-    """Append a new checklist item and return it."""
+    """Append a new checklist item and return it.
+
+    Raises
+    ------
+    ClaudiaError
+        If ``description`` is empty after stripping whitespace.
+    """
+    description = description.strip()
+    if not description:
+        raise ClaudiaError("checklist item description must not be empty")
     path = _path(planning_dir)
     text = _read(path)
     region = read_region(text, _REGION)

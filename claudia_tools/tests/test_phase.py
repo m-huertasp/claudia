@@ -59,3 +59,24 @@ def test_read_phases_rejects_invalid_status(planning_dir: Path) -> None:
 
     with pytest.raises(ClaudiaError, match="invalid status 'wip'"):
         read_phases(roadmap)
+
+
+def test_set_phase_status_reports_missing_phase_before_invalid_status(
+    planning_dir: Path,
+) -> None:
+    # Both args are wrong — the caller should learn about the missing phase
+    # first, not the invalid status, so they fix the right thing.
+    with pytest.raises(ClaudiaError, match="no phase 999 in roadmap"):
+        set_phase_status(planning_dir / "ROADMAP.md", 999, "frobnicated")
+
+
+def test_set_phase_status_rejects_invalid_status_when_phase_exists(
+    planning_dir: Path,
+) -> None:
+    with pytest.raises(ClaudiaError, match="status must be one of"):
+        set_phase_status(planning_dir / "ROADMAP.md", 1, "frobnicated")
+
+
+def test_read_phases_on_missing_roadmap_raises_claudia_error(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no ROADMAP.md"):
+        read_phases(tmp_path / "ROADMAP.md")

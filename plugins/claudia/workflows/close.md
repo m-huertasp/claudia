@@ -19,13 +19,20 @@ passed through to the draft-pr workflow.
    ```
    claudia state get
    claudia gate check ROADMAP.md DECISIONS:intent DECISIONS:approach
+   claudia verify exists
+   ```
+   If `claudia gate check` exits non-zero, stop and tell the user which
+   gates are still open.
+
+   For pure-Python phases that did not add a human checklist,
+   `.planning/VERIFICATION.md` may not exist — `claudia verify exists`
+   reports `{"exists": false}` and the checklist gate is skipped.
+   Otherwise run:
+   ```
    claudia verify ready
    ```
-   If `claudia gate check` or `claudia verify ready` exits non-zero, stop
-   and tell the user which gates or checklist items are still open. The
-   `verify ready` check is skipped only when no `.planning/VERIFICATION.md`
-   exists (pure-Python phases that didn't add a human checklist) — in
-   that case run `ls .planning/VERIFICATION.md` first to decide.
+   and stop on non-zero exit, telling the user which checklist items
+   are still open.
 2. **Final secret scan** of the branch diff against the base per the
    secure-ai-use rule. If anything is found, stop.
 3. **CONTEXT.md drift check.** Re-run the drift heuristics from

@@ -189,3 +189,38 @@ def test_fix_attempts_rejects_negative_counter(tmp_path: Path) -> None:
 
     with pytest.raises(ClaudiaError, match="negative fix-attempts counter"):
         verification.fix_attempts_status(planning)
+
+
+def test_add_item_rejects_empty_description(tmp_path: Path) -> None:
+    planning = _init(tmp_path)
+
+    with pytest.raises(ClaudiaError, match="must not be empty"):
+        verification.add_item(planning, "")
+
+
+def test_add_item_rejects_whitespace_only_description(tmp_path: Path) -> None:
+    planning = _init(tmp_path)
+
+    with pytest.raises(ClaudiaError, match="must not be empty"):
+        verification.add_item(planning, "   \t  ")
+
+
+def test_add_item_strips_surrounding_whitespace(tmp_path: Path) -> None:
+    planning = _init(tmp_path)
+
+    item = verification.add_item(planning, "  trim me  ")
+
+    assert item.description == "trim me"
+
+
+def test_exists_returns_false_when_no_verification_md(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    assert verification.exists(planning) is False
+
+
+def test_exists_returns_true_after_init(tmp_path: Path) -> None:
+    planning = _init(tmp_path)
+
+    assert verification.exists(planning) is True

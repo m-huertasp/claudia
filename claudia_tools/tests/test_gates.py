@@ -140,3 +140,41 @@ def test_legacy_ledger_shape_still_reads_as_accepted(planning_dir: Path) -> None
 def test_accept_rejects_unsafe_colon_path_traversal(planning_dir: Path) -> None:
     with pytest.raises(ClaudiaError, match="invalid artifact name"):
         accept(planning_dir, "../etc:passwd")
+
+
+def test_accept_returns_first_accept_true_on_fresh_artifact(planning_dir: Path) -> None:
+    result = accept(planning_dir, "ROADMAP.md")
+
+    assert result["first_accept"] is True
+    assert result["previous_at"] is None
+    assert result["status"] == "accepted"
+    assert result["artifact"] == "ROADMAP.md"
+
+
+def test_accept_returns_first_accept_false_on_restamp(planning_dir: Path) -> None:
+    first = accept(planning_dir, "ROADMAP.md")
+    second = accept(planning_dir, "ROADMAP.md")
+
+    assert second["first_accept"] is False
+    assert second["previous_at"] == first["at"]
+
+
+def test_revoke_errors_on_never_accepted_artifact(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no recorded acceptance or cancellation"):
+        revoke(planning_dir, "ROADMAP.md")
+
+
+def test_status_errors_when_no_ledger_exists(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    with pytest.raises(ClaudiaError, match="no gates ledger"):
+        status(planning)
+
+
+def test_status_returns_after_first_accept(planning_dir: Path) -> None:
+    accept(planning_dir, "ROADMAP.md")
+
+    ledger = status(planning_dir)
+
+    assert "ROADMAP.md" in ledger

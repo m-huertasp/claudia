@@ -47,8 +47,19 @@ class Task:
 
 
 def _read(path: Path) -> str:
-    """Return the text of ``path``."""
-    return Path(path).read_text(encoding="utf-8")
+    """Return the text of ``path``.
+
+    Raises
+    ------
+    ClaudiaError
+        If the file does not exist, with a hint at the right next command.
+    """
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ClaudiaError(
+            f"no STATE.md at {path}; run /claudia-plan first to initialise it"
+        ) from exc
 
 
 def _write(path: Path, text: str) -> None:
