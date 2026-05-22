@@ -278,13 +278,26 @@ def gate_accept(ctx: click.Context, artifact: str) -> None:
 @click.argument("artifact")
 @click.pass_context
 def gate_revoke(ctx: click.Context, artifact: str) -> None:
-    """Clear any recorded acceptance for ARTIFACT."""
+    """Clear any recorded acceptance or cancellation for ARTIFACT."""
 
     def _revoke() -> str:
         gates.revoke(_planning(ctx), artifact)
         return f"{artifact} revoked"
 
     _run(ctx, _revoke)
+
+
+@gate_cmd.command("cancel")
+@click.argument("artifact")
+@click.pass_context
+def gate_cancel(ctx: click.Context, artifact: str) -> None:
+    """Record that ARTIFACT's review gate was cancelled by the user."""
+
+    def _cancel() -> str:
+        gates.cancel(_planning(ctx), artifact)
+        return f"{artifact} cancelled"
+
+    _run(ctx, _cancel)
 
 
 @gate_cmd.command("check")

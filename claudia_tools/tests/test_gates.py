@@ -6,7 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from claudia_tools.gates import accept, is_accepted, require_accepted, revoke, status
+from claudia_tools.gates import (
+    accept,
+    cancel,
+    is_accepted,
+    is_cancelled,
+    require_accepted,
+    revoke,
+    status,
+)
 from claudia_tools.output import ClaudiaError
 
 
@@ -79,3 +87,56 @@ def test_accept_state_tasks_refuses_when_state_md_missing(tmp_path: Path) -> Non
 
     with pytest.raises(ClaudiaError, match="no artifact on disk"):
         accept(planning, "STATE-tasks")
+
+
+def test_cancel_records_cancellation(planning_dir: Path) -> None:
+    cancel(planning_dir, "DECISIONS:intent")
+
+    assert is_cancelled(planning_dir, "DECISIONS:intent") is True
+    assert is_accepted(planning_dir, "DECISIONS:intent") is False
+
+
+def test_cancel_does_not_require_artifact_on_disk(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    cancel(planning, "DECISIONS:intent")  # no raise — draft may never have been written
+
+    assert is_cancelled(planning, "DECISIONS:intent") is True
+
+
+def test_accept_after_cancel_clears_cancellation(planning_dir: Path) -> None:
+    cancel(planning_dir, "DECISIONS:intent")
+    accept(planning_dir, "DECISIONS:intent")
+
+    assert is_accepted(planning_dir, "DECISIONS:intent") is True
+    assert is_cancelled(planning_dir, "DECISIONS:intent") is False
+
+
+def test_revoke_clears_cancellation_too(planning_dir: Path) -> None:
+    cancel(planning_dir, "DECISIONS:intent")
+    revoke(planning_dir, "DECISIONS:intent")
+
+    assert is_cancelled(planning_dir, "DECISIONS:intent") is False
+
+
+def test_require_accepted_blocks_cancelled_artifact(planning_dir: Path) -> None:
+    cancel(planning_dir, "DECISIONS:intent")
+
+    with pytest.raises(ClaudiaError, match="DECISIONS:intent"):
+        require_accepted(planning_dir, "DECISIONS:intent")
+
+
+def test_legacy_ledger_shape_still_reads_as_accepted(planning_dir: Path) -> None:
+    # Older claudia versions wrote {"accepted": true} without a "status" key.
+    (planning_dir / "gates.json").write_text(
+        '{"ROADMAP.md": {"accepted": true, "at": "2026-01-01T00:00:00+00:00"}}',
+        encoding="utf-8",
+    )
+
+    assert is_accepted(planning_dir, "ROADMAP.md") is True
+
+
+def test_accept_rejects_unsafe_colon_path_traversal(planning_dir: Path) -> None:
+    with pytest.raises(ClaudiaError, match="invalid artifact name"):
+        accept(planning_dir, "../etc:passwd")

@@ -44,17 +44,36 @@ decisions from approach decisions.
 `DECISIONS.md` is **direction-locking**. Present the drafted entries
 (and, in `approach` mode, any ROADMAP.md revisions) and ask
 accept / edit / cancel via `AskUserQuestion`. Follow the file-based edit
-loop in `plugins/claudia/rules/common/review-gate.md`. On accept:
+loop in `plugins/claudia/rules/common/review-gate.md`.
+
+Each invocation records its outcome against a **mode-scoped gate name**
+(`DECISIONS:intent` from `/claudia-brief`, `DECISIONS:approach` from
+`/claudia-plan`) so the calling workflow can tell its own discuss
+result from the other one's, even though both append to the same
+`DECISIONS.md`.
+
+**On accept:**
 
 1. Append the entries to `.planning/DECISIONS.md` (never rewrite existing
    accepted entries — supersede them with a new entry instead).
-2. Record the gate clearance:
+2. Record the gate clearance using the mode-scoped name:
    ```
-   claudia gate accept DECISIONS.md
+   claudia gate accept DECISIONS:<mode>     # mode = intent | approach
    ```
 3. Return control to the calling workflow (`/claudia-brief` or
    `/claudia-plan`), which is responsible for advancing the state
    machine. Do not set `last_command` / `next_step` here.
+
+**On cancel:**
+
+1. Do **not** append entries to `.planning/DECISIONS.md`.
+2. Record the cancellation so the caller can detect it:
+   ```
+   claudia gate cancel DECISIONS:<mode>     # mode = intent | approach
+   ```
+3. Return control to the calling workflow. The caller must check the
+   gate status and halt — it must not advance `last_command` /
+   `next_step`.
 
 ## Rules
 
