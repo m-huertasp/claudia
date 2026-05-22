@@ -19,6 +19,12 @@ from claudia_tools.output import ClaudiaError
 _GATES_FILE = "gates.json"
 _ARTIFACT_NAME = re.compile(r"[A-Za-z0-9_.-]+")
 
+# Logical artifacts that don't correspond to a same-named file on disk.
+# Mapped to the file whose existence proves the artifact is real.
+_LOGICAL_ARTIFACTS: dict[str, str] = {
+    "STATE-tasks": "STATE.md",
+}
+
 
 def _validate_artifact(artifact: str) -> None:
     """Reject artifact names outside the safe character set.
@@ -58,9 +64,35 @@ def _save(planning_dir: Path, gates: dict[str, Any]) -> None:
     _gates_path(planning_dir).write_text(json.dumps(gates, indent=2) + "\n", encoding="utf-8")
 
 
+def _artifact_file(planning_dir: Path, artifact: str) -> Path:
+    """Return the on-disk file whose existence proves ``artifact`` is real.
+
+    Most artifacts back themselves: ``ROADMAP.md`` lives at
+    ``<planning>/ROADMAP.md``. A few — like ``STATE-tasks`` — are logical
+    artifacts mapped to the file that actually holds them.
+    """
+    backing = _LOGICAL_ARTIFACTS.get(artifact, artifact)
+    return Path(planning_dir) / backing
+
+
 def accept(planning_dir: Path, artifact: str) -> None:
-    """Record ``artifact`` as having cleared its review gate."""
+    """Record ``artifact`` as having cleared its review gate.
+
+    Refuses to accept an artifact whose backing file is not on disk —
+    review-gate acceptance must follow, not lead, the artifact itself.
+
+    Raises
+    ------
+    ClaudiaError
+        If the artifact name is unsafe, or the backing file is missing.
+    """
     _validate_artifact(artifact)
+    backing = _artifact_file(planning_dir, artifact)
+    if not backing.is_file():
+        raise ClaudiaError(
+            f"cannot accept '{artifact}': no artifact on disk at {backing}"
+        )
+    Path(planning_dir).mkdir(parents=True, exist_ok=True)
     gates = _load(planning_dir)
     gates[artifact] = {"accepted": True, "at": datetime.now(UTC).isoformat()}
     _save(planning_dir, gates)

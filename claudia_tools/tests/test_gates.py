@@ -57,3 +57,25 @@ def test_invalid_ledger_raises(planning_dir: Path) -> None:
 def test_accept_rejects_unsafe_artifact_name(planning_dir: Path) -> None:
     with pytest.raises(ClaudiaError, match="invalid artifact name"):
         accept(planning_dir, "../../etc/passwd")
+
+
+def test_accept_refuses_when_artifact_missing(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    with pytest.raises(ClaudiaError, match="no artifact on disk"):
+        accept(planning, "ROADMAP.md")
+
+
+def test_accept_state_tasks_maps_to_state_md(planning_dir: Path) -> None:
+    accept(planning_dir, "STATE-tasks")
+
+    assert is_accepted(planning_dir, "STATE-tasks") is True
+
+
+def test_accept_state_tasks_refuses_when_state_md_missing(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    with pytest.raises(ClaudiaError, match="no artifact on disk"):
+        accept(planning, "STATE-tasks")
