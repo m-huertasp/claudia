@@ -18,7 +18,7 @@ passed through to the draft-pr workflow.
 1. **Check readiness.**
    ```
    claudia state get
-   claudia gate check ROADMAP.md DECISIONS.md
+   claudia gate check ROADMAP.md DECISIONS:intent DECISIONS:approach
    claudia verify ready
    ```
    If `claudia gate check` or `claudia verify ready` exits non-zero, stop

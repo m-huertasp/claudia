@@ -119,3 +119,73 @@ def test_require_ready_passes_when_all_confirmed(tmp_path: Path) -> None:
     verification.confirm_item(planning, "V1")
 
     verification.require_ready(planning)  # no raise
+
+
+def test_fix_attempts_starts_at_zero(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    status = verification.fix_attempts_status(planning)
+
+    assert status == {"attempts": 0, "cap": 3, "cap_reached": False}
+
+
+def test_fix_attempts_increment_bumps_counter(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    first = verification.fix_attempts_increment(planning)
+    second = verification.fix_attempts_increment(planning)
+
+    assert first["attempts"] == 1
+    assert second["attempts"] == 2
+    assert second["cap_reached"] is False
+
+
+def test_fix_attempts_reaches_cap_at_third_increment(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    verification.fix_attempts_increment(planning)
+    verification.fix_attempts_increment(planning)
+    third = verification.fix_attempts_increment(planning)
+
+    assert third == {"attempts": 3, "cap": 3, "cap_reached": True}
+
+
+def test_fix_attempts_reset_zeroes_counter(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    verification.fix_attempts_increment(planning)
+    verification.fix_attempts_increment(planning)
+
+    verification.fix_attempts_reset(planning)
+
+    assert verification.fix_attempts_status(planning)["attempts"] == 0
+
+
+def test_fix_attempts_handles_missing_planning_dir(tmp_path: Path) -> None:
+    planning = tmp_path / "nope"
+    # planning dir does not exist yet — increment creates it on demand
+    result = verification.fix_attempts_increment(planning)
+
+    assert result["attempts"] == 1
+    assert planning.is_dir()
+
+
+def test_fix_attempts_rejects_corrupt_counter(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    (planning / "verify-fix-attempts.txt").write_text("not-a-number", encoding="utf-8")
+
+    with pytest.raises(ClaudiaError, match="invalid fix-attempts counter"):
+        verification.fix_attempts_status(planning)
+
+
+def test_fix_attempts_rejects_negative_counter(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    (planning / "verify-fix-attempts.txt").write_text("-1", encoding="utf-8")
+
+    with pytest.raises(ClaudiaError, match="negative fix-attempts counter"):
+        verification.fix_attempts_status(planning)

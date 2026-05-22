@@ -46,6 +46,17 @@ whole issue.
    - Output: a new `## <date> — approach — <topic>` section appended to
      `.planning/DECISIONS.md`; ROADMAP.md draft revised in place if the
      discussion changes it.
+
+   When the approach-mode discuss returns, **check its gate before
+   continuing**:
+   ```
+   claudia gate check DECISIONS:approach
+   ```
+   If the check fails (the user cancelled inside discuss), stop here.
+   Tell the user the approach-mode discuss was cancelled and that
+   `/claudia-plan` needs to be re-run to settle the open approach
+   decisions. Do **not** accept the ROADMAP.md gate, do **not**
+   initialize `STATE.md`, do **not** advance `next_step`.
 5. **Plan phase-1 tasks.** With the ROADMAP.md now stable, break down
    phase 1 into small, verifiable tasks. Each task needs an ID, title,
    spec, depends-on, and "done when". Flag any task the planner could
@@ -77,9 +88,13 @@ On both gates passing:
        --var updated=<YYYY-MM-DD> \
        --output .planning/STATE.md --force
    ```
-3. Write the task lines into the `<!-- claudia:tasks -->...
-   <!-- /claudia:tasks -->` region of `.planning/STATE.md` (one line per
-   task, `- [ ] T<N> — <title — full spec>`).
+3. Add the planned tasks via the CLI so STATE.md's task region stays
+   machine-managed (no hand-edits). One call per task:
+   ```
+   claudia state add-task "<title — full spec>"
+   ```
+   Ids are assigned monotonically (`T1`, `T2`, …) and stay stable
+   across later edits.
 4. Advance state:
    ```
    claudia state set last_command /claudia-plan

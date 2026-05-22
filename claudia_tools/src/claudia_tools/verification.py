@@ -20,6 +20,12 @@ from claudia_tools.templates import render_to_file
 _FILE = "VERIFICATION.md"
 _REGION = "checklist"
 
+# Verify's fix loop: each pass through ``/claudia-verify`` -> /claudia-execute
+# bumps this counter; ``/claudia-verify`` escalates to the user once the cap
+# is reached. The counter resets on a passing verify verdict.
+_FIX_ATTEMPTS_FILE = "verify-fix-attempts.txt"
+_FIX_ATTEMPTS_CAP = 3
+
 _ITEM_LINE = re.compile(
     r"^(?P<indent> *)- \[(?P<mark>[ xX])\] (?P<id>V\d+) — (?P<desc>.*)$",
     re.MULTILINE,
@@ -166,3 +172,63 @@ def require_ready(planning_dir: Path) -> None:
         raise ClaudiaError(
             f"blocked — verification items pending: {', '.join(pending)}"
         )
+
+
+# --- fix-loop counter ------------------------------------------------------
+
+
+def _fix_attempts_path(planning_dir: Path) -> Path:
+    """Return the path of the fix-attempts counter file."""
+    return Path(planning_dir) / _FIX_ATTEMPTS_FILE
+
+
+def _read_fix_attempts(planning_dir: Path) -> int:
+    """Return the current fix-attempts count, or 0 if no counter exists yet."""
+    path = _fix_attempts_path(planning_dir)
+    if not path.exists():
+        return 0
+    raw = path.read_text(encoding="utf-8").strip()
+    if not raw:
+        return 0
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ClaudiaError(
+            f"invalid fix-attempts counter at {path}: {raw!r}"
+        ) from exc
+    if value < 0:
+        raise ClaudiaError(f"negative fix-attempts counter at {path}: {value}")
+    return value
+
+
+def _write_fix_attempts(planning_dir: Path, value: int) -> None:
+    """Persist the fix-attempts counter."""
+    Path(planning_dir).mkdir(parents=True, exist_ok=True)
+    _fix_attempts_path(planning_dir).write_text(f"{value}\n", encoding="utf-8")
+
+
+def fix_attempts_status(planning_dir: Path) -> dict[str, int | bool]:
+    """Return the current fix-attempts counter and cap."""
+    attempts = _read_fix_attempts(planning_dir)
+    return {
+        "attempts": attempts,
+        "cap": _FIX_ATTEMPTS_CAP,
+        "cap_reached": attempts >= _FIX_ATTEMPTS_CAP,
+    }
+
+
+def fix_attempts_increment(planning_dir: Path) -> dict[str, int | bool]:
+    """Increment the fix-attempts counter and return the new status."""
+    new_value = _read_fix_attempts(planning_dir) + 1
+    _write_fix_attempts(planning_dir, new_value)
+    return {
+        "attempts": new_value,
+        "cap": _FIX_ATTEMPTS_CAP,
+        "cap_reached": new_value >= _FIX_ATTEMPTS_CAP,
+    }
+
+
+def fix_attempts_reset(planning_dir: Path) -> dict[str, int | bool]:
+    """Reset the fix-attempts counter to zero and return the new status."""
+    _write_fix_attempts(planning_dir, 0)
+    return {"attempts": 0, "cap": _FIX_ATTEMPTS_CAP, "cap_reached": False}

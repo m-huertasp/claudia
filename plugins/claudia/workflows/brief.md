@@ -83,11 +83,24 @@ mode** — do not require the user to invoke a separate command. Follow
 - Output: a new `## <date> — intent — <topic>` section appended to
   `.planning/DECISIONS.md`
 
-When the intent-mode discuss completes, advance state:
+When the intent-mode discuss completes, **check whether the user
+cancelled the gate** before advancing state. The discuss workflow records
+its outcome against the mode-scoped gate `DECISIONS:intent`:
+
 ```
-claudia state set last_command /claudia-brief
-claudia state set next_step /claudia-plan
+claudia gate check DECISIONS:intent
 ```
+
+- If the check **passes** (intent decisions were accepted), advance
+  state:
+  ```
+  claudia state set last_command /claudia-brief
+  claudia state set next_step /claudia-plan
+  ```
+- If the check **fails** (the user cancelled inside discuss, or the
+  draft was never accepted), **do not** advance `next_step`. Tell the
+  user the intent-mode discuss was cancelled and that `/claudia-brief`
+  needs to be re-run to settle the open intent decisions. Stop here.
 
 ## Rules
 

@@ -144,6 +144,22 @@ def state_task_done(ctx: click.Context, task_id: str, undo: bool) -> None:
     _run(ctx, lambda: asdict(state.set_task_done(_planning(ctx) / "STATE.md", task_id, not undo)))
 
 
+@state_cmd.command("add-task")
+@click.argument("title")
+@click.pass_context
+def state_add_task(ctx: click.Context, title: str) -> None:
+    """Append a new task to STATE.md with the next monotonic id."""
+    _run(ctx, lambda: asdict(state.add_task(_planning(ctx) / "STATE.md", title)))
+
+
+@state_cmd.command("remove-task")
+@click.argument("task_id")
+@click.pass_context
+def state_remove_task(ctx: click.Context, task_id: str) -> None:
+    """Remove TASK_ID from STATE.md and return the removed task."""
+    _run(ctx, lambda: asdict(state.remove_task(_planning(ctx) / "STATE.md", task_id)))
+
+
 # --- config ----------------------------------------------------------------
 
 
@@ -278,13 +294,26 @@ def gate_accept(ctx: click.Context, artifact: str) -> None:
 @click.argument("artifact")
 @click.pass_context
 def gate_revoke(ctx: click.Context, artifact: str) -> None:
-    """Clear any recorded acceptance for ARTIFACT."""
+    """Clear any recorded acceptance or cancellation for ARTIFACT."""
 
     def _revoke() -> str:
         gates.revoke(_planning(ctx), artifact)
         return f"{artifact} revoked"
 
     _run(ctx, _revoke)
+
+
+@gate_cmd.command("cancel")
+@click.argument("artifact")
+@click.pass_context
+def gate_cancel(ctx: click.Context, artifact: str) -> None:
+    """Record that ARTIFACT's review gate was cancelled by the user."""
+
+    def _cancel() -> str:
+        gates.cancel(_planning(ctx), artifact)
+        return f"{artifact} cancelled"
+
+    _run(ctx, _cancel)
 
 
 @gate_cmd.command("check")
@@ -430,6 +459,32 @@ def verify_ready(ctx: click.Context) -> None:
         return "verification checklist clear"
 
     _run(ctx, _check)
+
+
+@verify_cmd.command("fix-attempts")
+@click.option("--increment", "increment", is_flag=True, help="Bump the counter by one.")
+@click.option("--reset", "reset", is_flag=True, help="Reset the counter to zero.")
+@click.pass_context
+def verify_fix_attempts(ctx: click.Context, increment: bool, reset: bool) -> None:
+    """Read or update the verify fix-loop attempt counter.
+
+    With no flags, returns the current counter. ``--increment`` bumps it by
+    one (called by /claudia-verify each time it loops back to
+    /claudia-execute). ``--reset`` zeroes it (called on a passing verify
+    verdict). The response includes ``cap`` and ``cap_reached`` so the
+    workflow knows when to escalate to the user.
+    """
+    if increment and reset:
+        raise click.UsageError("--increment and --reset are mutually exclusive")
+
+    def _do() -> Any:
+        if increment:
+            return verification.fix_attempts_increment(_planning(ctx))
+        if reset:
+            return verification.fix_attempts_reset(_planning(ctx))
+        return verification.fix_attempts_status(_planning(ctx))
+
+    _run(ctx, _do)
 
 
 main.add_command(state_cmd, "state")
