@@ -229,6 +229,21 @@ def test_add_task_preserves_done_state_of_others(tmp_path: Path) -> None:
     assert by_id["T2"].done is False
 
 
+def test_read_status_on_missing_state_md_raises_claudia_error(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no STATE.md"):
+        read_status(tmp_path / "STATE.md")
+
+
+def test_read_tasks_on_missing_state_md_raises_claudia_error(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no STATE.md"):
+        read_tasks(tmp_path / "STATE.md")
+
+
+def test_set_task_done_on_missing_state_md_raises_claudia_error(tmp_path: Path) -> None:
+    with pytest.raises(ClaudiaError, match="no STATE.md"):
+        set_task_done(tmp_path / "STATE.md", "T1")
+
+
 def test_add_task_replaces_template_placeholder(tmp_path: Path) -> None:
     planning = tmp_path / ".planning"
     planning.mkdir()

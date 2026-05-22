@@ -37,7 +37,10 @@ def _run(ctx: click.Context, fn: Callable[[], Any]) -> None:
     except ClaudiaError as exc:
         result = Result.failure(str(exc))
     except OSError as exc:
-        result = Result.failure(f"file error: {exc}")
+        # Build a message from strerror + filename so [Errno N] never leaks.
+        reason = exc.strerror or "file error"
+        message = f"{reason}: {exc.filename}" if exc.filename else reason
+        result = Result.failure(message)
     ctx.exit(emit(result, as_text=ctx.obj["as_text"]))
 
 
@@ -129,10 +132,23 @@ def state_set(ctx: click.Context, key: str, value: str) -> None:
 
 
 @state_cmd.command("tasks")
+@click.option(
+    "--open",
+    "open_only",
+    is_flag=True,
+    help="Return only unticked tasks; without the flag, all tasks are listed.",
+)
 @click.pass_context
-def state_tasks(ctx: click.Context) -> None:
-    """List the open tasks."""
-    _run(ctx, lambda: [asdict(t) for t in state.read_tasks(_planning(ctx) / "STATE.md")])
+def state_tasks(ctx: click.Context, open_only: bool) -> None:
+    """List every task in STATE.md (use --open for unticked only)."""
+
+    def _do() -> list[dict[str, Any]]:
+        tasks = state.read_tasks(_planning(ctx) / "STATE.md")
+        if open_only:
+            tasks = [t for t in tasks if not t.done]
+        return [asdict(t) for t in tasks]
+
+    _run(ctx, _do)
 
 
 @state_cmd.command("task-done")
@@ -282,12 +298,7 @@ def gate_cmd() -> None:
 @click.pass_context
 def gate_accept(ctx: click.Context, artifact: str) -> None:
     """Record ARTIFACT as having cleared its review gate."""
-
-    def _accept() -> str:
-        gates.accept(_planning(ctx), artifact)
-        return f"{artifact} accepted"
-
-    _run(ctx, _accept)
+    _run(ctx, lambda: gates.accept(_planning(ctx), artifact))
 
 
 @gate_cmd.command("revoke")
@@ -447,6 +458,17 @@ def verify_confirm(ctx: click.Context, item_id: str) -> None:
 def verify_list(ctx: click.Context) -> None:
     """List every checklist item."""
     _run(ctx, lambda: [asdict(item) for item in verification.list_items(_planning(ctx))])
+
+
+@verify_cmd.command("exists")
+@click.pass_context
+def verify_exists(ctx: click.Context) -> None:
+    """Return whether .planning/VERIFICATION.md is on disk.
+
+    Use this instead of shelling out to ``ls`` from a workflow: the output
+    is JSON, the exit code is always 0 (existence is data, not failure).
+    """
+    _run(ctx, lambda: {"exists": verification.exists(_planning(ctx))})
 
 
 @verify_cmd.command("ready")

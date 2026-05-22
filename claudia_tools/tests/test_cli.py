@@ -114,6 +114,44 @@ def test_os_error_is_caught_as_envelope(planning_dir: Path, tmp_path: Path) -> N
     assert result.exit_code == 1
 
 
+def test_os_error_message_does_not_leak_errno(planning_dir: Path, tmp_path: Path) -> None:
+    """[Errno N] is an implementation detail of Python's OSError repr —
+    user-facing CLI messages should not include it."""
+    a_directory = tmp_path / "adir"
+    a_directory.mkdir()
+
+    result = _invoke(planning_dir, "template", "render", str(a_directory))
+    envelope = json.loads(result.output)
+
+    assert envelope["ok"] is False
+    assert envelope["error"] is not None
+    assert "[Errno" not in envelope["error"]
+
+
+def test_state_get_on_missing_state_md_returns_clean_error(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    result = _invoke(planning, "state", "get")
+    envelope = json.loads(result.output)
+
+    assert envelope["ok"] is False
+    assert "[Errno" not in envelope["error"]
+    assert "/claudia-plan" in envelope["error"]  # hint at the right next command
+
+
+def test_phase_list_on_missing_roadmap_returns_clean_error(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    result = _invoke(planning, "phase", "list")
+    envelope = json.loads(result.output)
+
+    assert envelope["ok"] is False
+    assert "[Errno" not in envelope["error"]
+    assert "/claudia-plan" in envelope["error"]
+
+
 def test_config_init_via_cli(tmp_path: Path) -> None:
     planning = tmp_path / ".planning"
     planning.mkdir()

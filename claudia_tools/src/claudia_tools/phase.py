@@ -39,8 +39,19 @@ class Phase:
 
 
 def _read(path: Path) -> str:
-    """Return the text of ``path``."""
-    return Path(path).read_text(encoding="utf-8")
+    """Return the text of ``path``.
+
+    Raises
+    ------
+    ClaudiaError
+        If the file does not exist, with a hint at the right next command.
+    """
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ClaudiaError(
+            f"no ROADMAP.md at {path}; run /claudia-plan first to render it"
+        ) from exc
 
 
 def _parse_phases(text: str) -> list[Phase]:
@@ -95,14 +106,16 @@ def set_phase_status(path: Path, number: int, status: str) -> Phase:
     Raises
     ------
     ClaudiaError
-        If ``status`` is not a valid status or ``number`` is not in the roadmap.
+        If ``number`` is not in the roadmap, or ``status`` is not valid.
+        Phase-existence is checked first so a user who passed both wrong
+        arguments learns about the missing phase rather than the status.
     """
-    if status not in STATUSES:
-        raise ClaudiaError(f"status must be one of {list(STATUSES)}, got '{status}'")
     text = _read(path)
     phases = {phase.number: phase for phase in _parse_phases(text)}
     if number not in phases:
         raise ClaudiaError(f"no phase {number} in roadmap")
+    if status not in STATUSES:
+        raise ClaudiaError(f"status must be one of {list(STATUSES)}, got '{status}'")
     Path(path).write_text(
         replace_region(text, f"status-{number}", status), encoding="utf-8"
     )
