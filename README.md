@@ -50,7 +50,7 @@ templates.
 Free-form natural-language routing into the framework. Examples:
 
 - `/claudia prepare docstrings of pipeline.py` → `claudia:prepare-docstrings`
-- `/claudia ship` → `/claudia-ship`
+- `/claudia close` → `/claudia-close`
 - `/claudia plan phase 2` → `/claudia-plan`
 
 When intent is ambiguous, the dispatcher asks via `AskUserQuestion`. Direct
@@ -63,11 +63,11 @@ slash commands also work.
 | `/claudia-understand` | One-time codebase bootstrap → `CONTEXT.md`, `ENVIRONMENT.md`, `config.json`. Re-runnable as a refresh on drift. |
 | `/claudia-brief` | Per-issue entry point → `ISSUE_BRIEF.md`, proposes a `{keyword}/{description}` branch, then chains into intent-mode discuss |
 | `/claudia-plan` | Reads brief + decisions → drafts `ROADMAP.md`, chains into approach-mode discuss, initializes `STATE.md` task breakdown |
-| `/claudia-execute` | Implement tasks via executor subagents (sequential by default) |
-| `/claudia-verify` | Two-stage review + secret scan + `CONTEXT.md` drift check |
-| `/claudia-ship` | Open a PR via `/claudia-draft-pr` (re-runs the drift check) |
+| `/claudia-execute` | Implement tasks via the executor — `pair` (default) hands you the diff to commit, `yolo` commits autonomously following the `commit-style` rule |
+| `/claudia-verify` | Two-stage review + secret scan + `CONTEXT.md` drift check; fix-loop branches on `mode` |
+| `/claudia-close` | Readiness gates + drafts PR via internal draft-pr workflow. `yolo` creates the PR via `gh`; `pair` hands you title + body to open it yourself |
 | `/claudia-progress` | Where things stand / next step |
-| `/claudia-settings` | View or edit `.planning/config.json` |
+| `/claudia-settings` | View or edit `.planning/config.json` (including `mode: pair | yolo`) |
 
 State persists in `.planning/` so work resumes cold across sessions. Each
 `/claudia-*` command is a thin entry point pointing at a workflow file under
@@ -142,8 +142,9 @@ action is gated behind explicit confirmation.
 | Command | Purpose |
 |---|---|
 | `/claudia-write-issue [owner/repo:] <description>` | Draft and create a structured issue (gated) |
-| `/claudia-draft-pr [base:branch]` | Draft and create a PR (gated) |
 | `/claudia-pr-review <num\|url>` | Structured PR review — never posts to GitHub |
+
+PR drafting is no longer a standalone command — `/claudia-close` runs the internal draft-pr workflow, which gates on accept and either creates the PR via `gh` (yolo) or hands you the title + body to open it yourself (pair).
 
 ---
 

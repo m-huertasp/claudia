@@ -1,6 +1,6 @@
 {
   "name": "claudia",
-  "description": "Unified Claude Code framework for Python and Nextflow development. Phased, control-first workflow (understand, brief, plan, execute, verify, ship), GitHub integration (issues, PRs, reviews), shared subagents (researcher, planner, executor, verifier, code-explorer, code-reviewer, nextflow-reviewer, domain-reviewer, pr-reviewer), domain skills (docstrings, type hints, pytest, nf-test, language patterns), and always-on rules. State persists in .planning/ across sessions; every direction-locking artifact and outward action passes through a review gate.",
+  "description": "Unified Claude Code framework for Python and Nextflow development. Phased, control-first workflow (understand, brief, plan, execute, verify, close), GitHub integration (issues, PRs, reviews), shared subagents (researcher, planner, executor, verifier, code-explorer, code-reviewer, nextflow-reviewer, domain-reviewer, pr-reviewer), domain skills (docstrings, type hints, pytest, nf-test, language patterns), and always-on rules. State persists in .planning/ across sessions; every direction-locking artifact and outward action passes through a review gate.",
   "version": "0.2.0",
   "author": {
     "name": "Marta H."

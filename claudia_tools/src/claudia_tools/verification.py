@@ -1,9 +1,9 @@
-"""Track the human-run verification checklist that gates ``/claudia-ship``.
+"""Track the human-run verification checklist that gates ``/claudia-close``.
 
 A ``.planning/VERIFICATION.md`` artifact holds a ``claudia:checklist`` marked
 region of ``- [ ] V<N> — <description>`` lines. The verify workflow appends
 items via :func:`add_item`; the user clears them via :func:`confirm_item`;
-``/claudia-ship`` refuses to proceed until :func:`ready` returns ``True``.
+``/claudia-close`` refuses to proceed until :func:`ready` returns ``True``.
 """
 
 from __future__ import annotations
@@ -140,7 +140,7 @@ def confirm_item(planning_dir: Path, item_id: str) -> ChecklistItem:
 def ready(planning_dir: Path) -> bool:
     """Return whether every item in the checklist is confirmed.
 
-    A checklist with **no items** counts as not ready — `/claudia-ship` should
+    A checklist with **no items** counts as not ready — `/claudia-close` should
     require that `/claudia-verify` actually produced a checklist first.
     """
     items = list_items(planning_dir)

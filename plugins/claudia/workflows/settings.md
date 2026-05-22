@@ -27,7 +27,7 @@ current config.
 
 | Key | Values | Effect |
 |---|---|---|
-| `mode` | `interactive`, `yolo` | confirm each phase, or auto-proceed |
+| `mode` | `pair`, `yolo` | `pair` (default): executor stops after each task so you review and commit. `yolo`: executor commits and proceeds autonomously. Also drives the verify fix-loop and close PR creation. |
 | `model_profile` | `quality`, `balanced`, `budget` | model per agent role |
 | `agents.researcher` / `.planner` / `.verifier` | `true`, `false` | toggle quality agents |
 | `execution.parallel` | `true`, `false` | parallel executor waves |
