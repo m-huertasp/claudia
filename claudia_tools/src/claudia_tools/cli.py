@@ -249,6 +249,13 @@ def template_cmd() -> None:
     """Render workflow templates."""
 
 
+@template_cmd.command("list")
+@click.pass_context
+def template_list(ctx: click.Context) -> None:
+    """List the bundled template names (each resolvable via `template render`)."""
+    _run(ctx, lambda: templates.bundled_template_names())
+
+
 @template_cmd.command("render")
 @click.argument("template_ref")
 @click.option("--var", "variables", multiple=True, help="A key=value substitution.")

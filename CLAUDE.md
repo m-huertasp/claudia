@@ -67,7 +67,7 @@ A phased, control-first workflow. Each command is invoked explicitly; state pers
 - `/claudia-brief` — start a new issue → `ISSUE_BRIEF.md`; proposes a `{keyword}/{description}` branch (one of `feat | fix | dev | chore | test | hotfix`) and chains into intent-mode discuss to align on what we're tackling.
 - `/claudia-plan` — reads `ISSUE_BRIEF.md` + `DECISIONS.md` → drafts `ROADMAP.md`, chains into approach-mode discuss, then initializes `STATE.md`.
 - `/claudia-execute` — implement tasks via the executor subagent, one task at a time. Branches on `mode`: `pair` (default) hands the diff to you to commit; `yolo` commits autonomously following the `commit-style` rule.
-- `/claudia-verify` — two-stage review + secret scan + `CONTEXT.md` drift check; for pipelines, generates a human checklist in `VERIFICATION.md`. The fix-loop also branches on `mode` — in `pair` you can choose to fix issues yourself.
+- `/claudia-verify` — two-stage review + secret scan + `CONTEXT.md` drift check; for pipelines, generates a human checklist in `VERIFICATION.md`. The fix-loop branches on `mode` (in `pair` you can choose to fix issues yourself) and is capped at 3 iterations — at the cap, claudia escalates to the user instead of looping silently.
 - `/claudia-close` — readiness gates + drift check, then drafts the PR via the internal draft-pr workflow. In `yolo` it pushes and creates the PR via `gh`; in `pair` it pushes and hands you the title + body to open the PR yourself.
 - `/claudia-progress` — where the workflow stands / suggested next step (read-only).
 - `/claudia-settings` — view or edit `.planning/config.json` (including `mode`).

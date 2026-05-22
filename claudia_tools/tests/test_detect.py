@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from claudia_tools.detect import NEXTFLOW, PYTHON, UNKNOWN, detect_project_type
+from claudia_tools.detect import (
+    NEXTFLOW,
+    PYTHON,
+    SUPPORTED_LANGUAGES,
+    UNKNOWN,
+    detect_project_type,
+)
 
 
 def test_detects_python_only(tmp_path: Path) -> None:
@@ -43,6 +49,15 @@ def test_unknown_when_no_markers(tmp_path: Path) -> None:
     assert result.primary == UNKNOWN
     assert result.languages == []
     assert result.evidence == {}
+
+
+def test_unknown_result_exposes_supported_set(tmp_path: Path) -> None:
+    result = detect_project_type(tmp_path)
+
+    assert result.supported == list(SUPPORTED_LANGUAGES)
+    # Hint should be available on successful detections too.
+    (tmp_path / "pyproject.toml").write_text("", encoding="utf-8")
+    assert detect_project_type(tmp_path).supported == list(SUPPORTED_LANGUAGES)
 
 
 def test_picks_up_nf_files_in_modules(tmp_path: Path) -> None:

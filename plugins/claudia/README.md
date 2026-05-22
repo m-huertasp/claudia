@@ -18,6 +18,10 @@ action passes through a review gate before it is accepted.
   uv tool install ../../claudia_tools     # or pipx install
   claudia --help
   ```
+  The CLI ships the workflow templates as package data, so
+  `claudia template render ROADMAP --output .planning/ROADMAP.md`
+  works from any working directory — no separate template-path
+  install step.
 - For GitHub commands (`/claudia-write-issue`, `/claudia-pr-review`) and
   for `/claudia-close` in `yolo` mode: the [`gh` CLI](https://cli.github.com/)
   installed and authenticated:
@@ -52,10 +56,16 @@ than silently guessing. Direct slash commands still work too.
 | `/claudia-brief` | Start a new issue; chains into intent discuss | `ISSUE_BRIEF.md`, `DECISIONS.md` (intent), `{keyword}/{slug}` branch |
 | `/claudia-plan` | Draft per-issue roadmap; chains into approach discuss | `ROADMAP.md`, `DECISIONS.md` (approach), tasks in `STATE.md` |
 | `/claudia-execute` | Implement tasks via the executor; branches on `mode` | atomic commits (`yolo`) or staged diffs you commit (`pair`) |
-| `/claudia-verify` | Two-stage review + checklist + drift check; fix-loop branches on `mode` | verification report |
+| `/claudia-verify` | Two-stage review + checklist + drift check; fix-loop branches on `mode` and is capped at 3 attempts | verification report |
 | `/claudia-close` | Readiness gates + drafts PR via internal draft-pr workflow | PR created via `gh` (`yolo`) or title + body to open yourself (`pair`) |
 | `/claudia-progress` | Where am I / what's next (read-only) | reads `STATE.md` |
 | `/claudia-settings` | Edit `.planning/config.json` (including `mode`) | updated config |
+
+If the user cancels the inline-discuss review gate (intent or approach),
+the parent command (`/claudia-brief` or `/claudia-plan`) halts without
+advancing `STATE.md`. Each mode has its own gate
+(`DECISIONS:intent`, `DECISIONS:approach`) so the two never clobber
+each other.
 
 The discuss and draft-pr steps are **not user-callable**. discuss runs
 internally from `/claudia-brief` (intent mode) and `/claudia-plan`
@@ -138,7 +148,9 @@ Persists across sessions; agents reload it cold. Kept out of git by default.
 - `DECISIONS.md` — intent-mode and approach-mode design choices
 - `STATE.md` — current position, task list, resume notes
 - `VERIFICATION.md` — human checklist gating `/claudia-close`
-- `gates.json` — review-gate acceptance ledger
+- `gates.json` — review-gate acceptance and cancellation ledger
+- `verify-fix-attempts.txt` — internal counter for verify's fix-loop cap;
+  reset on a passing verdict
 
 ## Configuration — `config.json`
 

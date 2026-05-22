@@ -82,6 +82,25 @@ def test_template_render(planning_dir: Path, tmp_path: Path) -> None:
     assert _data(result) == "# Done"
 
 
+def test_template_list_lists_bundled_names(planning_dir: Path) -> None:
+    result = _invoke(planning_dir, "template", "list")
+    names = _data(result)
+
+    assert isinstance(names, list)
+    assert {"CONTEXT", "ISSUE_BRIEF", "ROADMAP", "STATE"} <= set(names)
+
+
+def test_detect_unknown_includes_supported_languages(planning_dir: Path, tmp_path: Path) -> None:
+    empty = tmp_path / "empty"
+    empty.mkdir()
+
+    result = _invoke(planning_dir, "detect", str(empty))
+    data = _data(result)
+
+    assert data["primary"] == "unknown"
+    assert data["supported"] == ["nextflow", "python"]
+
+
 def test_gate_accept_then_check_passes(planning_dir: Path) -> None:
     assert _invoke(planning_dir, "gate", "accept", "ROADMAP.md").exit_code == 0
 
