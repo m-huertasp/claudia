@@ -16,6 +16,8 @@ PYTHON = "python"
 NEXTFLOW = "nextflow"
 UNKNOWN = "unknown"
 
+SUPPORTED_LANGUAGES: tuple[str, ...] = (NEXTFLOW, PYTHON)
+
 _PYTHON_MARKERS = ("pyproject.toml", "setup.py", "requirements.txt")
 _NEXTFLOW_MARKERS = ("main.nf", "nextflow.config")
 _NEXTFLOW_SUBDIRS = ("modules", "workflows", "subworkflows")
@@ -34,11 +36,16 @@ class Detection:
     evidence
         For each language, the list of marker file paths (relative to the
         repository root) that triggered the detection.
+    supported
+        The full set of language types this detector knows about. Useful
+        when ``primary == "unknown"`` so callers can see what *could* be
+        detected without having to read the source.
     """
 
     primary: str
     languages: list[str] = field(default_factory=list)
     evidence: dict[str, list[str]] = field(default_factory=dict)
+    supported: list[str] = field(default_factory=lambda: list(SUPPORTED_LANGUAGES))
 
 
 def _find_python_evidence(root: Path) -> list[str]:
