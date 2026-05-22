@@ -1,6 +1,6 @@
 # claudia
 
-> A personal Claude Code framework for Python and Nextflow development.
+> A personal framework for Python and Nextflow development.
 
 ---
 
@@ -8,7 +8,7 @@
 
 **claudia** is a Claude Code framework bundled as a single plugin. It provides
 a phased development **workflow** — understand, brief, plan, execute, verify,
-ship — plus reusable agents, rules, and skills, all in one place.
+close — plus reusable agents, rules, and skills, all in one place.
 
 As of now, it works with Claude Code in VS Code, and the rules are written to hold for any AI model.
 
