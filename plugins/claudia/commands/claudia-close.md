@@ -4,7 +4,7 @@ description: Close out the issue — run a final secret scan and CONTEXT.md drif
 
 # Close the issue
 
-Follow `plugins/claudia/workflows/close.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/close.md`.
 
 Argument: `$ARGUMENTS` — optional base branch override (e.g. `base:dev`).
 Passed through to the internal draft-pr workflow.

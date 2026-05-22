@@ -4,6 +4,6 @@ description: Natural-language dispatcher for the claudia ecosystem. Routes "Clau
 
 # claudia (dispatcher)
 
-Follow `plugins/claudia/workflows/dispatcher.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/dispatcher.md`.
 
 Argument: `$ARGUMENTS` — the user's free-form intent (e.g. "prepare docstrings of pipeline.py", "plan phase 2", "ship").

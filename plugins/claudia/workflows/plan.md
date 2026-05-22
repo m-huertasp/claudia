@@ -39,7 +39,7 @@ whole issue.
    enabled, dispatch the `planner` agent to produce the phase breakdown
    from the brief + decisions + context.
 4. **Chain into discuss (approach mode).** Follow
-   `plugins/claudia/workflows/discuss.md` with mode `approach`:
+   `${CLAUDE_PLUGIN_ROOT}/workflows/discuss.md` with mode `approach`:
    - Inputs: drafted `ROADMAP.md` + `ISSUE_BRIEF.md` + `DECISIONS.md` +
      `CONTEXT.md`
    - Focus: sequencing, tradeoffs, risk areas, test strategy
@@ -66,7 +66,7 @@ whole issue.
 
 The `ROADMAP.md` draft is presented and gated **before** initializing
 `STATE.md`. Use `AskUserQuestion` for accept / edit / cancel and follow
-the file-based edit loop in `plugins/claudia/rules/common/review-gate.md`.
+the file-based edit loop in `${CLAUDE_PLUGIN_ROOT}/rules/common/review-gate.md`.
 The task breakdown (step 5) is also direction-locking and gated the same
 way after ROADMAP.md is accepted.
 

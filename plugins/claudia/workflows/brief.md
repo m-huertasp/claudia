@@ -66,7 +66,7 @@ Branch name follows `{keyword}/{branch-description}`:
 
 `ISSUE_BRIEF.md` is **direction-locking**. Present the drafted file and
 ask accept / edit / cancel via `AskUserQuestion`. Follow the file-based
-edit loop in `plugins/claudia/rules/common/review-gate.md`. On accept,
+edit loop in `${CLAUDE_PLUGIN_ROOT}/rules/common/review-gate.md`. On accept,
 record clearance:
 ```
 claudia gate accept ISSUE_BRIEF.md
@@ -76,7 +76,7 @@ claudia gate accept ISSUE_BRIEF.md
 
 Once the brief is accepted, **run the discuss workflow inline in `intent`
 mode** — do not require the user to invoke a separate command. Follow
-`plugins/claudia/workflows/discuss.md` with:
+`${CLAUDE_PLUGIN_ROOT}/workflows/discuss.md` with:
 
 - Inputs: `ISSUE_BRIEF.md` + `CONTEXT.md`
 - Focus: what the issue is, why now, scope boundaries

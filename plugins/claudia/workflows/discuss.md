@@ -44,7 +44,7 @@ decisions from approach decisions.
 `DECISIONS.md` is **direction-locking**. Present the drafted entries
 (and, in `approach` mode, any ROADMAP.md revisions) and ask
 accept / edit / cancel via `AskUserQuestion`. Follow the file-based edit
-loop in `plugins/claudia/rules/common/review-gate.md`.
+loop in `${CLAUDE_PLUGIN_ROOT}/rules/common/review-gate.md`.
 
 Each invocation records its outcome against a **mode-scoped gate name**
 (`DECISIONS:intent` from `/claudia-brief`, `DECISIONS:approach` from

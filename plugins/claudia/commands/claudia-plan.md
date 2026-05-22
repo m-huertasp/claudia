@@ -4,6 +4,6 @@ description: Turn the current roadmap phase into an ordered breakdown of small, 
 
 # Plan the phase
 
-Follow `plugins/claudia/workflows/plan.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/plan.md`.
 
 Argument: `$ARGUMENTS` — optional phase number.

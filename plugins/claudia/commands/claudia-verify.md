@@ -4,6 +4,6 @@ description: Verify completed tasks with a two-stage review — stage 1 spec com
 
 # Verify the work
 
-Follow `plugins/claudia/workflows/verify.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/verify.md`.
 
 Argument: `$ARGUMENTS` — optional task IDs to verify.

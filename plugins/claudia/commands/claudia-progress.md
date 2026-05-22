@@ -4,6 +4,6 @@ description: Report where the claudia workflow currently stands — current phas
 
 # Workflow progress
 
-Follow `plugins/claudia/workflows/progress.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/progress.md`.
 
 Argument: `$ARGUMENTS` — optional. `--next` offers to run the suggested next command.

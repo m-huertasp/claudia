@@ -4,7 +4,7 @@ description: Start work on a new issue — draft .planning/ISSUE_BRIEF.md (goal,
 
 # Brief a new issue
 
-Follow `plugins/claudia/workflows/brief.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/brief.md`.
 
 Argument: `$ARGUMENTS` — optional one-line description of the issue (used to
 seed the brief title and suggested branch slug).

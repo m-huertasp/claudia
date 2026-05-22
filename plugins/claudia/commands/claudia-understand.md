@@ -4,7 +4,7 @@ description: One-time codebase bootstrap — analyze stack, architecture, conven
 
 # Understand the codebase
 
-Follow `plugins/claudia/workflows/understand.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/workflows/understand.md`.
 
 Argument: `$ARGUMENTS` — optional focus hint (a subdirectory or subsystem),
 or `refresh` to force a CONTEXT.md drift pass on an already-initialized repo.
