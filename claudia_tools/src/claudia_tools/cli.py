@@ -144,6 +144,22 @@ def state_task_done(ctx: click.Context, task_id: str, undo: bool) -> None:
     _run(ctx, lambda: asdict(state.set_task_done(_planning(ctx) / "STATE.md", task_id, not undo)))
 
 
+@state_cmd.command("add-task")
+@click.argument("title")
+@click.pass_context
+def state_add_task(ctx: click.Context, title: str) -> None:
+    """Append a new task to STATE.md with the next monotonic id."""
+    _run(ctx, lambda: asdict(state.add_task(_planning(ctx) / "STATE.md", title)))
+
+
+@state_cmd.command("remove-task")
+@click.argument("task_id")
+@click.pass_context
+def state_remove_task(ctx: click.Context, task_id: str) -> None:
+    """Remove TASK_ID from STATE.md and return the removed task."""
+    _run(ctx, lambda: asdict(state.remove_task(_planning(ctx) / "STATE.md", task_id)))
+
+
 # --- config ----------------------------------------------------------------
 
 

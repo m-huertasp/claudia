@@ -88,9 +88,13 @@ On both gates passing:
        --var updated=<YYYY-MM-DD> \
        --output .planning/STATE.md --force
    ```
-3. Write the task lines into the `<!-- claudia:tasks -->...
-   <!-- /claudia:tasks -->` region of `.planning/STATE.md` (one line per
-   task, `- [ ] T<N> — <title — full spec>`).
+3. Add the planned tasks via the CLI so STATE.md's task region stays
+   machine-managed (no hand-edits). One call per task:
+   ```
+   claudia state add-task "<title — full spec>"
+   ```
+   Ids are assigned monotonically (`T1`, `T2`, …) and stay stable
+   across later edits.
 4. Advance state:
    ```
    claudia state set last_command /claudia-plan

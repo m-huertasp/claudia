@@ -157,3 +157,66 @@ def set_task_done(path: Path, task_id: str, done: bool = True) -> Task:
         raise ClaudiaError(f"no task '{task_id}' in {path}")
     _write(path, replace_region(text, _TASKS_REGION, new_region))
     return Task(id=task_id, title=matched[0]["title"].strip(), done=done)
+
+
+def _format_tasks_region(tasks: list[Task]) -> str:
+    """Render a tasks list back into the body of the ``tasks`` marked region."""
+    if not tasks:
+        return "\n- (none yet — run /claudia-plan)\n"
+    lines = [f"- [{'x' if t.done else ' '}] {t.id} — {t.title}" for t in tasks]
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _next_task_id(tasks: list[Task]) -> str:
+    """Return ``T<max+1>`` using monotonic numbering — no gap reuse."""
+    highest = 0
+    for task in tasks:
+        match = re.fullmatch(r"T(\d+)", task.id)
+        if match:
+            highest = max(highest, int(match.group(1)))
+    return f"T{highest + 1}"
+
+
+def add_task(path: Path, title: str) -> Task:
+    """Append a new task to the ``tasks`` region and return it.
+
+    The new task's id is the next monotonic ``T<N>`` after the highest
+    existing numeric id (gaps from removed tasks are not reused, so ids
+    stay stable across edits). Auto-creates ``STATE.md`` from the bundled
+    template if missing.
+
+    Raises
+    ------
+    ClaudiaError
+        If ``title`` is empty after stripping whitespace.
+    """
+    title = title.strip()
+    if not title:
+        raise ClaudiaError("task title must not be empty")
+    path = Path(path)
+    if not path.exists():
+        init_state(path.parent)
+    text = _read(path)
+    tasks = read_tasks(path)
+    task = Task(id=_next_task_id(tasks), title=title, done=False)
+    tasks.append(task)
+    _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(tasks)))
+    return task
+
+
+def remove_task(path: Path, task_id: str) -> Task:
+    """Remove ``task_id`` from the ``tasks`` region and return the removed task.
+
+    Raises
+    ------
+    ClaudiaError
+        If no task with that id exists.
+    """
+    text = _read(path)
+    tasks = read_tasks(path)
+    remaining = [t for t in tasks if t.id != task_id]
+    if len(remaining) == len(tasks):
+        raise ClaudiaError(f"no task '{task_id}' in {path}")
+    removed = next(t for t in tasks if t.id == task_id)
+    _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(remaining)))
+    return removed
