@@ -25,6 +25,17 @@ uv tool install ./claudia_tools      # or, for development:
 uv sync && uv run claudia --help
 ```
 
+## Test
+
+```bash
+uv sync
+uv run pytest
+```
+
+Plain `pytest` will fail on a fresh clone because the dev dependencies
+(`pytest-cov`) and the editable package install live inside the uv-managed
+virtualenv — always go through `uv run`.
+
 ## Output contract
 
 Every command emits a consistent envelope as JSON on stdout:

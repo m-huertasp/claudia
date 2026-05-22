@@ -85,11 +85,16 @@ re-dispatch the executor in this branch.
 
 ### Fix-loop cap
 
-Before any *fix now* branch dispatches, bump the fix-attempts counter:
+Before either *fix now* branch starts — `fix now (executor)` **and**
+`fix now (I'll fix it myself)` — bump the fix-attempts counter:
 
 ```
 claudia verify fix-attempts --increment
 ```
+
+The cap and escalation prompt apply equally to both branches. A
+user-driven fix loop that keeps surfacing new issues hits the cap
+exactly like an executor-driven one — the workflow stalls otherwise.
 
 The CLI returns `{attempts, cap, cap_reached}`. The cap is **3**. If
 `cap_reached` is true (this would be the 3rd consecutive failed verify
@@ -110,7 +115,10 @@ claudia verify fix-attempts --reset
 ```
 
 This must happen *before* the state-advance below, so a future verify
-loop starts fresh.
+loop starts fresh. The CLI also resets the counter automatically
+whenever `claudia state set current_phase ...` changes the phase value,
+so phase N+1 always starts from zero attempts — no leftover state from
+phase N.
 
 Shipping is blocked on any CRITICAL finding regardless of mode.
 

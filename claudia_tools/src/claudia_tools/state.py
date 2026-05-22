@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 
 from claudia_tools.markers import read_region, replace_region
-from claudia_tools.output import ClaudiaError
+from claudia_tools.output import ClaudiaError, atomic_write, file_lock
 from claudia_tools.templates import render_to_file
 
 _STATUS_REGION = "status"
@@ -63,8 +63,8 @@ def _read(path: Path) -> str:
 
 
 def _write(path: Path, text: str) -> None:
-    """Write ``text`` to ``path``."""
-    Path(path).write_text(text, encoding="utf-8")
+    """Write ``text`` to ``path`` atomically."""
+    atomic_write(Path(path), text)
 
 
 def init_state(
@@ -122,16 +122,25 @@ def set_status_field(path: Path, key: str, value: str) -> dict[str, str]:
         If ``key`` is not a recognised status field.
     """
     path = Path(path)
-    if not path.exists():
-        init_state(path.parent)
-    text = _read(path)
-    region = read_region(text, _STATUS_REGION)
-    status = {m["key"]: m["value"].strip() for m in _STATUS_LINE.finditer(region)}
-    if key not in status:
-        raise ClaudiaError(f"unknown status field '{key}'")
-    status[key] = str(value)
-    body = "\n" + "\n".join(f"- {k}: {v}" for k, v in status.items()) + "\n"
-    _write(path, replace_region(text, _STATUS_REGION, body))
+    with file_lock(path):
+        if not path.exists():
+            init_state(path.parent)
+        text = _read(path)
+        region = read_region(text, _STATUS_REGION)
+        status = {m["key"]: m["value"].strip() for m in _STATUS_LINE.finditer(region)}
+        if key not in status:
+            raise ClaudiaError(f"unknown status field '{key}'")
+        old_value = status[key]
+        status[key] = str(value)
+        body = "\n" + "\n".join(f"- {k}: {v}" for k, v in status.items()) + "\n"
+        _write(path, replace_region(text, _STATUS_REGION, body))
+    # The verify fix-loop counter is per-phase: advancing (or rewinding) the
+    # phase always starts fresh, otherwise phase N+1 inherits phase N's
+    # near-cap state and may escalate to the user spuriously.
+    if key == "current_phase" and old_value != str(value):
+        from claudia_tools import verification
+
+        verification.fix_attempts_reset(path.parent)
     return status
 
 
@@ -152,21 +161,22 @@ def set_task_done(path: Path, task_id: str, done: bool = True) -> Task:
     ClaudiaError
         If no task with that id exists in ``STATE.md``.
     """
-    text = _read(path)
-    region = read_region(text, _TASKS_REGION)
-    mark = "x" if done else " "
-    matched: list[re.Match[str]] = []
+    with file_lock(path):
+        text = _read(path)
+        region = read_region(text, _TASKS_REGION)
+        mark = "x" if done else " "
+        matched: list[re.Match[str]] = []
 
-    def _replace(match: re.Match[str]) -> str:
-        if match["id"] != task_id:
-            return match.group(0)
-        matched.append(match)
-        return f"{match['indent']}- [{mark}] {match['id']} — {match['title']}"
+        def _replace(match: re.Match[str]) -> str:
+            if match["id"] != task_id:
+                return match.group(0)
+            matched.append(match)
+            return f"{match['indent']}- [{mark}] {match['id']} — {match['title']}"
 
-    new_region = _TASK_LINE.sub(_replace, region)
-    if not matched:
-        raise ClaudiaError(f"no task '{task_id}' in {path}")
-    _write(path, replace_region(text, _TASKS_REGION, new_region))
+        new_region = _TASK_LINE.sub(_replace, region)
+        if not matched:
+            raise ClaudiaError(f"no task '{task_id}' in {path}")
+        _write(path, replace_region(text, _TASKS_REGION, new_region))
     return Task(id=task_id, title=matched[0]["title"].strip(), done=done)
 
 
@@ -205,13 +215,14 @@ def add_task(path: Path, title: str) -> Task:
     if not title:
         raise ClaudiaError("task title must not be empty")
     path = Path(path)
-    if not path.exists():
-        init_state(path.parent)
-    text = _read(path)
-    tasks = read_tasks(path)
-    task = Task(id=_next_task_id(tasks), title=title, done=False)
-    tasks.append(task)
-    _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(tasks)))
+    with file_lock(path):
+        if not path.exists():
+            init_state(path.parent)
+        text = _read(path)
+        tasks = read_tasks(path)
+        task = Task(id=_next_task_id(tasks), title=title, done=False)
+        tasks.append(task)
+        _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(tasks)))
     return task
 
 
@@ -223,11 +234,12 @@ def remove_task(path: Path, task_id: str) -> Task:
     ClaudiaError
         If no task with that id exists.
     """
-    text = _read(path)
-    tasks = read_tasks(path)
-    remaining = [t for t in tasks if t.id != task_id]
-    if len(remaining) == len(tasks):
-        raise ClaudiaError(f"no task '{task_id}' in {path}")
-    removed = next(t for t in tasks if t.id == task_id)
-    _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(remaining)))
+    with file_lock(path):
+        text = _read(path)
+        tasks = read_tasks(path)
+        remaining = [t for t in tasks if t.id != task_id]
+        if len(remaining) == len(tasks):
+            raise ClaudiaError(f"no task '{task_id}' in {path}")
+        removed = next(t for t in tasks if t.id == task_id)
+        _write(path, replace_region(text, _TASKS_REGION, _format_tasks_region(remaining)))
     return removed

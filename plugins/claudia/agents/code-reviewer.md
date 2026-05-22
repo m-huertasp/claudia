@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Expert code review specialist. Proactively reviews code for quality, security, and maintainability. Use immediately after writing or modifying code. MUST BE USED for all code changes.
+description: Expert code review specialist. Reviews code for quality, security, and maintainability. Invoke explicitly when you want a second opinion on a diff — the `/claudia-verify` workflow can dispatch it internally as part of stage 2 if `agents.verifier` is enabled. Not auto-triggered.
 tools: ["Read", "Grep", "Glob", "Bash"]
 model: sonnet
 ---

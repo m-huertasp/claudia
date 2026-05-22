@@ -14,7 +14,7 @@ from importlib import resources
 from pathlib import Path
 
 from claudia_tools.markers import read_region, replace_region
-from claudia_tools.output import ClaudiaError
+from claudia_tools.output import ClaudiaError, atomic_write, file_lock
 from claudia_tools.templates import render_to_file
 
 _FILE = "VERIFICATION.md"
@@ -121,13 +121,14 @@ def add_item(planning_dir: Path, description: str) -> ChecklistItem:
     if not description:
         raise ClaudiaError("checklist item description must not be empty")
     path = _path(planning_dir)
-    text = _read(path)
-    region = read_region(text, _REGION)
-    existing = _parse_items(region)
-    item_id = f"V{len(existing) + 1}"
-    new_line = f"- [ ] {item_id} — {description}"
-    new_region = region.rstrip("\n") + "\n" + new_line + "\n"
-    path.write_text(replace_region(text, _REGION, new_region), encoding="utf-8")
+    with file_lock(path):
+        text = _read(path)
+        region = read_region(text, _REGION)
+        existing = _parse_items(region)
+        item_id = f"V{len(existing) + 1}"
+        new_line = f"- [ ] {item_id} — {description}"
+        new_region = region.rstrip("\n") + "\n" + new_line + "\n"
+        atomic_write(path, replace_region(text, _REGION, new_region))
     return ChecklistItem(id=item_id, description=description, confirmed=False)
 
 
@@ -140,20 +141,21 @@ def confirm_item(planning_dir: Path, item_id: str) -> ChecklistItem:
         If no item with that id is in the checklist.
     """
     path = _path(planning_dir)
-    text = _read(path)
-    region = read_region(text, _REGION)
-    matched: list[re.Match[str]] = []
+    with file_lock(path):
+        text = _read(path)
+        region = read_region(text, _REGION)
+        matched: list[re.Match[str]] = []
 
-    def _replace(match: re.Match[str]) -> str:
-        if match["id"] != item_id:
-            return match.group(0)
-        matched.append(match)
-        return f"{match['indent']}- [x] {match['id']} — {match['desc']}"
+        def _replace(match: re.Match[str]) -> str:
+            if match["id"] != item_id:
+                return match.group(0)
+            matched.append(match)
+            return f"{match['indent']}- [x] {match['id']} — {match['desc']}"
 
-    new_region = _ITEM_LINE.sub(_replace, region)
-    if not matched:
-        raise ClaudiaError(f"no checklist item '{item_id}' in {path}")
-    path.write_text(replace_region(text, _REGION, new_region), encoding="utf-8")
+        new_region = _ITEM_LINE.sub(_replace, region)
+        if not matched:
+            raise ClaudiaError(f"no checklist item '{item_id}' in {path}")
+        atomic_write(path, replace_region(text, _REGION, new_region))
     return ChecklistItem(id=item_id, description=matched[0]["desc"].strip(), confirmed=True)
 
 
@@ -216,9 +218,18 @@ def _read_fix_attempts(planning_dir: Path) -> int:
 
 
 def _write_fix_attempts(planning_dir: Path, value: int) -> None:
-    """Persist the fix-attempts counter."""
+    """Persist the fix-attempts counter atomically."""
     Path(planning_dir).mkdir(parents=True, exist_ok=True)
-    _fix_attempts_path(planning_dir).write_text(f"{value}\n", encoding="utf-8")
+    atomic_write(_fix_attempts_path(planning_dir), f"{value}\n")
+
+
+def _bump_fix_attempts(planning_dir: Path) -> int:
+    """Read-modify-write the fix-attempts counter under a lock; return new value."""
+    path = _fix_attempts_path(planning_dir)
+    with file_lock(path):
+        new_value = _read_fix_attempts(planning_dir) + 1
+        _write_fix_attempts(planning_dir, new_value)
+    return new_value
 
 
 def fix_attempts_status(planning_dir: Path) -> dict[str, int | bool]:
@@ -233,8 +244,7 @@ def fix_attempts_status(planning_dir: Path) -> dict[str, int | bool]:
 
 def fix_attempts_increment(planning_dir: Path) -> dict[str, int | bool]:
     """Increment the fix-attempts counter and return the new status."""
-    new_value = _read_fix_attempts(planning_dir) + 1
-    _write_fix_attempts(planning_dir, new_value)
+    new_value = _bump_fix_attempts(planning_dir)
     return {
         "attempts": new_value,
         "cap": _FIX_ATTEMPTS_CAP,
