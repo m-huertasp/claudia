@@ -52,15 +52,28 @@ Branch name follows `{keyword}/{branch-description}`:
 
 `hotfix` is opt-in only — the user must override to use it.
 `{branch-description}` is a kebab-case slug derived from the brief title
-(or from `$ARGUMENTS` if it was passed).
+(or from `$ARGUMENTS` if it was passed). The branch name is the only
+place the issue type is encoded, so it must always match this
+convention with a valid keyword (`feat | fix | dev | chore | test |
+hotfix`).
 
-1. Propose the full branch name to the user via `AskUserQuestion` (allow
-   them to edit both the keyword and the description).
-2. On confirmation, create and switch to the branch from the current base:
-   ```
-   git checkout -b <keyword>/<description>
-   ```
-3. If the working tree is dirty at this point, stop and tell the user.
+1. Detect the current branch with `git rev-parse --abbrev-ref HEAD`. If
+   it already matches `{keyword}/{description}` with a valid keyword,
+   it is reusable.
+2. Propose the branch via `AskUserQuestion`, allowing the user to edit
+   both the keyword and the description. When step 1 detected a
+   reusable branch, also offer *Use current branch (`<name>`)* as an
+   option. If its parsed keyword conflicts with the issue type gathered
+   in *Draft the brief*, flag the mismatch and ask the user to resolve
+   it (rename the branch, or revisit the issue type) before continuing.
+3. On confirmation:
+   - *Use current branch* — do not run `git checkout`; we are already
+     on it.
+   - Otherwise, create and switch from the current base:
+     ```
+     git checkout -b <keyword>/<description>
+     ```
+4. If the working tree is dirty at this point, stop and tell the user.
 
 ## Review gate
 
@@ -108,6 +121,9 @@ claudia gate check DECISIONS:intent
 - Never overwrite existing per-issue artifacts without an explicit user
   choice (archive / overwrite / cancel).
 - The branch is created **only** after the user confirms the proposed
-  name.
+  name — or skipped entirely when the user picks *Use current branch*.
+- The current branch is reusable only when its name already matches
+  `{keyword}/{description}` with a valid keyword; otherwise the user
+  must accept a freshly created branch.
 - Do not skip the chained discuss step — the brief alone is not enough
   for `/claudia-plan` to plan well.
