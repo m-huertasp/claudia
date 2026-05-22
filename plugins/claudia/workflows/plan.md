@@ -75,7 +75,7 @@ On both gates passing:
        --var last_command=/claudia-plan \
        --var next_step=/claudia-execute \
        --var updated=<YYYY-MM-DD> \
-       --output .planning/STATE.md
+       --output .planning/STATE.md --force
    ```
 3. Write the task lines into the `<!-- claudia:tasks -->...
    <!-- /claudia:tasks -->` region of `.planning/STATE.md` (one line per

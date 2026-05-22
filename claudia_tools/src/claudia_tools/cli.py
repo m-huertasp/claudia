@@ -103,6 +103,15 @@ def state_cmd() -> None:
     """Read and update STATE.md."""
 
 
+@state_cmd.command("init")
+@click.option("--name", "project_name", default="project", help="Project name in the heading.")
+@click.option("--force", is_flag=True, help="Overwrite an existing STATE.md.")
+@click.pass_context
+def state_init(ctx: click.Context, project_name: str, force: bool) -> None:
+    """Write a fresh .planning/STATE.md from the bundled template."""
+    _run(ctx, lambda: str(state.init_state(_planning(ctx), project_name, force=force)))
+
+
 @state_cmd.command("get")
 @click.pass_context
 def state_get(ctx: click.Context) -> None:

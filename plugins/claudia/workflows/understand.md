@@ -65,10 +65,10 @@ exists in `.planning/`:
    claudia state set last_command /claudia-understand
    claudia state set next_step /claudia-brief
    ```
-   If `STATE.md` does not exist yet, this is fine — `/claudia-plan` will
-   initialise it from its own template; `claudia state set` against a
-   missing file should be deferred until `STATE.md` exists, so on a first
-   run skip this step and rely on `/claudia-brief` setting state.
+   `claudia state set` auto-creates `.planning/STATE.md` with safe
+   defaults if it doesn't exist yet, so this step is always safe to run.
+   `/claudia-plan` re-renders STATE.md with the issue title and the
+   real phase breakdown when it runs.
 
 ## Refresh
 

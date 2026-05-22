@@ -7,7 +7,13 @@ from pathlib import Path
 import pytest
 
 from claudia_tools.output import ClaudiaError
-from claudia_tools.state import read_status, read_tasks, set_status_field, set_task_done
+from claudia_tools.state import (
+    init_state,
+    read_status,
+    read_tasks,
+    set_status_field,
+    set_task_done,
+)
 
 
 def test_read_status_fields(planning_dir: Path) -> None:
@@ -77,3 +83,61 @@ def test_consecutive_status_updates_both_persist(planning_dir: Path) -> None:
     status = read_status(state)
     assert status["next_step"] == "/a"
     assert status["last_command"] == "/b"
+
+
+def test_init_state_writes_template(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+
+    target = init_state(planning, name="myproj")
+
+    assert target == planning / "STATE.md"
+    text = target.read_text(encoding="utf-8")
+    assert text.startswith("# State — myproj")
+    assert "current_phase: 1" in text
+
+
+def test_init_state_refuses_existing_without_force(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    init_state(planning)
+
+    with pytest.raises(ClaudiaError, match="already exists"):
+        init_state(planning)
+
+
+def test_init_state_force_overwrites(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    init_state(planning, name="first")
+
+    init_state(planning, name="second", force=True)
+
+    assert (planning / "STATE.md").read_text(encoding="utf-8").startswith("# State — second")
+
+
+def test_set_status_field_auto_creates_state_md(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    state_path = planning / "STATE.md"
+    assert not state_path.exists()
+
+    set_status_field(state_path, "last_command", "/claudia-understand")
+
+    assert state_path.exists()
+    status = read_status(state_path)
+    assert status["last_command"] == "/claudia-understand"
+    assert status["current_phase"] == "1"  # template default preserved
+
+
+def test_set_status_field_after_auto_create_supports_further_sets(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir()
+    state_path = planning / "STATE.md"
+
+    set_status_field(state_path, "last_command", "/a")
+    set_status_field(state_path, "next_step", "/b")
+
+    status = read_status(state_path)
+    assert status["last_command"] == "/a"
+    assert status["next_step"] == "/b"
