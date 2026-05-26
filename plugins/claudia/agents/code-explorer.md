@@ -1,6 +1,6 @@
 ---
 name: code-explorer
-description: Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, and documenting dependencies to inform new development.
+description: Deep architecture-trace specialist — follows the call chain from entry point through every layer, maps cross-module dependencies, and documents data transformations. Complementary to `researcher` (which surveys what's in the repo at a high level); dispatch `code-explorer` only when you need to understand *how the call chain flows* through a layered or pipeline-heavy codebase, not for routine repo surveys.
 model: sonnet
 tools: [Read, Grep, Glob]
 ---

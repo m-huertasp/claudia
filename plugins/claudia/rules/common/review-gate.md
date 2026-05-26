@@ -5,8 +5,11 @@
 Every **direction-locking** artifact — one that, once accepted, constrains all
 later work — passes through a review gate before it is treated as final. The
 gate keeps the user in control: `claudia` may draft, but only the user locks
-direction. Direction-locking artifacts include `ROADMAP.md`, `DECISIONS.md`,
-the `STATE.md` task breakdown, and any drafted PR or issue body.
+direction. The direction-locking artifacts in v2 are:
+
+- the per-task plan file at `.planning/plans/YYYY-MM-DD-<slug>.md` (gated by `/claudia plan`)
+- any drafted PR title + body (gated by `/claudia close`)
+- any drafted GitHub issue body (gated by `/claudia write-issue`)
 
 ## The gate
 
@@ -23,7 +26,7 @@ When a direction-locking artifact is ready, present it and ask the user, with
 `claudia` artifacts are files, so editing happens **in the file**, not as a
 chat transcript — the user opens it in their editor and changes it directly.
 
-1. **Write the current draft to its real path** (e.g. `.planning/ROADMAP.md`).
+1. **Write the current draft to its real path** (e.g. `.planning/plans/2026-05-26-add-types.md`).
    The file is a *draft* — not final — until the user accepts it.
 2. **Surface the file** to the user as a clickable path and tell them it is
    open for editing. They may edit and save it in their editor, or describe
@@ -40,11 +43,11 @@ the workflow, commit, or push on the basis of an unaccepted draft.
 ## Example
 
 ```
-/claudia-brief drafts ISSUE_BRIEF.md
+/claudia plan drafts .planning/plans/2026-05-26-add-types.md
    │
    ▼  AskUserQuestion: accept / edit / cancel
-   ├─ accept  → file is final; chain into intent-mode discuss
-   ├─ edit    → write draft to .planning/ISSUE_BRIEF.md → user edits & saves
+   ├─ accept  → file is final; the task is ready for /claudia execute
+   ├─ edit    → user edits the file in their editor & saves
    │            → re-read → re-present gate  ⤴
    └─ cancel  → delete the draft file; stop
 ```

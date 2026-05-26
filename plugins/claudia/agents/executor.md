@@ -43,7 +43,7 @@ fresh context with only the task spec, the project's conventions, and a
   needs a decision, stop and report back — do not improvise scope.
 - One task, one commit (or one pair handoff). Do not touch unrelated files.
 - Do not push, open PRs, or comment on GitHub — shipping is gated and handled
-  by `/claudia-close`.
+  by `/claudia close`.
 
 ## Output
 

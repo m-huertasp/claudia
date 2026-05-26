@@ -1,9 +1,16 @@
 ---
-description: Natural-language dispatcher for the claudia ecosystem. Routes "Claudia, do X" to the right skill or workflow command; asks via AskUserQuestion when intent is ambiguous.
+description: Single entry point for the claudia framework. Routes `/claudia <verb> [args]` to the matching skill (explicit-verb mode) or, when the first token is not a known verb, falls through to natural-language routing. Verbs include understand, plan, execute, close, rules, pr-review, write-issue, add-type-hints, prepare-docstrings.
 ---
 
-# claudia (dispatcher)
+# claudia
 
-Follow `${CLAUDE_PLUGIN_ROOT}/workflows/dispatcher.md`.
+Invoke the `claudia:claudia` skill (the dispatcher) with `$ARGUMENTS`.
 
-Argument: `$ARGUMENTS` — the user's free-form intent (e.g. "prepare docstrings of pipeline.py", "plan phase 2", "ship").
+The dispatcher handles both explicit-verb routing
+(`/claudia <verb> [args]`) and natural-language routing
+(`/claudia <free-form text>`). See
+[skills/claudia/SKILL.md](../skills/claudia/SKILL.md) for the
+authoritative routing table and behaviour.
+
+**Argument:** `$ARGUMENTS` — empty, an explicit verb followed by its
+arguments, or free-form natural language.

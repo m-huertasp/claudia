@@ -1,182 +1,201 @@
 # claudia (plugin)
 
-The unified Claude Code plugin for Python and Nextflow development. One
-plugin holds everything: phased workflow commands, GitHub commands, shared
-subagents, skills, rules, and templates.
+The Claude Code plugin for Python and Nextflow development. One plugin
+holds everything: the dispatcher, the workflow skills, the bioinformatics
+agents, the rule set, and a tiny shared script.
 
-It is **control-first**: every direction-locking artifact and every outward
-action passes through a review gate before it is accepted.
+It is **control-first**: every direction-locking artefact and every
+outward action passes through a review gate before it is accepted.
 
 ## Prerequisites
 
-- Claude Code with this plugin enabled (commands, agents, and skills are
-  auto-discovered from the plugin's subfolders).
-- The [`claudia-tools`](../../claudia_tools/) Python package, installed and
-  on PATH as the `claudia` console script — every workflow calls it for
-  deterministic operations on `.planning/` files:
-  ```bash
-  uv tool install ../../claudia_tools     # or pipx install
-  claudia --help
-  ```
-  The CLI ships the workflow templates as package data, so
-  `claudia template render ROADMAP --output .planning/ROADMAP.md`
-  works from any working directory — no separate template-path
-  install step.
-- For GitHub commands (`/claudia-write-issue`, `/claudia-pr-review`) and
-  for `/claudia-close` in `yolo` mode: the [`gh` CLI](https://cli.github.com/)
+- Claude Code with this plugin enabled (the single `/claudia` command,
+  every skill, every agent are auto-discovered from the plugin's
+  subfolders).
+- Python 3.9+ on PATH (the shared script is stdlib-only; no install step).
+- For GitHub helpers (`/claudia pr-review`, `/claudia write-issue`) and
+  for `/claudia close` in `yolo` mode: the [`gh` CLI](https://cli.github.com/)
   installed and authenticated:
   ```bash
-  gh auth login        # interactive OAuth or PAT
-  gh auth status       # verify
+  gh auth login
+  gh auth status
   ```
-  Issues and PRs are created under the authenticated GitHub account — i.e.
-  attributed to the user, not to Claude. Without `gh`, GitHub commands fail
-  at the first `gh` call.
+  Issues and PRs are created under the authenticated GitHub account —
+  attributed to the user, not to Claude.
 
-## Entry points
+## Bootstrapping a project
 
-### `/claudia` — natural-language dispatcher
+Once the plugin is enabled, set up a project in two steps:
 
-The primary entry point. Routes free-form requests to the right skill or
-workflow command. Examples:
+```text
+/claudia understand    # writes .planning/CONTEXT.md + .planning/config.json
+/claudia rules         # injects the Claudia Rules section into CLAUDE.md
+```
 
-- `/claudia prepare docstrings of pipeline.py`
-  → invokes the `claudia:prepare-docstrings` skill
-- `/claudia close` → routes to `/claudia-close`
-- `/claudia plan phase 2` → routes to `/claudia-plan`
+`understand` only runs once (re-runnable as a refresh when the codebase
+drifts). `rules` is idempotent — re-running it on the same repo
+produces no diff.
 
-When intent is ambiguous, the dispatcher asks via `AskUserQuestion` rather
-than silently guessing. Direct slash commands still work too.
+## How invocation works
 
-### Phased workflow commands
+`/claudia` is the **only** command exposed by the plugin. It implements
+two routing modes side-by-side:
 
-| Command | Phase | Output |
-|---|---|---|
-| `/claudia-understand` | One-time codebase bootstrap (re-runnable on drift) | `CONTEXT.md`, `ENVIRONMENT.md`, `config.json` |
-| `/claudia-brief` | Start a new issue; chains into intent discuss | `ISSUE_BRIEF.md`, `DECISIONS.md` (intent), `{keyword}/{slug}` branch |
-| `/claudia-plan` | Draft per-issue roadmap; chains into approach discuss | `ROADMAP.md`, `DECISIONS.md` (approach), tasks in `STATE.md` |
-| `/claudia-execute` | Implement tasks via the executor; branches on `mode` | atomic commits (`yolo`) or staged diffs you commit (`pair`) |
-| `/claudia-verify` | Two-stage review + checklist + drift check; fix-loop branches on `mode` and is capped at 3 attempts | verification report |
-| `/claudia-close` | Readiness gates + drafts PR via internal draft-pr workflow | PR created via `gh` (`yolo`) or title + body to open yourself (`pair`) |
-| `/claudia-progress` | Where am I / what's next (read-only) | reads `STATE.md` |
-| `/claudia-settings` | Edit `.planning/config.json` (including `mode`) | updated config |
+1. **Explicit-verb route** — `/claudia <verb> [args]` invokes the
+   matching skill directly. No NLP, no `AskUserQuestion` for
+   disambiguation.
+2. **Natural-language route** — `/claudia <free-form>` matches the
+   intent against a keyword table. One match → invoke; many matches →
+   ask the user; zero matches → fallback message + verb list.
 
-If the user cancels the inline-discuss review gate (intent or approach),
-the parent command (`/claudia-brief` or `/claudia-plan`) halts without
-advancing `STATE.md`. Each mode has its own gate
-(`DECISIONS:intent`, `DECISIONS:approach`) so the two never clobber
-each other.
+The authoritative routing table lives in
+[`skills/claudia/SKILL.md`](skills/claudia/SKILL.md). Some examples:
 
-The discuss and draft-pr steps are **not user-callable**. discuss runs
-internally from `/claudia-brief` (intent mode) and `/claudia-plan`
-(approach mode), both appending to a single `.planning/DECISIONS.md`.
-draft-pr runs internally from `/claudia-close`.
-
-Each `/claudia-*` command is a thin pointer. Full orchestration lives in
-[`workflows/`](workflows/) and calls the `claudia` CLI for every
-deterministic op.
-
-### GitHub commands
-
-| Command | Action | Writes to GitHub? |
-|---|---|---|
-| `/claudia-write-issue [owner/repo:] <description>` | Draft a structured issue and create it | Yes — after a confirmation gate |
-| `/claudia-pr-review <num\|owner/repo#num\|url>` | Structured review classified URGENT/HIGH/MEDIUM/LOW | **Never** — output stays in chat |
-
-PR drafting/creation lives inside `/claudia-close` via the internal
-`workflows/draft-pr.md`. It defaults the base branch to `dev`; override
-with `base:main` on `/claudia-close`. Read commands never mutate; write
-actions always show a draft first.
-
-## Skills (`skills/`)
-
-Plugin skills are namespaced `claudia:<name>`. Trigger them through `/claudia`
-or directly:
-
-| Skill | Purpose |
+| Input | Routes to |
 |---|---|
-| `claudia:prepare-docstrings` | Write/homogenise NumPy/SciPy docstrings |
-| `claudia:add-type-hints` | Infer and add type annotations |
-| `claudia:python-testing` | pytest TDD |
-| `claudia:python-patterns` | Non-obvious Python patterns |
-| `claudia:nextflow-patterns` | Production-ready Nextflow DSL2 habits |
-| `claudia:nextflow-testing` | nf-test patterns |
+| `/claudia understand` | `claudia:understand` (explicit verb) |
+| `/claudia plan 42` | `claudia:plan`, passing `42` as the issue ref |
+| `/claudia close base:main` | `claudia:close`, passing `base:main` |
+| `/claudia prepare-docstrings src/foo.py` | `claudia:prepare-docstrings` (dual-mode verb) |
+| `/claudia let's start a new feature` | `claudia:plan` (NLP keyword match) |
+| `/claudia test this` | ambiguous → `AskUserQuestion` between `python-testing` and `nextflow-testing` |
+
+## Workflow verbs
+
+| Verb | Skill | Purpose | Gate |
+|---|---|---|---|
+| `understand` | `claudia:understand` | One-time bootstrap → `.planning/CONTEXT.md` + `.planning/config.json`. Re-runnable as `refresh`. | summary (no formal gate) |
+| `plan [issue-ref]` | `claudia:plan` | Intent + design + tasks in **one** plan file at `.planning/plans/YYYY-MM-DD-<slug>.md`. Optionally seeds intent from `gh issue view`. | **plan-accept** |
+| `execute [T1 T2 …]` | `claudia:execute` | Implement plan tasks one at a time, ticking checkboxes in the plan file. Branches on `mode`. | per-commit (in `pair`) |
+| `close [base:<branch>]` | `claudia:close` | Verify (parallel reviewer dispatch) + draft + open/hand off the PR. | **PR-accept** |
+
+## Utility verbs
+
+| Verb | Skill | Purpose |
+|---|---|---|
+| `rules` | `claudia:rules` | Inject the Claudia Rules section into the project's `CLAUDE.md` (idempotent, detect-aware). |
+| `pr-review <ref>` | `claudia:pr-review` | Local-only structured PR review classified `URGENT`/`HIGH`/`MEDIUM`/`LOW`. **Never posts to GitHub.** |
+| `write-issue <description>` | `claudia:write-issue` | Draft + create a GitHub issue, gated on user confirmation. |
+
+## Content skills (auto-triggered)
+
+These fire automatically when the model sees relevant context. The first
+two are **dual-mode** — also callable as explicit verbs:
+
+| Skill | Auto-triggered? | Callable verb? |
+|---|---|---|
+| `claudia:add-type-hints` | yes | `/claudia add-type-hints <path>` |
+| `claudia:prepare-docstrings` | yes | `/claudia prepare-docstrings <path>` |
+| `claudia:python-testing` | yes | — |
+| `claudia:python-patterns` | yes | — |
+| `claudia:nextflow-testing` | yes | — |
+| `claudia:nextflow-patterns` | yes | — |
 
 ## Agents (`agents/`)
 
-| Agent | Role |
-|---|---|
-| `researcher` | Read-only investigation → findings brief |
-| `planner` | Roadmap phase → ordered task breakdown |
-| `executor` | Implements one task, one atomic commit |
-| `verifier` | Two-stage review: spec compliance, then code quality |
-| `code-explorer` | Deep codebase exploration |
-| `code-reviewer` | General code review (quality, security) |
-| `nextflow-reviewer` | Nextflow DSL2 review (reproducibility, channels, nf-test) |
-| `domain-reviewer` | Bioinformatics output sanity |
-| `pr-reviewer` | Confidence-gated PR review (never posts) |
+| Agent | Called by | Role |
+|---|---|---|
+| `planner` | `plan` skill | Task breakdown from intent + design. |
+| `executor` | `execute` skill | Implement one task in a fresh context. |
+| `verifier` | `close` skill | Orchestrates two-stage review; **dispatches reviewers in parallel**. |
+| `researcher` | `plan`, `understand` skills | Read-only investigation. |
+| `code-reviewer` | `verifier` (always) | General quality, security, maintainability. |
+| `nextflow-reviewer` | `verifier` (conditional on `.nf` / `nextflow.config`) | Nextflow DSL2 production-readiness. |
+| `domain-reviewer` | `verifier` (conditional on config + pipeline diff) | Bioinformatics output plausibility. |
+| `pr-reviewer` | `pr-review` skill | Confidence-gated PR review (never posts). |
+| `code-explorer` | `understand` skill (only when concrete dispatch triggers fire — see [skills/understand/SKILL.md](skills/understand/SKILL.md) step 3) | Deep architecture/call-chain trace. Complementary to `researcher`, not a substitute. |
 
 ## Rules (`rules/`)
 
 `common/` and `python/` rule files. **Not auto-loaded by the plugin** —
-consumer projects should `@`-import them from their root `CLAUDE.md` so
-they become always-on context for every skill, agent, and workflow:
+consuming projects should run `/claudia rules` to inject the appropriate
+subset into their `CLAUDE.md` as `@`-imports. The injector picks subsets
+based on `claudia detect`:
 
-```markdown
-@plugins/claudia/rules/common/review-gate.md
-@plugins/claudia/rules/common/coding-style.md
-@plugins/claudia/rules/python/coding-style.md
-... etc.
-```
+| Project type | Subsets included |
+|---|---|
+| `python` | `common`, `python` |
+| `nextflow` | `common`, `nextflow` (when the plugin ships one) |
+| `mixed` | `common`, `python`, `nextflow` (when the plugin ships one) |
+| `unknown` | `common` only |
 
-This is how skills inherit project conventions without per-skill edits.
+To add a new rule, drop a `.md` file in the right subdirectory and add
+its `@`-import to the [project's root CLAUDE.md](../../CLAUDE.md). The
+`/claudia rules` injector will pick it up automatically.
 
 ## State — `.planning/`
 
-Persists across sessions; agents reload it cold. Kept out of git by default.
+Persists across sessions; agents reload it cold. Kept out of git by
+default.
 
-**Project-level** (written by `/claudia-understand`, refreshed on drift):
+**Project-level** (written by `/claudia understand`):
 
-- `CONTEXT.md` — codebase baseline (architecture, stack, conventions, sensitive areas)
-- `ENVIRONMENT.md` — tool-version snapshot
-- `config.json` — mode, model profile, agent toggles
+- `CONTEXT.md` — codebase baseline plus a sentinel-bounded `## Environment` section managed by `claudia env capture --section`
+- `config.json` — `{ mode, agents }`
 
-**Per-issue** (replaced on each `/claudia-brief`; previous set is archived under `.planning/archive/<timestamp>/`):
+**Per-task** (one file per task; previous tasks stay in place):
 
-- `ISSUE_BRIEF.md` — what we're tackling and why
-- `ROADMAP.md` — the phases to tackle it
-- `DECISIONS.md` — intent-mode and approach-mode design choices
-- `STATE.md` — current position, task list, resume notes
-- `VERIFICATION.md` — human checklist gating `/claudia-close`
-- `gates.json` — review-gate acceptance and cancellation ledger
-- `verify-fix-attempts.txt` — internal counter for verify's fix-loop cap;
-  reset on a passing verdict
+- `plans/YYYY-MM-DD-<slug>.md` — intent + decisions + checkbox task list + notes
+
+That's it. There is no `STATE.md`, `VERIFICATION.md`, `ISSUE_BRIEF.md`,
+`ROADMAP.md`, `DECISIONS.md`, or `ENVIRONMENT.md` in v2.
 
 ## Configuration — `config.json`
 
-Created from [config.template.json](config.template.json) by `/claudia-understand` (one-time, on first run).
+Created by `/claudia understand`. Schema:
+
+```json
+{
+  "mode": "pair",
+  "agents": {
+    "domain_reviewer": false,
+    "nextflow_reviewer": true
+  }
+}
+```
 
 | Setting | Values | Effect |
 |---|---|---|
-| `mode` | `pair`, `yolo` | `pair` (default): executor stops after each task so you review and commit; verify lets you fix issues yourself; close hands you the PR draft to open. `yolo`: executor commits autonomously following `commit-style`; verify queues fix tasks for the executor; close pushes and creates the PR via `gh`. |
-| `model_profile` | `quality`, `balanced`, `budget` | which model each agent role uses |
-| `agents.researcher` / `.planner` / `.verifier` | `true` / `false` | toggle quality agents on/off |
-| `execution.parallel` | `true` / `false` | run executor tasks in waves (default `false`, sequential). Ignored in `pair` mode. |
+| `mode` | `pair`, `yolo` | `pair` (default): executor stops after each task so you review and commit; close hands you the PR draft. `yolo`: executor commits autonomously following `commit-style`; close pushes and creates the PR via `gh`. |
+| `agents.domain_reviewer` | `true`, `false` | Toggle the bioinformatics output reviewer for `/claudia close`. |
+| `agents.nextflow_reviewer` | `true`, `false` | Toggle the Nextflow DSL2 reviewer for `/claudia close`. (Automatic on `.nf` diff regardless when `true`.) |
 
-The **review gate** and the **secret scan** are not configurable — they
-always run.
+The **review gate** and the **secret scan** are not configurable —
+they always run.
+
+## Shared script — `scripts/claudia`
+
+A single-file Python script (~250 LOC, stdlib-only). Invoked from skills
+as `python ${CLAUDE_PLUGIN_ROOT}/scripts/claudia <cmd>`. JSON-envelope
+output by default (`{ok, data}` / `{ok, error}`); some commands accept
+`--text` for human output.
+
+| Subcommand | Purpose |
+|---|---|
+| `claudia detect [--root PATH] [--text]` | Report project type. |
+| `claudia config init [--force]` / `get <key>` / `set <key> <value>` | Manage `.planning/config.json`. |
+| `claudia env capture [--root PATH] [--section] [--text]` | Probe tool versions; with `--section`, rewrite the `## Environment` section of `.planning/CONTEXT.md`. |
+| `claudia rules inject [--root PATH] [--path FILE] [--dry-run]` | Inject the `## Claudia Rules` section into `CLAUDE.md`. Idempotent, sentinel-bounded, detect-aware. |
 
 ## Safety model (GitHub)
 
 - Read commands never mutate.
-- Write commands always show a full draft and require explicit confirmation
-  via `AskUserQuestion`. Editing the draft re-triggers the gate.
-- `/claudia-pr-review` and `pr-reviewer` **never post to GitHub**. No comment,
-  review, approval, merge, or label change — output stays in chat.
+- Write commands always show a full draft and require explicit
+  confirmation via `AskUserQuestion`. Editing the draft re-triggers the
+  gate.
+- `/claudia pr-review` and the `pr-reviewer` agent **never post to
+  GitHub** — no comment, review, approval, merge, or label change.
+  Output stays in chat.
 
 ## Install
 
-Reference this repo as a marketplace and enable the `claudia` plugin. The
-commands, agents, and skills register automatically. Then add the rule
-`@`-imports to your project's `CLAUDE.md` (see Rules above) and install
-`claudia_tools`.
+Reference this repo as a marketplace and enable the `claudia` plugin in
+Claude Code. The single `/claudia` command, every skill, and every agent
+register automatically. Then in your project:
+
+```text
+/claudia understand
+/claudia rules
+```
+
+That's the entire onboarding.
