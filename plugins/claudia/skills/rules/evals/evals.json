@@ -1,0 +1,67 @@
+{
+  "skill": "claudia:rules",
+  "skill_path": "plugins/claudia/skills/rules/SKILL.md",
+  "version": "iteration-1",
+  "description": "Evals for the callable-only /claudia rules utility skill. Validates dry-run preview + gate + idempotent injection, detect-awareness, and graceful handling of missing rule subsets.",
+  "tests": [
+    {
+      "id": "A",
+      "name": "python-create-claude-md",
+      "prompt": "/claudia rules",
+      "scenario_setup": "Fresh Python repo at /tmp/rules-test-python-create with pyproject.toml and src/. No CLAUDE.md exists.",
+      "expected_behavior": [
+        "Run `claudia rules inject --dry-run` and parse JSON envelope.",
+        "Report project_type=python, action=create, rule_count>=11 (common + python).",
+        "Show preview of section content.",
+        "AskUserQuestion (Apply / Cancel) before writing.",
+        "On Apply, run injection and emit one-line summary."
+      ],
+      "assertions": [
+        "preview rendered with action=create and project_type=python",
+        "gate prompt shown before any disk write",
+        "CLAUDE.md created at repo root after apply",
+        "injected section contains @${CLAUDE_PLUGIN_ROOT}/rules/python/coding-style.md"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "idempotent-refresh",
+      "prompt": "/claudia rules",
+      "scenario_setup": "Python repo at /tmp/rules-test-idempotent-refresh where `claudia rules inject` was already applied. CLAUDE.md has the sentinel-bounded block already.",
+      "expected_behavior": [
+        "Dry-run reports action=replace (routine refresh).",
+        "Skill does NOT prompt for backup (sentinel block already exists = previously injected).",
+        "Gate then apply.",
+        "Running the skill twice produces an identical CLAUDE.md (zero diff)."
+      ],
+      "assertions": [
+        "dry-run reports action=replace",
+        "no backup prompt is suggested for a previously-injected file",
+        "running the skill again yields zero functional diff (diff exit code 0)",
+        "gate is still shown even on no-op refresh"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "mixed-repo-detect",
+      "prompt": "/claudia rules",
+      "scenario_setup": "Mixed repo at /tmp/rules-test-mixed-detect with both pyproject.toml AND main.nf. `claudia detect` returns mixed. No `rules/nextflow/` exists in plugin today.",
+      "expected_behavior": [
+        "Dry-run reports project_type=mixed.",
+        "rule_count reflects common + python only (nextflow subset silently skipped).",
+        "Skill clearly communicates to the user that nextflow was skipped (no rules/nextflow/ in plugin yet).",
+        "Gate then apply."
+      ],
+      "assertions": [
+        "project_type=mixed reported",
+        "preview contains python rules and zero nextflow rules",
+        "user message mentions that nextflow rules were skipped (or that only common+python were included)",
+        "CLAUDE.md created successfully with action=create"
+      ]
+    }
+  ],
+  "scoring": {
+    "method": "binary per assertion, average per test",
+    "pass_threshold": 0.75
+  }
+}

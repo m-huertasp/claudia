@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Expert code review specialist. Reviews code for quality, security, and maintainability. Invoke explicitly when you want a second opinion on a diff — the `/claudia-verify` workflow can dispatch it internally as part of stage 2 if `agents.verifier` is enabled. Not auto-triggered.
+description: Expert code review specialist. Reviews code for quality, security, and maintainability. Invoke explicitly when you want a second opinion on a diff — `/claudia close` dispatches it (always) in parallel with `nextflow-reviewer` (conditionally) and `domain-reviewer` (conditionally) inside the `verifier` agent's stage 2. Not auto-triggered.
 tools: ["Read", "Grep", "Glob", "Bash"]
 model: sonnet
 ---

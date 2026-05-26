@@ -37,11 +37,11 @@ If a change spans two categories, prefer the more behavior-y one
 ## Examples
 
 ```
-feat: add pair-programming mode to /claudia-execute
-fix: stop ship workflow from skipping verify ready check
-refactor: lift draft-pr into an internal workflow
-docs: clarify CONTEXT.md drift heuristics in verify
-test: cover mode=interactive rejection in config tests
+feat: add explicit-verb routing to /claudia dispatcher
+fix: stop close from skipping the parallel reviewer dispatch
+refactor: fold brief and discuss into a single plan skill
+docs: clarify CONTEXT.md env section sentinels
+test: cover rules-inject idempotency on stale sections
 ```
 
 ## Who follows this

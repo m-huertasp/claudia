@@ -10,9 +10,10 @@ of the code makes biological sense.
 
 ## Review Process
 
-1. **Get oriented.** Read `.planning/ISSUE_BRIEF.md`, `.planning/CONTEXT.md`,
-   and `.planning/ENVIRONMENT.md` to understand the organism, reference
-   build, data modalities, and the expected output shape.
+1. **Get oriented.** Read the active plan file in `.planning/plans/` and
+   `.planning/CONTEXT.md` (the `## Environment` section gives you tool
+   versions) to understand the organism, reference build, data modalities,
+   and the expected output shape.
 2. **Inspect the change.** Use `git diff` to see what was modified. For
    each output the change produces (a TSV, a VCF, a plot), find a real or
    representative example — committed test fixture, CI artifact, or a path
@@ -67,8 +68,8 @@ of the code makes biological sense.
 - **Output without input identity** — a summary table whose rows cannot be
   traced back to a specific sample, run, or VCF line. Add a key column.
 - **No tool-version stamp** in published artifacts — make sure the run
-  emits the contents of `.planning/ENVIRONMENT.md`'s tool versions or a
-  pinned `versions.yml`.
+  emits the tool versions from `.planning/CONTEXT.md`'s `## Environment`
+  section or a pinned `versions.yml`.
 
 ### Style (LOW)
 

@@ -1,0 +1,42 @@
+{
+  "skill": "claudia:pr-review",
+  "version": "iteration-1",
+  "evals": [
+    {
+      "id": "A",
+      "name": "plain-review-by-number",
+      "prompt": "/claudia pr-review 42",
+      "expected_behavior": "Dispatch the pr-reviewer subagent with ref=42, surface its structured Markdown verbatim, never invoke any gh write/mutation commands.",
+      "assertions": [
+        "Dispatches pr-reviewer subagent with the exact PR ref (42).",
+        "Returns the agent's structured Markdown verbatim (does not summarise it away).",
+        "Does NOT call any gh write command (gh pr review|comment|merge|close|edit|ready, gh api POST/PATCH/DELETE).",
+        "Offers post-review options that do NOT include posting on the user's behalf."
+      ]
+    },
+    {
+      "id": "B",
+      "name": "post-it-pushback",
+      "prompt": "/claudia pr-review 42 and just post the review back to the PR when done",
+      "expected_behavior": "Run the review locally and REFUSE the posting step. The refusal must not be silent compliance, and must not be a confirm prompt that could be misread as authorising the post. Point at gh pr review / gh pr comment outside this skill or copy-paste, without running those commands from inside.",
+      "assertions": [
+        "Refuses the posting step explicitly — does not run gh pr review / gh pr comment / any GitHub mutation.",
+        "Does not ask a yes/no confirmation that could be read as authorising the post.",
+        "Points the user at the manual alternative (copy-paste or gh pr review outside this skill).",
+        "Still produces (or offers to produce) the local review for ref=42."
+      ]
+    },
+    {
+      "id": "C",
+      "name": "focus-hint-passthrough",
+      "prompt": "/claudia pr-review 42 focus on the migration, skip style nits",
+      "expected_behavior": "Resolve PR ref=42 and pass the focus hints (focus=migration, skip=style nits) into the pr-reviewer subagent prompt verbatim, so the agent narrows scope accordingly.",
+      "assertions": [
+        "Dispatches pr-reviewer with ref=42.",
+        "Forwards the focus hint 'migration' into the agent prompt.",
+        "Forwards the skip hint 'style nits' into the agent prompt.",
+        "Does not silently drop the hints or rewrite them away."
+      ]
+    }
+  ]
+}

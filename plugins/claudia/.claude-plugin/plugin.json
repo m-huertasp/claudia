@@ -1,22 +1,20 @@
 {
   "name": "claudia",
-  "description": "Unified Claude Code framework for Python and Nextflow development. Phased, control-first workflow (understand, brief, plan, execute, verify, close), GitHub integration (issues, PRs, reviews), shared subagents (researcher, planner, executor, verifier, code-explorer, code-reviewer, nextflow-reviewer, domain-reviewer, pr-reviewer), domain skills (docstrings, type hints, pytest, nf-test, language patterns), and always-on rules. State persists in .planning/ across sessions; every direction-locking artifact and outward action passes through a review gate.",
-  "version": "0.3.0",
+  "description": "Slim, skill-driven Claude Code framework for Python and Nextflow development. One command (`/claudia`) dispatches to skills via explicit verbs (understand, plan, execute, close, rules, pr-review, write-issue, add-type-hints, prepare-docstrings) or natural-language routing. Workflow skills are gated and control-first; bioinformatics reviewers (nextflow-reviewer, domain-reviewer) dispatch in parallel inside close. A tiny shared script (detect/config/env/rules) provides the deterministic skeleton; per-task state is a single plan file.",
+  "version": "0.4.0",
   "author": {
     "name": "Marta H."
   },
   "keywords": [
     "workflow",
-    "planning",
+    "skills",
     "subagents",
-    "orchestration",
     "review-gate",
     "github",
     "issues",
     "pull-requests",
     "code-review",
     "python",
-    "nextflow",
-    "skills"
+    "nextflow"
   ]
 }

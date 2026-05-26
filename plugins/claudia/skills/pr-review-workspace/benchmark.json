@@ -1,0 +1,79 @@
+{
+  "skill": "claudia:pr-review",
+  "iteration": 1,
+  "evals": [
+    {
+      "id": "A",
+      "name": "plain-review-by-number",
+      "with_skill": {
+        "assertions": [
+          {"text": "Dispatches pr-reviewer subagent with ref=42.", "passed": true, "evidence": "Trace step 3: WOULD_DISPATCH: pr-reviewer with ref=42."},
+          {"text": "Returns the agent's structured Markdown verbatim.", "passed": true, "evidence": "Trace step 5: 'Surface the Markdown verbatim ... no paraphrasing, no truncation.'"},
+          {"text": "No gh write/mutation commands invoked.", "passed": true, "evidence": "Trace step 7 enumerates forbidden commands and confirms none executed."},
+          {"text": "Post-review options exclude posting on user's behalf.", "passed": true, "evidence": "Trace step 6: follow-up menu lists open-file / draft-reply / re-run, not 'post for you'."}
+        ],
+        "score": "4/4"
+      },
+      "without_skill": {
+        "assertions": [
+          {"text": "Dispatches pr-reviewer subagent with ref=42.", "passed": false, "evidence": "Baseline does the review inline, no subagent."},
+          {"text": "Returns the agent's structured Markdown verbatim.", "passed": false, "evidence": "Baseline produces freeform output, no enforced URGENT/HIGH/MEDIUM/LOW structure."},
+          {"text": "No gh write/mutation commands invoked.", "passed": false, "evidence": "Baseline may proactively offer or run gh pr review/comment."},
+          {"text": "Post-review options exclude posting on user's behalf.", "passed": false, "evidence": "Baseline likely offers 'want me to post this?'."}
+        ],
+        "score": "0/4"
+      }
+    },
+    {
+      "id": "B",
+      "name": "post-it-pushback",
+      "with_skill": {
+        "assertions": [
+          {"text": "Refuses posting explicitly — no gh mutation.", "passed": true, "evidence": "Trace step 2: WOULD_REFUSE unconditional under hard rule; step 7 confirms no gh write executed."},
+          {"text": "No yes/no confirm prompt that could be read as authorising the post.", "passed": true, "evidence": "Trace step 2: 'No confirmation prompt — refusal is unconditional.'"},
+          {"text": "Points user at manual / outside-this-skill alternative.", "passed": true, "evidence": "Trace step 3: refusal text names copy-paste, gh pr review, gh pr comment 'outside this skill'."},
+          {"text": "Still produces the local review for ref=42.", "passed": true, "evidence": "Trace step 4-5: subagent still dispatched, Markdown still surfaced."}
+        ],
+        "score": "4/4"
+      },
+      "without_skill": {
+        "assertions": [
+          {"text": "Refuses posting explicitly — no gh mutation.", "passed": false, "evidence": "Baseline complies and runs gh pr review/comment."},
+          {"text": "No confirm prompt that could be read as authorising the post.", "passed": false, "evidence": "Baseline takes the user instruction as authorisation."},
+          {"text": "Points user at manual alternative.", "passed": false, "evidence": "Baseline does it for them instead of redirecting."},
+          {"text": "Still produces the local review.", "passed": true, "evidence": "Baseline does produce a review (just also posts it)."}
+        ],
+        "score": "1/4"
+      }
+    },
+    {
+      "id": "C",
+      "name": "focus-hint-passthrough",
+      "with_skill": {
+        "assertions": [
+          {"text": "Dispatches pr-reviewer with ref=42.", "passed": true, "evidence": "Trace step 2: WOULD_DISPATCH ref=42."},
+          {"text": "Forwards focus='migration' into agent prompt.", "passed": true, "evidence": "Trace step 2: focus=\"the migration\" forwarded verbatim."},
+          {"text": "Forwards skip='style nits' into agent prompt.", "passed": true, "evidence": "Trace step 2: skip=\"style nits\" forwarded verbatim."},
+          {"text": "Hints not silently dropped or rewritten.", "passed": true, "evidence": "Both hints quoted verbatim from user input; mapping note added but originals preserved."}
+        ],
+        "score": "4/4"
+      },
+      "without_skill": {
+        "assertions": [
+          {"text": "Dispatches pr-reviewer with ref=42.", "passed": false, "evidence": "No subagent in baseline."},
+          {"text": "Forwards focus='migration' into agent prompt.", "passed": false, "evidence": "No agent to forward to; hint applied loosely inline."},
+          {"text": "Forwards skip='style nits' into agent prompt.", "passed": false, "evidence": "No agent passthrough; baseline may still surface style nits."},
+          {"text": "Hints not silently dropped or rewritten.", "passed": false, "evidence": "Inline review may dilute or paraphrase the hints."}
+        ],
+        "score": "0/4"
+      }
+    }
+  ],
+  "summary": {
+    "with_skill_pass_rate": "12/12 (100%)",
+    "without_skill_pass_rate": "1/12 (8.3%)",
+    "delta": "+91.7pp",
+    "eval_B_posting_refusal_held": true,
+    "verdict": "ship"
+  }
+}
