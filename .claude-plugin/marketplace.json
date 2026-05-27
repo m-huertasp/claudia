@@ -1,13 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claudia",
+  "description": "Claudia — a personal Claude Code framework for Python and Nextflow development",
   "owner": {
     "name": "Marta H."
   },
   "plugins": [
     {
       "name": "claudia",
-      "description": "Unified Claude Code framework for Python and Nextflow development. Phased, control-first workflow (understand, brief, plan, execute, verify, close), GitHub integration, shared subagents, domain skills, and always-on rules.",
+      "description": "Unified Claude Code framework for Python and Nextflow development. Phased, control-first workflow (understand, plan, execute, close), GitHub integration, shared subagents, domain skills, and always-on rules.",
       "source": "./plugins/claudia"
     }
   ]
