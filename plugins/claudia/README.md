@@ -1,6 +1,6 @@
 # claudia (plugin)
 
-The Claude Code plugin for Python and Nextflow development. One plugin
+Plugin for Python and Nextflow development. One plugin
 holds everything: the dispatcher, the workflow skills, the bioinformatics
 agents, the rule set, and a tiny shared script.
 
@@ -20,8 +20,6 @@ outward action passes through a review gate before it is accepted.
   gh auth login
   gh auth status
   ```
-  Issues and PRs are created under the authenticated GitHub account —
-  attributed to the user, not to Claude.
 
 ## Bootstrapping a project
 
@@ -115,8 +113,7 @@ based on `claudia detect`:
 | Project type | Subsets included |
 |---|---|
 | `python` | `common`, `python` |
-| `nextflow` | `common`, `nextflow` (when the plugin ships one) |
-| `mixed` | `common`, `python`, `nextflow` (when the plugin ships one) |
+| `nextflow` | `common` only |
 | `unknown` | `common` only |
 
 To add a new rule, drop a `.md` file in the right subdirectory and add
@@ -177,16 +174,6 @@ output by default (`{ok, data}` / `{ok, error}`); some commands accept
 | `claudia env capture [--root PATH] [--section] [--text]` | Probe tool versions; with `--section`, rewrite the `## Environment` section of `.planning/CONTEXT.md`. |
 | `claudia rules inject [--root PATH] [--path FILE] [--dry-run]` | Inject the `## Claudia Rules` section into `CLAUDE.md`. Idempotent, sentinel-bounded, detect-aware. |
 
-## Safety model (GitHub)
-
-- Read commands never mutate.
-- Write commands always show a full draft and require explicit
-  confirmation via `AskUserQuestion`. Editing the draft re-triggers the
-  gate.
-- `/claudia pr-review` and the `pr-reviewer` agent **never post to
-  GitHub** — no comment, review, approval, merge, or label change.
-  Output stays in chat.
-
 ## Install
 
 Reference this repo as a marketplace and enable the `claudia` plugin in
@@ -198,4 +185,3 @@ register automatically. Then in your project:
 /claudia rules
 ```
 
-That's the entire onboarding.
