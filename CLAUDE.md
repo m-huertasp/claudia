@@ -138,7 +138,8 @@ Follow these formats when adding or editing files:
 - **Agents** ([plugins/claudia/agents/](plugins/claudia/agents/)): YAML frontmatter with `name`, `description`, `model`; add `tools` only to restrict access — omit it when the agent needs MCP tools.
 - **Skills** ([plugins/claudia/skills/](plugins/claudia/skills/)): one folder per skill containing `SKILL.md`; frontmatter with `name` and `description`. Workflow skills add `Do NOT auto-trigger; callable-only` to the description so the dispatcher does not auto-fire them.
 - **Rules** ([plugins/claudia/rules/](plugins/claudia/rules/)): focused on a single convention; use a short title, one-paragraph explanation, and a code example. Add new rule files to the `@`-imports block above so they become always-on. The injector at `claudia rules inject` will pick them up automatically based on directory name (`common/`, `python/`, `nextflow/`).
-- **Plugin manifest** ([plugins/claudia/.claude-plugin/plugin.json](plugins/claudia/.claude-plugin/plugin.json)): single source of truth for plugin metadata. The `commands` array must remain exactly `[claudia]`.
+- **Plugin manifest** ([plugins/claudia/.claude-plugin/plugin.json](plugins/claudia/.claude-plugin/plugin.json)): single source of truth for plugin metadata. The `commands` array must remain exactly `["claudia"]`.
+- **Marketplace config** ([marketplace.json](marketplace.json)): repo-root file that registers this repo as a marketplace. Points to `./plugins/claudia`. Do not move it inside a subdirectory.
 
 File naming: lowercase with hyphens.
 

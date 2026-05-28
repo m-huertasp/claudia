@@ -1,5 +1,6 @@
 ---
 description: Single entry point for the claudia framework. Routes `/claudia <verb> [args]` to the matching skill (explicit-verb mode) or, when the first token is not a known verb, falls through to natural-language routing. Verbs include understand, plan, execute, close, rules, pr-review, write-issue, add-type-hints, prepare-docstrings.
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep
 ---
 
 # claudia
