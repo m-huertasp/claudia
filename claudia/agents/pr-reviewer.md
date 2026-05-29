@@ -33,7 +33,7 @@ If ambiguous, resolve the repo from the working directory's git remote before fe
 
 ## Tool Usage
 
-Use the `gh` CLI (via `Bash`) for all GitHub data. Read-only commands only:
+Use the `gh` CLI (via `Bash`) for all GitHub data. Read-only commands only. **IMPORTANT** if `gh` not found in `$PATH` use conda environment named `git-env`:
 
 - `gh pr view <ref> --json title,body,author,baseRefName,headRefName,isDraft,labels,state,additions,deletions,changedFiles,url` — PR metadata
 - `gh pr diff <ref>` — the full diff

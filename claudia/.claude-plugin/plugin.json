@@ -1,7 +1,7 @@
 {
   "name": "claudia",
   "description": "Slim, skill-driven home-made framework for Python and Nextflow development.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": {
     "name": "Marta H.",
     "email": "martahuertasp@gmail.com"
