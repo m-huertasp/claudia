@@ -1,14 +1,13 @@
 ---
 name: pr-review
-description: Review a GitHub pull request locally — structured, confidence-gated, classified URGENT/HIGH/MEDIUM/LOW. Read-only; never posts to GitHub. Invoked via `/claudia pr-review <num|owner/repo#num|url>`. Do NOT auto-trigger; callable-only utility skill.
+description: Review a GitHub pull request locally — structured, confidence-gated, classified URGENT/HIGH/MEDIUM/LOW. Read-only; never posts to GitHub. Use whenever the user asks to review a PR, check a pull request, "look at PR 123", review someone else's changes before merging, or mentions a PR number/URL alongside "review". Distinct from `/code-review`, which reviews the user's own working diff.
 ---
 
 # Review a Pull Request (local-only)
 
-> Invoke as: `/claudia pr-review <num|owner/repo#num|url>`
-
-**Input**: `$ARGUMENTS` — PR number, `owner/repo#N`, or a full PR URL.
-If empty, ask the user for it once.
+**Input**: a PR number, `owner/repo#N`, or a full PR URL, from wherever
+the user mentioned it in their request. If none was given, ask the
+user for it once.
 
 ---
 

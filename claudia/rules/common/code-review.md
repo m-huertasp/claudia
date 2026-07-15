@@ -38,7 +38,7 @@ Before marking code complete:
 
 ## Security Review Triggers
 
-**STOP and use security-reviewer agent when:**
+**STOP and review manually — with extra care, and against [security.md](security.md) — when:**
 
 - Authentication or authorization code
 - User input handling
@@ -59,14 +59,10 @@ Before marking code complete:
 
 ## Agent Usage
 
-Use these agents for code review:
-
-| Agent | Purpose |
-|-------|---------|
-| **code-reviewer** | General code quality, patterns, best practices |
-| **security-reviewer** | Security vulnerabilities, OWASP Top 10 |
-| **python-reviewer** | Python specific issues |
-| **nextflow-reviewer** | Nextflow DSL2 specific issues |
+This plugin ships one review agent, `pr-reviewer`, used by the
+`pr-review` skill to review someone else's pull request (read-only,
+never posts). For your own working diff, apply the checklist below
+directly — there is no dedicated review agent for that in this plugin.
 
 ## Review Workflow
 

@@ -37,24 +37,17 @@ If a change spans two categories, prefer the more behavior-y one
 ## Examples
 
 ```
-feat: add explicit-verb routing to /claudia dispatcher
-fix: stop close from skipping the parallel reviewer dispatch
-refactor: fold brief and discuss into a single plan skill
-docs: clarify CONTEXT.md env section sentinels
-test: cover rules-inject idempotency on stale sections
+feat: add confidence tiers to add-type-hints inference
+fix: stop prepare-docstrings from documenting private symbols
+refactor: simplify rule file layout
+docs: clarify rules skill output format
+test: cover nf-test snapshot regeneration flow
 ```
 
 ## Who follows this
 
-- **Executor agent in `yolo` mode** — every commit it creates must
-  match this format. The agent dispatcher passes the rule by reference,
-  not by paste.
-- **You, in `pair` mode** — recommended. The executor will suggest a
-  `{type}: {description}` line you can use as-is when you commit.
-
-## Enforcement
-
-There is no pre-commit hook for this rule yet. The executor agent is
-expected to self-check before running `git commit`. A bad commit
-message is a workflow bug — flag it and use `git commit --amend` (only
-for the most recent commit, never published) to fix it.
+Any commit made on the user's behalf by a skill or agent in this
+plugin must match this format. There is no pre-commit hook enforcing
+it — self-check before running `git commit`. A bad commit message is
+a mistake, not a policy violation — fix it with `git commit --amend`
+only if the commit hasn't been pushed yet.

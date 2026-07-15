@@ -2,61 +2,31 @@
 
 ## Purpose
 
-Every **direction-locking** artifact — one that, once accepted, constrains all
-later work — passes through a review gate before it is treated as final. The
-gate keeps the user in control: `claudia` may draft, but only the user locks
-direction. The direction-locking artifacts in v2 are:
+Every edit this plugin's skills make to your files should be
+trustworthy without a line-by-line audit — because the skill resolves
+uncertainty **before** writing, not after. `claudia` drafts nothing
+speculative and posts nothing without being asked.
 
-- the per-task plan file at `.planning/plans/YYYY-MM-DD-<slug>.md` (gated by `/claudia plan`)
-- any drafted PR title + body (gated by `/claudia close`)
-- any drafted GitHub issue body (gated by `/claudia write-issue`)
+## The gate, as it applies here
 
-## The gate
+The skills in this plugin follow one of two patterns:
 
-When a direction-locking artifact is ready, present it and ask the user, with
-`AskUserQuestion`, for one of three outcomes:
-
-- **Accept** — the artifact is final. Keep it written; continue the workflow.
-- **Edit** — the user wants changes first. Run the edit loop below.
-- **Cancel** — discard the artifact. Delete any draft file created this session
-  and stop.
-
-## The edit loop (file-based)
-
-`claudia` artifacts are files, so editing happens **in the file**, not as a
-chat transcript — the user opens it in their editor and changes it directly.
-
-1. **Write the current draft to its real path** (e.g. `.planning/plans/2026-05-26-add-types.md`).
-   The file is a *draft* — not final — until the user accepts it.
-2. **Surface the file** to the user as a clickable path and tell them it is
-   open for editing. They may edit and save it in their editor, or describe
-   the change in chat for `claudia` to apply. Chat-supplied rewrites are used
-   verbatim — do not paraphrase them.
-3. **Wait** for the user to signal that editing is done.
-4. **Re-read the file from disk** — the saved file is now the new draft.
-5. **Re-present the gate** (accept / edit / cancel) on the updated draft.
-6. Repeat until the user accepts or cancels.
-
-A draft file existing on disk is never the same as acceptance. Do not advance
-the workflow, commit, or push on the basis of an unaccepted draft.
-
-## Example
-
-```
-/claudia plan drafts .planning/plans/2026-05-26-add-types.md
-   │
-   ▼  AskUserQuestion: accept / edit / cancel
-   ├─ accept  → file is final; the task is ready for /claudia execute
-   ├─ edit    → user edits the file in their editor & saves
-   │            → re-read → re-present gate  ⤴
-   └─ cancel  → delete the draft file; stop
-```
+- **Ask before writing** (`add-type-hints`, `prepare-docstrings`) —
+  when a skill can't determine something with high confidence (a
+  type, an inferred intent), it stops and asks via `AskUserQuestion`
+  *before* touching the file. It never guesses and never writes
+  speculative content to fill a gap.
+- **Read-only, no writes** (`pr-review`, `rules`) — these skills only
+  report or print information to chat. They never edit, create, or
+  delete a file. If the user wants a suggestion applied, that is a
+  separate, explicit request outside the skill's contract.
 
 ## Rules
 
-- Never skip the gate for a direction-locking artifact. It is not configurable
-  and cannot be disabled by any `config.json` setting.
-- The draft file is the editing surface — do not re-paste long drafts into
-  chat when the user can edit the file directly.
-- On accept, the artifact stands as written on disk; on cancel, leave no
-  draft behind.
+- Never write an uncertain type hint, docstring claim, or rule change
+  to disk on a guess — ask first.
+- `pr-review` never posts to GitHub, under any framing, even if the
+  user insists otherwise.
+- `rules` never edits `CLAUDE.md` or any other file; it only prints.
+- Standard git hygiene still applies: the user reviews the diff
+  (`git diff`) before committing, same as with any other edit.

@@ -1,125 +1,88 @@
 ---
 name: rules
-description: Inject or refresh the Claudia Rules section in the project's CLAUDE.md so the plugin's always-on rule files are wired in via `@`-imports. Use whenever the user asks to "set up rules", "inject rules", "add the claudia rules", "wire rules into CLAUDE.md", "install rules", "refresh rules", or otherwise mentions configuring CLAUDE.md with the claudia rule set. Idempotent (sentinel-bounded section), detect-aware (picks `common` + `python` / `nextflow` subsets based on `claudia detect`), and creates CLAUDE.md if it does not exist. Invoked via `/claudia rules`. Do NOT auto-trigger on unrelated tasks — callable-only utility skill.
+description: Show the Claudia rule set (common + Python conventions) as a ready-to-paste `@`-imports block for a project's CLAUDE.md. Read-only — never edits any file. Use whenever the user asks to "set up rules", "show me the claudia rules", "what rules does claudia ship", "add the claudia rules to this project", or otherwise wants to see or wire the plugin's rule files into their own CLAUDE.md.
 ---
 
 # Rules
 
-> Invoke as: `/claudia rules`
-
-**Input**: `$ARGUMENTS` — optional. Currently ignored by the skill. To
-target a non-default `CLAUDE.md`, invoke the underlying script with
-`--path <CLAUDE.md>` directly.
+**Input**: none required.
 
 ---
 
 ## Purpose
 
-Wire the claudia rule files into the project's `CLAUDE.md` so they
-become always-on instructions for any Claude Code session run in this
-project. Uses `@`-imports pointing at `${CLAUDE_PLUGIN_ROOT}/rules/...`
-— rule content stays single-sourced and refreshes automatically when
-the plugin updates.
+Surface the rule files bundled with this plugin
+(`${CLAUDE_PLUGIN_ROOT}/rules/`) as a copy-pasteable `@`-imports block,
+so the user can wire them into their own project's `CLAUDE.md` by hand.
 
-The skill is **idempotent**: running it twice on the same repo
-produces no diff. The section lives under a `## Claudia Rules`
-heading and is bounded by `<!-- claudia:rules:start -->` /
-`<!-- claudia:rules:end -->` sentinels, so a re-run replaces the
-block in place without duplicating. Any `action == "replace"` —
-even a no-op refresh — is normal and expected on a second run.
-
-The skill is **detect-aware**: the included rule subsets depend on the
-project type detected by `claudia detect`:
-
-| Project type | Subsets included |
-|---|---|
-| `python` | `common`, `python` |
-| `nextflow` | `common`, `nextflow` (when the plugin ships one) |
-| `mixed` | `common`, `python`, `nextflow` (when the plugin ships one) |
-| `unknown` | `common` only |
-
-Subsets without a corresponding `rules/<subset>/` directory in the
-plugin are silently skipped by the helper. The skill, however, must
-**not** be silent: when the detected project type implies a subset
-that the plugin does not ship (e.g. `mixed` today, where `rules/nextflow/`
-does not exist), the skill must explicitly tell the user which subsets
-were included and which were skipped, so the missing coverage is visible.
-
-To detect this, compare the detected `project_type` against the
-`@`-imports in `data.preview`: if `project_type` is `nextflow` or
-`mixed` and no `rules/nextflow/...` lines appear, surface a one-line
-note like *"nextflow rules skipped — plugin does not ship `rules/nextflow/` yet."*
+This skill is **read-only**. It never writes, edits, or otherwise
+touches any file outside the plugin's own `rules/` directory — not the
+current project's `CLAUDE.md`, not any other file. It only prints
+content to chat. If the user wants the block applied, they paste it
+themselves, or ask the model directly to edit their `CLAUDE.md` as a
+separate, explicit action outside this skill.
 
 ## Steps
 
-### 1. Preview the change
+### 1. List the available rule files
 
-Run the deterministic helper in dry-run mode:
+List the `.md` files under each subset directory that actually exists
+in `${CLAUDE_PLUGIN_ROOT}/rules/` (currently `common/` and `python/` —
+a `nextflow/` subset may or may not exist depending on the plugin
+version; include it only if the directory is present).
 
-```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/claudia rules inject --dry-run
+### 2. Detect the project type (best-effort, informational only)
+
+Look at the current project root for:
+
+- **Python markers**: `pyproject.toml`, `setup.py`, `requirements.txt`
+- **Nextflow markers**: `main.nf`, `nextflow.config`, or `.nf` files
+  under `modules/`, `workflows/`, `subworkflows/`
+
+This only decides which subsets to *recommend* in the printed block —
+it does not gate anything. If both or neither match, say so and offer
+`common` as the safe default plus whichever subsets exist.
+
+### 3. Print the block
+
+Print a fenced Markdown code block the user can paste as-is into their
+project's `CLAUDE.md`, e.g.:
+
+```markdown
+## Claudia Rules
+
+@${CLAUDE_PLUGIN_ROOT}/rules/common/code-review.md
+@${CLAUDE_PLUGIN_ROOT}/rules/common/coding-style.md
+@${CLAUDE_PLUGIN_ROOT}/rules/common/commit-style.md
+@${CLAUDE_PLUGIN_ROOT}/rules/common/patterns.md
+@${CLAUDE_PLUGIN_ROOT}/rules/common/security.md
+@${CLAUDE_PLUGIN_ROOT}/rules/common/testing.md
+@${CLAUDE_PLUGIN_ROOT}/rules/python/coding-style.md
+@${CLAUDE_PLUGIN_ROOT}/rules/python/fastapi.md
+@${CLAUDE_PLUGIN_ROOT}/rules/python/patterns.md
+@${CLAUDE_PLUGIN_ROOT}/rules/python/security.md
+@${CLAUDE_PLUGIN_ROOT}/rules/python/tests.md
 ```
 
-Parse the JSON envelope. The script prints
-`{"ok": true, "data": {...}}` on success; extract from `data`:
+List only the subsets relevant per step 2 (drop the `python/` lines
+for a non-Python project, etc.). Note that `${CLAUDE_PLUGIN_ROOT}`
+resolves automatically at Claude Code's import time — the user does
+not need to substitute anything.
 
-- `path` — target `CLAUDE.md` location
-- `action` — one of `create` / `append` / `replace`
-- `project_type` — what `claudia detect` reported
-- `rule_count` — how many `@`-imports the section will contain
-- `preview` — the would-be section content (only present with `--dry-run`)
+### 4. Tell the user what to do with it
 
-On `{"ok": false, "error": ...}` (printed to stderr), surface the
-error to the user and stop.
-
-If `path` is not the expected `CLAUDE.md` at the repo root, surface
-that to the user so they can intervene before any write.
-
-### 2. Confirm with the user
-
-Show in chat:
-
-- The detected project type
-- The action (`create` new file / `append` to existing / `replace`
-  stale section)
-- The full preview content (markdown), inside a fenced code block
-
-`AskUserQuestion`:
-
-- **Apply** — write the change.
-- **Cancel** — do nothing.
-
-In the special case of `action == "replace"` against a `CLAUDE.md`
-that already has hand-written content outside the sentinels, suggest
-the user back the file up first if they want a safety net —
-`cp CLAUDE.md CLAUDE.md.bak` before re-running. Do not perform the
-backup automatically. (A replace against a previously-injected file
-is a routine refresh and does not need a backup prompt.)
-
-### 3. Apply the change
-
-On *Apply*:
-
-```bash
-python ${CLAUDE_PLUGIN_ROOT}/scripts/claudia rules inject
-```
-
-Print a one-line summary of the result (action + rule count + path)
-so the user can confirm at a glance.
-
-On *Cancel*: stop. Do nothing on disk.
+One short line: "Paste this into your project's `CLAUDE.md` (create
+the file if it doesn't exist). Re-run this skill any time the plugin's
+rule set changes to get an updated block."
 
 ## Rules
 
-- Never hand-edit the sentinel-bounded section; always go through
-  `claudia rules inject`.
-- The skill is the **only** sanctioned way to wire claudia rules into
-  a project. Do not paste rule content into `CLAUDE.md` directly —
-  that loses the auto-refresh behaviour and diverges from the
-  plugin's source of truth.
-- Idempotency is a contract: if running this skill twice in a row
-  ever produces a diff (beyond whitespace), it is a bug. The cheap
-  field check is `diff CLAUDE.md CLAUDE.md.before` after a back-to-back
-  re-run — it must exit `0`.
-- The skill never stages or commits changes to `CLAUDE.md`. The user
-  reviews the diff and commits when they are ready.
+- **Never write to any file.** Not `CLAUDE.md`, not anything else.
+  This skill's entire output is chat text.
+- Do not fabricate rule files — only list `.md` files that actually
+  exist on disk under `${CLAUDE_PLUGIN_ROOT}/rules/`.
+- If the user pushes back and asks you to just apply it directly to
+  their `CLAUDE.md`, that is a legitimate separate request you can
+  fulfill with the `Edit`/`Write` tool as a normal file edit — just not
+  as part of *this* skill's contract. Make that distinction clear if
+  it comes up.

@@ -1,19 +1,17 @@
 {
   "name": "claudia",
-  "description": "Slim, skill-driven home-made framework for Python and Nextflow development.",
-  "version": "0.4.1",
+  "description": "Minimal skill set for Python and Nextflow development: type hints, docstrings, pytest/nf-test guidance, PR review, and a rules reference — no commands, no agents beyond pr-reviewer.",
+  "version": "0.5.0",
   "author": {
     "name": "Marta H.",
     "email": "martahuertasp@gmail.com"
   },
   "homepage": "https://github.com/m-huertasp/claudia",
   "keywords": [
-    "workflow",
     "skills",
-    "subagents",
-    "review-gate",
-    "github",
-    "issues",
+    "type-hints",
+    "docstrings",
+    "testing",
     "pull-requests",
     "best-practices",
     "python",
